@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 import sbpy.activity as sba
 
-__author__ = 'Shawn Oset, Lauren Lyons'
+__author__ = 'Shawn Oset'
 __version__ = '0.0'
 
 solarbluecol = np.array([38, 139, 220]) / 255.
@@ -24,11 +24,35 @@ solarwhitecol = np.array([238, 232, 213]) / 255.
 solarwhite = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
 
 
-def showRadialPlots(coma, rUnits, volUnits, fragName):
-    """ Show the radial density of the fragment species """
+def findColDensInflectionPoints(coma):
 
-    xMin_logplot = np.ceil(np.log10(coma.vModel['CollisionSphereRadius'].to(u.m).value))
-    xMax_logplot = np.floor(np.log10(coma.vModel['MaxRadiusOfGrid'].to(u.m).value))
+    xs = np.linspace(0, 5e8, num=100)
+    concavity = coma.vModel['ColumnDensity']['Interpolator'].derivative(nu=2)
+    ys = concavity(xs)
+
+    # for pair in zip(xs, ys):
+    #     print(f"R: {pair[0]:08.1e}\t\tConcavity: {pair[1]:8.8f}")
+
+    # Array of 1s or 0s marking if the sign changed from one element to the next
+    signChanges = (np.diff(np.sign(ys)) != 0)*1
+
+    # Manually remove the weirdness near the nucleus and rezize the array
+    signChanges[0] = 0
+    signChanges = np.resize(signChanges, 100)
+
+    radInflectionPts = xs*signChanges
+    # Only want non-zero elements
+    radInflectionPts = radInflectionPts[radInflectionPts > 0]
+
+    # Only want inflection points outside the collision sphere
+    cRadius = coma.vModel['CollisionSphereRadius'].to_value(u.m)
+    radInflectionPts = radInflectionPts[radInflectionPts > cRadius]
+
+    return radInflectionPts
+
+
+def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, daysSince):
+    """ Show the radial density of the fragment species """
 
     xMin_linear = 0 * u.m
     xMax_linear = 2000000 * u.m
@@ -38,101 +62,25 @@ def showRadialPlots(coma, rUnits, volUnits, fragName):
     linInterpX *= u.m
     linInterpX.to(rUnits)
 
-    logInterpX = np.logspace(xMin_logplot, xMax_logplot, num=200)
-    logInterpY = coma.vModel['rDensInterpolator'](logInterpX)/(u.m**3)
-    logInterpX *= u.m
-    logInterpX.to(rUnits)
-
+    # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
+    plt.style.use('default')
     plt.style.use('Solarize_Light2')
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
-
-    ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
-    ax1.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
-    ax2.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
-    ax2.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated radial density of {fragName}")
-
-    ax1.set_xlim([xMin_linear, xMax_linear])
-    ax1.plot(linInterpX, linInterpY, color="red",  linewidth=1.5, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'bo', label="model")
-    ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'g--', label="linear interpolation")
-
-    ax2.set_xscale('log')
-    ax2.set_yscale('log')
-    ax2.loglog(coma.vModel['FastRadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'bo', label="model")
-    ax2.loglog(coma.vModel['FastRadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'g--', label="linear interpolation")
-    ax2.loglog(logInterpX, logInterpY, color="red",  linewidth=1.5, linestyle="-", label="cubic spline")
-
-    ax1.set_ylim(bottom=0)
-    ax2.set_ylim(bottom=0.1)
-
-    # Mark the beginning of the collision sphere
-    ax1.axvline(x=coma.vModel['CollisionSphereRadius'], color=solarblue)
-    ax2.axvline(x=coma.vModel['CollisionSphereRadius'], color=solarblue)
-
-    # Mark the collision sphere
-    plt.text(coma.vModel['CollisionSphereRadius']*2, linInterpY[0]*2, 'Collision Sphere Edge', color=solarblue)
-
-    plt.legend(loc='upper right', frameon=False)
-    plt.show()
-
-
-def showColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, daysSince):
-    """ Show the radial density of the fragment species """
-
-    # xMin_logplot = np.ceil(np.log10(coma.vModel['CollisionSphereRadius'].to(u.m).value))
-    # xMax_logplot = np.floor(np.log10(coma.vModel['MaxRadiusOfGrid'].to(u.m).value))
-
-    xMin_linear = 0 * u.m
-    # xMax_linear = 2000000 * u.m
-    xMax_linear = coma.vModel['MaxRadiusOfGrid'].to(u.m)
-
-    linInterpX = np.linspace(xMin_linear.value, xMax_linear.value, num=200)
-    linInterpY = coma.vModel['ColumnDensity']['Interpolator'](linInterpX)/(u.m**2)
-    linInterpX *= u.m
-    linInterpX.to(rUnits)
-
-    # logInterpX = np.logspace(xMin_logplot, xMax_logplot, num=200)
-    # logInterpY = coma.vModel['ColumnDensity']['Interpolator'](logInterpX)/(u.m**2)
-    # logInterpX *= u.m
-    # logInterpX.to(rUnits)
-
-    plt.style.use('Solarize_Light2')
-
-    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
     fig, ax1 = plt.subplots(1, 1, figsize=(20, 10))
 
     ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
-    ax1.set(ylabel=f"Fragment column density, {cdUnits.unit.to_string()}")
-    # ax2.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
-    # ax2.set(ylabel=f"Fragment column density, {cdUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated column density of {fragName}, {daysSince:02.1f} days after outburst")
+    ax1.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
+    fig.suptitle(f"Calculated radial density of {fragName}, {daysSince:05.2f} days after outburst")
 
     ax1.set_xlim([xMin_linear, xMax_linear])
-    ax1.plot(linInterpX, linInterpY, color='#688894',  linewidth=2.5, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vModel['ColumnDensity']['CDGrid'], coma.vModel['ColumnDensity']['Values'], 'o', color='#c74a77', label="model")
+    ax1.plot(linInterpX, linInterpY, color="#688894",  linewidth=2.5, linestyle="-", label="cubic spline")
+    ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'o', color="#c74a77", label="model")
 
-    # ax2.set_xscale('log')
-    # ax2.set_yscale('log')
-    # ax2.loglog(coma.vModel['ColumnDensity']['CDGrid'], coma.vModel['ColumnDensity']['Values'], 'bo', label="model")
-    # ax2.loglog(coma.vModel['ColumnDensity']['CDGrid'], coma.vModel['ColumnDensity']['Values'], 'g--',
-    #            label="linear interpolation", linewidth=0.5)
-    # ax2.loglog(logInterpX, logInterpY, color="red",  linewidth=0.5, linestyle="-", label="cubic spline")
-
-    ax1.set_ylim(bottom=0, top=2e17)
-
-    # ax2.set_xlim(right=coma.vModel['MaxRadiusOfGrid'])
+    expectedMaxRDens = 5e11
+    ax1.set_ylim(bottom=0, top=expectedMaxRDens)
 
     # Mark the beginning of the collision sphere
-    # ax1.axvline(x=coma.vModel['CollisionSphereRadius'], color=solarblue)
-    # ax2.axvline(x=coma.vModel['CollisionSphereRadius'], color=solarblue)
-
-    # Only plot as far as the maximum radius of our grid on log-log plot
-    # ax2.axvline(x=coma.vModel['MaxRadiusOfGrid'])
-
-    # Mark the collision sphere
-    # plt.text(coma.vModel['CollisionSphereRadius']*1.1, linInterpY[0]/10, 'Collision Sphere Edge', color=solarblue)
+    ax1.axvline(x=coma.vModel['CollisionSphereRadius'], color=solarblue)
 
     plt.legend(loc='upper right', frameon=False)
     # plt.show()
@@ -140,8 +88,46 @@ def showColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, daysSince):
     plt.close()
 
 
-def showColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, rUnits, cdUnits, fragName, filename,
-                        daysSince):
+def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, daysSince):
+    """ Show the radial density of the fragment species """
+
+    xMin_linear = 0 * u.m
+    xMax_linear = coma.vModel['MaxRadiusOfGrid'].to(u.m)
+
+    linInterpX = np.linspace(xMin_linear.value, xMax_linear.value, num=200)
+    linInterpY = coma.vModel['ColumnDensity']['Interpolator'](linInterpX)/(u.m**2)
+    linInterpX *= u.m
+    linInterpX.to(rUnits)
+
+    # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
+    plt.style.use('default')
+    plt.style.use('Solarize_Light2')
+
+    fig, ax1 = plt.subplots(1, 1, figsize=(20, 10))
+
+    ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
+    ax1.set(ylabel=f"Fragment column density, {cdUnits.unit.to_string()}")
+    fig.suptitle(f"Calculated column density of {fragName}, {daysSince:05.2f} days after outburst")
+
+    ax1.set_xlim([xMin_linear, xMax_linear])
+    ax1.plot(linInterpX, linInterpY, color='#688894',  linewidth=2.5, linestyle="-", label="cubic spline")
+    ax1.plot(coma.vModel['ColumnDensity']['CDGrid'], coma.vModel['ColumnDensity']['Values'], 'o', color='#c74a77', label="model")
+
+    expectedMaxColDens = 2e17
+    ax1.set_ylim(bottom=0, top=expectedMaxColDens)
+
+    # Find possible inflection points
+    for ipoint in findColDensInflectionPoints(coma):
+        ax1.axvline(x=ipoint, color=solargreen)
+
+    plt.legend(loc='upper right', frameon=False)
+    # plt.show()
+    plt.savefig(filename)
+    plt.close()
+
+
+def generateColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, rUnits, cdUnits, fragName, filename,
+                            daysSince):
     """ 3D plot of column density """
 
     # mesh grid for units native to the interpolation function
@@ -166,8 +152,6 @@ def showColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, rUni
 
     fig = plt.figure(figsize=(20, 20))
     ax = plt.axes(projection='3d')
-    # ax.grid(False)
-    # surf = ax.plot_surface(xvu, yvu, fz, cmap='inferno', vmin=0, edgecolor='none')
     surf = ax.plot_surface(xvu, yvu, fz, cmap='inferno', norm=normColors, edgecolor='none')
 
     frame1 = plt.gca()
@@ -175,14 +159,12 @@ def showColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, rUni
     frame1.axes.yaxis.set_ticklabels([])
     frame1.axes.zaxis.set_ticklabels([])
 
-    # frame1.set_zlim(bottom=0)
     ax.set_zlim(bottom=0, top=expectedMaxColDens)
-    # ax.set_zlim(bottom=0)
 
     ax.set_xlabel(f'Distance, ({rUnits.to_string()})')
     ax.set_ylabel(f'Distance, ({rUnits.to_string()})')
     ax.set_zlabel(f"Column density, {cdUnits.unit.to_string()}")
-    plt.title(f"Calculated column density of {fragName}, {daysSince:02.1f} days after outburst")
+    plt.title(f"Calculated column density of {fragName}, {daysSince:05.2f} days after outburst")
 
     ax.w_xaxis.set_pane_color(solargreen)
     ax.w_yaxis.set_pane_color(solarblue)
@@ -203,11 +185,6 @@ def makeInputDict():
 
     vModelInput = {}
 
-    # # 30 days ago to 15 days ago, production was 1e28,
-    # # then jumped to 3e29 from 15 days ago to now
-    vModelInput['TimeAtProductions'] = [30, 15] * u.day
-    vModelInput['ProductionRates'] = [1.e28, 3.e29]
-
     # Parent molecule is H2O
     vModelInput['Parent'] = {}
     vModelInput['Parent']['TotalLifetime'] = 86430 * u.s
@@ -222,7 +199,7 @@ def makeInputDict():
     vModelInput['Fragment'] = {}
     # Cochran and Schleicher, 1993
     vModelInput['Fragment']['Velocity'] = 1.05 * u.km/u.s
-    vModelInput['Fragment']['TotalLifetime'] = sba.photo_timescale('OH') * 0.8
+    vModelInput['Fragment']['TotalLifetime'] = sba.photo_timescale('OH') * 0.93
     # vModelInput['Fragment']['TotalLifetime'] = 129000 * u.s
 
     # Adjust some things for heliocentric distance
@@ -248,27 +225,56 @@ def main():
     fragName = 'OH'
     vModelInputBase = makeInputDict()
 
-    for daysSince in np.arange(0, 5, step=0.25):
+    # Outburst information
+    outburstLength = 5 * u.day
+    baseProduction = 1e28
+    outburstProduction = 1e29
+
+    # Long enough ago that we reach steady state by the time the outburst happens
+    daysAgoProductionStarts = 50
+
+    # Make images after the outburst until this amount of time goes by
+    daysAfterToStop = 5
+    dayStep = 0.2
+
+    # Which outputs?
+    radialDensityPlots = False
+    coldens2DPlots = True
+    coldens3DPlots = False
+
+    for daysSince in np.arange(0, daysAfterToStop, step=dayStep):
 
         vModelInput = copy.deepcopy(vModelInputBase)
-        vModelInput['TimeAtProductions'] = [50, daysSince+5, daysSince] * u.day
-        vModelInput['ProductionRates'] = [1.e28, 1.e29, 1.e28]
-        print(vModelInput['TimeAtProductions'], vModelInput['ProductionRates'])
+        vModelInput['TimeAtProductions'] = [daysAgoProductionStarts, daysSince+outburstLength.to_value(u.day), daysSince] * u.day
+        vModelInput['ProductionRates'] = [baseProduction, outburstProduction, baseProduction]
+        print("")
+        for pair in zip(vModelInput['TimeAtProductions'], vModelInput['ProductionRates']):
+            print(f"Time: {pair[0]:05.2f} ago\t\tProduction rate: {pair[1]:05.2e}")
 
-        print(f"Calculating for {daysSince} days since outburst:")
+        print(f"Calculating for {daysSince:05.2f} days since outburst:")
         coma = sba.VectorialModel(0*(1/u.s), 0 * u.m/u.s, vModelInput)
+        print("")
 
-        plotfilename = f"{daysSince:05.2f}_days_since_outburst.png"
-        print(f"Generating {plotfilename} ...")
+        plotbasename = f"{daysSince:05.2f}_days_since_outburst"
+        print(f"Generating plots for {plotbasename} ...")
 
-        # showRadialPlots(coma, u.km, 1/u.cm**3, fragName)
-        # showColumnDensityPlot(coma, u.km, 1/u.cm**3, fragName, plotfilename, daysSince)
-        # showColumnDensity3D(coma, -100000*u.km, 10000*u.km, -100000*u.km, 10000*u.km, 1000, 100, u.km, 1/u.cm**2, fragName)
-        showColumnDensity3D(coma, -100000*u.km, 100000*u.km, -100000*u.km, 100000*u.km, 1000, 1000, u.km, 1/u.cm**2,
-                            fragName, plotfilename, daysSince)
+        # The volume density seems to evolve very quickly, it settles ~0.1 days after a 5-day outburst
+        if radialDensityPlots:
+            generateRadialPlots(coma, u.km, 1/u.cm**3, fragName, plotbasename+'_rdens.png', daysSince)
 
-    # generate the gif with
-    # convert -delay 25 -loop 0 -layers OptimizePlus *.png outburst.gif
+        if coldens2DPlots:
+            generateColumnDensityPlot(coma, u.km, 1/u.cm**3, fragName, plotbasename+'_coldens2D.png', daysSince)
+
+        if coldens3DPlots:
+            generateColumnDensity3D(coma, -100000*u.km, 100000*u.km, -100000*u.km, 100000*u.km, 1000, 1000, u.km, 1/u.cm**2,
+                                    fragName, plotbasename+'_coldens3D_view1.png', daysSince)
+            # generateColumnDensity3D(coma, -100000*u.km, 10000*u.km, -100000*u.km, 10000*u.km, 1000, 100, u.km, 1/u.cm**2,
+            #                         fragName, plotbasename+'_coldens3D_view2.png', daysSince)
+
+    # generate the gifs with
+    # convert -delay 25 -loop 0 -layers OptimizePlus *rdens.png outburst_rdens.gif
+    # convert -delay 25 -loop 0 -layers OptimizePlus *coldens2D.png outburst_coldens2D.gif
+    # convert -delay 25 -loop 0 -layers OptimizePlus *coldens3D_view1.png outburst_coldens3D_view1.gif
 
 
 if __name__ == '__main__':
