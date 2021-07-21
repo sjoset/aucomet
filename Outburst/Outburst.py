@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import copy
+# import copy
 
 import numpy as np
 import astropy.units as u
@@ -235,7 +235,7 @@ def main():
 
     # Make images after the outburst until this amount of time goes by
     daysAfterToStop = 5
-    dayStep = 0.2
+    dayStep = 2
 
     # Which outputs?
     radialDensityPlots = False
@@ -244,7 +244,8 @@ def main():
 
     for daysSince in np.arange(0, daysAfterToStop, step=dayStep):
 
-        vModelInput = copy.deepcopy(vModelInputBase)
+        # vModelInput = copy.deepcopy(vModelInputBase)
+        vModelInput = vModelInputBase
         vModelInput['TimeAtProductions'] = [daysAgoProductionStarts, daysSince+outburstLength.to_value(u.day), daysSince] * u.day
         vModelInput['ProductionRates'] = [baseProduction, outburstProduction, baseProduction]
         print("")

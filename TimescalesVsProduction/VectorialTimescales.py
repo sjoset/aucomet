@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import copy
+# import copy
 
 import numpy as np
 import astropy.units as u
@@ -24,31 +24,81 @@ solarwhitecol = np.array([238, 232, 213]) / 255.
 solarwhite = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
 
 
-def findColDensInflectionPoints(coma):
+def generate2D_TvsQPlot(TvsQdata, modelProduction):
 
-    xs = np.linspace(0, 5e8, num=100)
-    concavity = coma.vModel['ColumnDensity']['Interpolator'].derivative(nu=2)
-    ys = concavity(xs)
+    timescales = TvsQdata[:, 1]
+    Qs = TvsQdata[:, 2]
 
-    # for pair in zip(xs, ys):
-    #     print(f"R: {pair[0]:08.1e}\t\tConcavity: {pair[1]:8.8f}")
+    # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
+    plt.style.use('default')
+    plt.style.use('Solarize_Light2')
 
-    # Array of 1s or 0s marking if the sign changed from one element to the next
-    signChanges = (np.diff(np.sign(ys)) != 0)*1
+    fig, ax1 = plt.subplots(1, 1, figsize=(20, 10))
 
-    # Manually remove the weirdness near the nucleus and rezize the array
-    signChanges[0] = 0
-    signChanges = np.resize(signChanges, 100)
+    ax1.set(xlabel="Dissociative lifetime of H2O, (s)")
+    ax1.set(ylabel="Q(H2O)")
+    fig.suptitle(f"Calculated productions against varying lifetimes for initial model Q = {modelProduction}")
 
-    radInflectionPts = xs*signChanges
-    # Only want non-zero elements
-    radInflectionPts = radInflectionPts[radInflectionPts > 0]
+    # ax1.set_xlim([xMin_linear, xMax_linear])
+    ax1.plot(timescales, Qs, color="#688894",  linewidth=2.5, linestyle="-", label="", zorder=1)
+    ax1.scatter(timescales, Qs, color="#c74a77", zorder=2)
+    # ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'o', color="#c74a77", label="model")
 
-    # Only want inflection points outside the collision sphere
-    cRadius = coma.vModel['CollisionSphereRadius'].to_value(u.m)
-    radInflectionPts = radInflectionPts[radInflectionPts > cRadius]
+    # ax1.set_ylim(bottom=1e29, top=1e30)
 
-    return radInflectionPts
+    plt.legend(loc='upper right', frameon=False)
+    plt.show()
+    # plt.savefig(filename)
+    plt.close()
+
+
+def generateAggregatePlots(TvsQdata, filename):
+
+    modelQ = TvsQdata[:, 0]
+    timescales = TvsQdata[:, 1]
+    Qs = TvsQdata[:, 2]
+
+    numTimes = len(set(timescales))
+    numModelQs = len(set(modelQ))
+    # numPoints = numTimes * numModelQs
+
+    # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
+    plt.style.use('default')
+    plt.style.use('Solarize_Light2')
+
+    # normColors = colors.Normalize(vmin=0, vmax=5e31, clip=False)
+
+    fig = plt.figure(figsize=(30, 30))
+    ax = plt.axes(projection='3d')
+    surf = ax.scatter(modelQ, timescales, Qs)
+    # ax.plot3D([modelQ[0]]*3, timescales[:3], Qs[:3], color="#c74a77")
+
+    for x in list(range(0, numModelQs)):
+        print(x)
+        ax.plot3D(modelQ[x*numTimes:(x+1)*numTimes], timescales[x*numTimes:(x+1)*numTimes], Qs[x*numTimes:(x+1)*numTimes], color="#c74a77")
+
+    # ax.bar3d(modelQ, timescales, np.zeros(numPoints), np.ones(len(modelQ)), np.ones(len(timescales)), Qs)
+    # surf = ax.scatter(modelQ, timescales, Qs, cmap='inferno', norm=normColors, edgecolor='none')
+
+    # ax1.set(xlabel="Dissociative lifetime of H2O, (s)")
+    # ax1.set(ylabel="Q(H2O)")
+    fig.suptitle("Calculated productions against varying lifetimes for range of model Q(H2O)")
+
+    # ax1.set_xlim([xMin_linear, xMax_linear])
+    # ax1.plot(timescales, Qs, color="#688894",  linewidth=2.5, linestyle="-", label="", zorder=1)
+    # ax1.plot_surface(modelQ, timescales, Qs)
+    # ax1.scatter(timescales, Qs, color="#c74a77", zorder=2)
+    # ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'o', color="#c74a77", label="model")
+
+    # ax1.set_ylim(bottom=1e29, top=1e30)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    ax.view_init(0, 0)
+
+    plt.legend(loc='upper right', frameon=False)
+    plt.savefig(filename)
+    plt.show()
+    plt.close()
 
 
 def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, lifetime):
@@ -115,10 +165,6 @@ def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, lifetim
 
     expectedMaxColDens = 2e17
     ax1.set_ylim(bottom=0, top=expectedMaxColDens)
-
-    # Find possible inflection points
-    for ipoint in findColDensInflectionPoints(coma):
-        ax1.axvline(x=ipoint, color=solargreen)
 
     plt.legend(loc='upper right', frameon=False)
     # plt.show()
@@ -214,7 +260,9 @@ def makeInputDict():
     vModelInput['Parent']['Velocity'] /= np.sqrt(HeliocentricDistance.value)
 
     vModelInput['Grid'] = {}
-    vModelInput['Grid']['NumRadialGridpoints'] = 100
+    vModelInput['Grid']['NumRadialGridpoints'] = 20
+    # vModelInput['Grid']['NumRadialGridpoints'] = 100
+    vModelInput['Grid']['NumAngularGridpoints'] = 20
     # vModelInput['Grid']['NumAngularGridpoints'] = 40
 
     vModelInput['PrintDensityProgress'] = True
@@ -225,6 +273,9 @@ def main():
 
     quantity_support()
 
+    numModelProductions = 3
+    numDissocLifetimes = 3
+
     vModelInputBase = makeInputDict()
 
     # Aperture to use
@@ -234,25 +285,32 @@ def main():
     totalToDissoc = 0.93
 
     acceptedLifetime = sba.photo_timescale('H2O')
-    # Set of water dissociative lifetimes
-    waterDisLifetimes = np.linspace(acceptedLifetime/4, acceptedLifetime*2, num=30)
+    # Set of water dissociative lifetimes to input into the model
+    waterDisLifetimes = np.linspace(acceptedLifetime/2, acceptedLifetime*2, num=numDissocLifetimes)
 
     # Assuming this constant count in an aperture
-    countInAperture = 1e30
+    countInAperture = 1e29
+    # Constant production for 50 days is enough to reach steady state
     vModelInputBase['TimeAtProductions'] = [50] * u.day
+
+    # Initial 'guess' productions to run the model to scale up or down based on the model results
     # productions = [5e25, 1e26, 1e27, 1e28, 1e29]
-    productions = np.logspace(26, 29, num=20)
+    # productions = np.logspace(26, 29, num=2)
+    productions = np.logspace(28, 29, num=numModelProductions)
+
+    aggregateResults = []
 
     for q in productions:
 
         vModelInputBase['ProductionRates'] = [q]
 
-        # Holds [[lifetime, apertureCount, correctedProduction]]
+        # Holds [[modelProduction, lifetime, correctedProduction]]
         resultsArray = []
 
         for h2olifetime in waterDisLifetimes:
 
-            vModelInput = copy.deepcopy(vModelInputBase)
+            # vModelInput = copy.deepcopy(vModelInputBase)
+            vModelInput = vModelInputBase
 
             vModelInput['Parent']['DissociativeLifetime'] = h2olifetime
             vModelInput['Parent']['TotalLifetime'] = h2olifetime*totalToDissoc
@@ -266,7 +324,12 @@ def main():
             tNum = coma.total_number(ap)
 
             # Scale up the production to produce the desired number of counts in aperture
-            resultsArray.append([h2olifetime, tNum, (countInAperture/tNum)*vModelInput['ProductionRates'][0]])
+            resultsArray.append([q, h2olifetime.to(u.s).value, (countInAperture/tNum)*vModelInput['ProductionRates'][0]])
+
+        # generate2D_TvsQPlot(np.array(resultsArray), q)
+        # print(resultsArray)
+        aggregateResults += resultsArray
+        # print(aggregateResults)
 
         # Output the results to file
         with open("results", "a") as outfile:
@@ -281,6 +344,8 @@ def main():
                     print(f"{col:08.6e}\t", end='', file=outfile)
                 print("", file=outfile)
             print("\n\n", file=outfile)
+
+    generateAggregatePlots(np.array(aggregateResults), 'results.png')
 
 
 if __name__ == '__main__':
