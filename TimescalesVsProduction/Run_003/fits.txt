@@ -1,0 +1,3 @@
+For 1.000e+28, slope best fit: 6.820e+24 with intercept 3.586e+28
+For 5.500e+28, slope best fit: 8.803e+24 with intercept 6.577e+28
+For 1.000e+29, slope best fit: 9.879e+24 with intercept 8.777e+28

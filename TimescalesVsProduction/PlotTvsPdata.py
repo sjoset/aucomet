@@ -4,24 +4,23 @@ import sys
 # import copy
 
 import numpy as np
-import astropy.units as u
+# import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 # from matplotlib import cm, colors
-from matplotlib import colors
-import sbpy.activity as sba
+# from matplotlib import colors
 
 __author__ = 'Shawn Oset'
 __version__ = '0.0'
 
-solarbluecol = np.array([38, 139, 220]) / 255.
-solarblue = (solarbluecol[0], solarbluecol[1], solarbluecol[2], 1)
-solargreencol = np.array([133, 153, 0]) / 255.
-solargreen = (solargreencol[0], solargreencol[1], solargreencol[2], 1)
-solarblackcol = np.array([0, 43, 54]) / 255.
-solarblack = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
-solarwhitecol = np.array([238, 232, 213]) / 255.
-solarwhite = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
+# solarbluecol = np.array([38, 139, 220]) / 255.
+# solarblue = (solarbluecol[0], solarbluecol[1], solarbluecol[2], 1)
+# solargreencol = np.array([133, 153, 0]) / 255.
+# solargreen = (solargreencol[0], solargreencol[1], solargreencol[2], 1)
+# solarblackcol = np.array([0, 43, 54]) / 255.
+# solarblack = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
+# solarwhitecol = np.array([238, 232, 213]) / 255.
+# solarwhite = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
 
 
 def generate2D_TvsQPlot(TvsQdata, modelProduction):
@@ -39,12 +38,8 @@ def generate2D_TvsQPlot(TvsQdata, modelProduction):
     ax1.set(ylabel="Q(H2O)")
     fig.suptitle(f"Calculated productions against varying lifetimes for initial model Q = {modelProduction}")
 
-    # ax1.set_xlim([xMin_linear, xMax_linear])
     ax1.plot(timescales, Qs, color="#688894",  linewidth=2.5, linestyle="-", label="", zorder=1)
     ax1.scatter(timescales, Qs, color="#c74a77", zorder=2)
-    # ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'o', color="#c74a77", label="model")
-
-    # ax1.set_ylim(bottom=1e29, top=1e30)
 
     plt.legend(loc='upper right', frameon=False)
     plt.show()
@@ -54,219 +49,44 @@ def generate2D_TvsQPlot(TvsQdata, modelProduction):
 
 def generateAggregatePlots(TvsQdata, filename):
 
-    modelQ = TvsQdata[:, 0]
-    timescales = TvsQdata[:, 1]
-    Qs = TvsQdata[:, 2]
-
-    numTimes = len(set(timescales))
-    numModelQs = len(set(modelQ))
-    # numPoints = numTimes * numModelQs
+    # Grab each set of values in a flat array for scatter plotting, with productions in log10
+    modelQs = np.log10(TvsQdata[:, :, 0].flatten())
+    timescales = TvsQdata[:, :, 1].flatten()
+    Qs = np.log10(TvsQdata[:, :, 2].flatten())
 
     # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
     plt.style.use('default')
     plt.style.use('Solarize_Light2')
-
-    # normColors = colors.Normalize(vmin=0, vmax=5e31, clip=False)
 
     fig = plt.figure(figsize=(30, 30))
     ax = plt.axes(projection='3d')
-    surf = ax.scatter(modelQ, timescales, Qs)
-    # ax.plot3D([modelQ[0]]*3, timescales[:3], Qs[:3], color="#c74a77")
 
-    for x in list(range(0, numModelQs)):
-        print(x)
-        ax.plot3D(modelQ[x*numTimes:(x+1)*numTimes], timescales[x*numTimes:(x+1)*numTimes], Qs[x*numTimes:(x+1)*numTimes], color="#c74a77")
+    # 3d scatter plot
+    ax.scatter(modelQs, timescales, Qs)
 
-    # ax.bar3d(modelQ, timescales, np.zeros(numPoints), np.ones(len(modelQ)), np.ones(len(timescales)), Qs)
-    # surf = ax.scatter(modelQ, timescales, Qs, cmap='inferno', norm=normColors, edgecolor='none')
+    # add linear best fit curves for each run
+    for modelProduction in TvsQdata:
+        # Each column in the data structure has the relevant data
+        mqs = np.log10(modelProduction[:, 0])
+        ts = modelProduction[:, 1]
+        cps = np.log10(modelProduction[:, 2])
+        coeffs = np.polyfit(ts, cps, 1)
+        fitfunction = np.poly1d(coeffs)
+        fit_ys = fitfunction(ts)
+        ax.plot3D(mqs, ts, fit_ys, color="#c74a77")
+        ax.plot3D(mqs, ts, cps, color="#afac7c")
 
-    # ax1.set(xlabel="Dissociative lifetime of H2O, (s)")
-    # ax1.set(ylabel="Q(H2O)")
+    ax.set(xlabel="Model production, log10 Q(H2O)")
+    ax.set(ylabel="Dissociative lifetime of H2O, (s)")
+    ax.set(zlabel="Calculated production, log10 Q(H2O)")
     fig.suptitle("Calculated productions against varying lifetimes for range of model Q(H2O)")
 
-    # ax1.set_xlim([xMin_linear, xMax_linear])
-    # ax1.plot(timescales, Qs, color="#688894",  linewidth=2.5, linestyle="-", label="", zorder=1)
-    # ax1.plot_surface(modelQ, timescales, Qs)
-    # ax1.scatter(timescales, Qs, color="#c74a77", zorder=2)
-    # ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'o', color="#c74a77", label="model")
+    # Initialize 3d view at these angles for saving the plot
+    ax.view_init(20, 30)
 
-    # ax1.set_ylim(bottom=1e29, top=1e30)
-    fig.colorbar(surf, shrink=0.5, aspect=5)
-
-    ax.view_init(0, 0)
-
-    plt.legend(loc='upper right', frameon=False)
     plt.savefig(filename)
     plt.show()
     plt.close()
-
-
-def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, lifetime):
-    """ Show the radial density of the fragment species """
-
-    xMin_linear = 0 * u.m
-    xMax_linear = 2000000 * u.m
-
-    linInterpX = np.linspace(xMin_linear.value, xMax_linear.value, num=200)
-    linInterpY = coma.vModel['rDensInterpolator'](linInterpX)/(u.m**3)
-    linInterpX *= u.m
-    linInterpX.to(rUnits)
-
-    # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
-    plt.style.use('default')
-    plt.style.use('Solarize_Light2')
-
-    fig, ax1 = plt.subplots(1, 1, figsize=(20, 10))
-
-    ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
-    ax1.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated radial density of {fragName}, {lifetime:05.2f} water lifetime")
-
-    ax1.set_xlim([xMin_linear, xMax_linear])
-    ax1.plot(linInterpX, linInterpY, color="#688894",  linewidth=2.5, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vModel['RadialGrid'], coma.vModel['RadialDensity'].to(volUnits), 'o', color="#c74a77", label="model")
-
-    expectedMaxRDens = 5e11
-    ax1.set_ylim(bottom=0, top=expectedMaxRDens)
-
-    # Mark the beginning of the collision sphere
-    ax1.axvline(x=coma.vModel['CollisionSphereRadius'], color=solarblue)
-
-    plt.legend(loc='upper right', frameon=False)
-    # plt.show()
-    plt.savefig(filename)
-    plt.close()
-
-
-def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, lifetime):
-    """ Show the radial density of the fragment species """
-
-    xMin_linear = 0 * u.m
-    xMax_linear = coma.vModel['MaxRadiusOfGrid'].to(u.m)
-
-    linInterpX = np.linspace(xMin_linear.value, xMax_linear.value, num=200)
-    linInterpY = coma.vModel['ColumnDensity']['Interpolator'](linInterpX)/(u.m**2)
-    linInterpX *= u.m
-    linInterpX.to(rUnits)
-
-    # Make sure to clear the dark background setting from the 3D plots by defaulting everything here
-    plt.style.use('default')
-    plt.style.use('Solarize_Light2')
-
-    fig, ax1 = plt.subplots(1, 1, figsize=(20, 10))
-
-    ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
-    ax1.set(ylabel=f"Fragment column density, {cdUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated column density of {fragName}, {lifetime:05.2f} water lifetime")
-
-    ax1.set_xlim([xMin_linear, xMax_linear])
-    ax1.plot(linInterpX, linInterpY, color='#688894',  linewidth=2.5, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vModel['ColumnDensity']['CDGrid'], coma.vModel['ColumnDensity']['Values'], 'o', color='#c74a77', label="model")
-
-    expectedMaxColDens = 2e17
-    ax1.set_ylim(bottom=0, top=expectedMaxColDens)
-
-    plt.legend(loc='upper right', frameon=False)
-    # plt.show()
-    plt.savefig(filename)
-    plt.close()
-
-
-def generateColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, rUnits, cdUnits, fragName, filename,
-                            lifetime):
-    """ 3D plot of column density """
-
-    # mesh grid for units native to the interpolation function
-    x = np.linspace(xMin.to(u.m).value, xMax.to(u.m).value, gridStepX)
-    y = np.linspace(yMin.to(u.m).value, yMax.to(u.m).value, gridStepY)
-    xv, yv = np.meshgrid(x, y)
-    z = coma.vModel['ColumnDensity']['Interpolator'](np.sqrt(xv**2 + yv**2))
-    # Interpolator spits out m^-2
-    fz = (z/u.m**2).to(cdUnits)
-
-    # mesh grid in the units requested for plotting
-    xu = np.linspace(xMin.to(rUnits), xMax.to(rUnits), gridStepX)
-    yu = np.linspace(yMin.to(rUnits), yMax.to(rUnits), gridStepY)
-    xvu, yvu = np.meshgrid(xu, yu)
-
-    plt.style.use('Solarize_Light2')
-    plt.style.use('dark_background')
-    plt.rcParams['grid.color'] = "black"
-
-    expectedMaxColDens = 3e13
-    normColors = colors.Normalize(vmin=0, vmax=expectedMaxColDens/1.5, clip=False)
-
-    fig = plt.figure(figsize=(20, 20))
-    ax = plt.axes(projection='3d')
-    surf = ax.plot_surface(xvu, yvu, fz, cmap='inferno', norm=normColors, edgecolor='none')
-
-    frame1 = plt.gca()
-    frame1.axes.xaxis.set_ticklabels([])
-    frame1.axes.yaxis.set_ticklabels([])
-    frame1.axes.zaxis.set_ticklabels([])
-
-    ax.set_zlim(bottom=0, top=expectedMaxColDens)
-
-    ax.set_xlabel(f'Distance, ({rUnits.to_string()})')
-    ax.set_ylabel(f'Distance, ({rUnits.to_string()})')
-    ax.set_zlabel(f"Column density, {cdUnits.unit.to_string()}")
-    plt.title(f"Calculated column density of {fragName}, {lifetime:05.2f} water lifetime")
-
-    ax.w_xaxis.set_pane_color(solargreen)
-    ax.w_yaxis.set_pane_color(solarblue)
-    ax.w_zaxis.set_pane_color(solarblack)
-
-    fig.colorbar(surf, shrink=0.5, aspect=5)
-    # ax.view_init(25, 45)
-    ax.view_init(90, 90)
-    # plt.show()
-    plt.savefig(filename)
-    plt.close()
-
-
-def makeInputDict():
-
-    # Fill in parameters to run vectorial model
-    HeliocentricDistance = 1.0 * u.AU
-
-    vModelInput = {}
-
-    # Steady-state production for 50 days
-    vModelInput['TimeAtProductions'] = [50] * u.day
-    vModelInput['ProductionRates'] = [1e28]
-
-    # Parent molecule is H2O
-    vModelInput['Parent'] = {}
-    vModelInput['Parent']['Velocity'] = 1.0 * (u.km/u.s)
-    vModelInput['Parent']['TotalLifetime'] = 86430 * u.s
-    vModelInput['Parent']['DissociativeLifetime'] = 101730 * u.s
-
-    # vModelInput['Parent']['DissociativeLifetime'] = sba.photo_timescale('H2O')
-    # vModelInput['Parent']['TotalLifetime'] = vModelInput['Parent']['DissociativeLifetime']*0.8
-
-    # Fragment molecule is OH
-    vModelInput['Fragment'] = {}
-    # Cochran and Schleicher, 1993
-    vModelInput['Fragment']['Velocity'] = 1.05 * u.km/u.s
-    vModelInput['Fragment']['TotalLifetime'] = sba.photo_timescale('OH') * 0.93
-    # vModelInput['Fragment']['TotalLifetime'] = 129000 * u.s
-
-    # Adjust some things for heliocentric distance
-    rs2 = HeliocentricDistance.value**2
-    vModelInput['Parent']['TotalLifetime'] *= rs2
-    vModelInput['Parent']['DissociativeLifetime'] *= rs2
-    vModelInput['Fragment']['TotalLifetime'] *= rs2
-    # Cochran and Schleicher, 1993
-    vModelInput['Parent']['Velocity'] /= np.sqrt(HeliocentricDistance.value)
-
-    vModelInput['Grid'] = {}
-    vModelInput['Grid']['NumRadialGridpoints'] = 20
-    # vModelInput['Grid']['NumRadialGridpoints'] = 100
-    vModelInput['Grid']['NumAngularGridpoints'] = 20
-    # vModelInput['Grid']['NumAngularGridpoints'] = 40
-
-    vModelInput['PrintDensityProgress'] = True
-    return vModelInput
 
 
 def main():
@@ -276,11 +96,15 @@ def main():
     with open('output.npdata', 'rb') as infile:
         allData = np.load(infile)
 
-    for dataslice in allData:
-        print(dataslice)
-        print("End of slice")
+    with open('fits.txt', 'w') as fitfile:
+        for modelProduction in allData:
+            thisModelQ = modelProduction[0][0]
+            ts = modelProduction[:, 1]
+            cps = modelProduction[:, 2]
+            m, b = np.polyfit(ts, cps, 1)
+            print(f"For {thisModelQ:7.3e}, slope best fit: {m:7.3e} with intercept {b:7.3e}", file=fitfile)
 
-    # generateAggregatePlots(np.array(aggregateResults), 'results.png')
+    generateAggregatePlots(allData, 'results.png')
 
 
 if __name__ == '__main__':

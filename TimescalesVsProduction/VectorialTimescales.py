@@ -58,7 +58,7 @@ def main():
 
     quantity_support()
 
-    numModelProductions = 3
+    numModelProductions = 12
     numDissocLifetimes = 3
 
     vModelInputBase = makeInputDict()
@@ -83,8 +83,8 @@ def main():
 
     # Initial 'guess' productions to run the model to scale up or down based on the model results
     # productions = [5e25, 1e26, 1e27, 1e28, 1e29]
-    # productions = np.logspace(26, 29, num=2)
-    productions = np.linspace(1e28, 1e29, num=numModelProductions)
+    productions = np.logspace(24, 29, num=numModelProductions, endpoint=True)
+    # productions = np.linspace(1e24, 1e29, num=numModelProductions, endpoint=True)
 
     aggregateResults = []
 
