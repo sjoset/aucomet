@@ -45,10 +45,10 @@ def makeInputDict():
     vModelInput['Parent']['Velocity'] /= np.sqrt(HeliocentricDistance.value)
 
     vModelInput['Grid'] = {}
-    vModelInput['Grid']['NumRadialGridpoints'] = 20
-    # vModelInput['Grid']['NumRadialGridpoints'] = 100
-    vModelInput['Grid']['NumAngularGridpoints'] = 20
-    # vModelInput['Grid']['NumAngularGridpoints'] = 40
+    # vModelInput['Grid']['NumRadialGridpoints'] = 20
+    vModelInput['Grid']['NumRadialGridpoints'] = 50
+    # vModelInput['Grid']['NumAngularGridpoints'] = 20
+    vModelInput['Grid']['NumAngularGridpoints'] = 30
 
     vModelInput['PrintDensityProgress'] = True
     return vModelInput
@@ -58,8 +58,8 @@ def main():
 
     quantity_support()
 
-    numModelProductions = 12
-    numDissocLifetimes = 3
+    numModelProductions = 25
+    numDissocLifetimes = 15
 
     vModelInputBase = makeInputDict()
 
@@ -83,7 +83,7 @@ def main():
 
     # Initial 'guess' productions to run the model to scale up or down based on the model results
     # productions = [5e25, 1e26, 1e27, 1e28, 1e29]
-    productions = np.logspace(24, 29, num=numModelProductions, endpoint=True)
+    productions = np.logspace(25, 29, num=numModelProductions, endpoint=True)
     # productions = np.linspace(1e24, 1e29, num=numModelProductions, endpoint=True)
 
     aggregateResults = []
@@ -97,7 +97,6 @@ def main():
 
         for h2olifetime in waterDisLifetimes:
 
-            # vModelInput = copy.deepcopy(vModelInputBase)
             vModelInput = vModelInputBase
 
             vModelInput['Parent']['DissociativeLifetime'] = h2olifetime
@@ -119,7 +118,6 @@ def main():
 
     # Turn our list into a numpy array
     agArray = np.array(aggregateResults)
-    print(agArray)
 
     # Save the run data as numpy binary data because plaintext saving only works for 2d or 1d arrays
     with open('output.npdata', 'wb') as outfile:
