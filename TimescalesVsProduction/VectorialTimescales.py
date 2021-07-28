@@ -58,7 +58,7 @@ def main():
 
     quantity_support()
 
-    numModelProductions = 25
+    numModelProductions = 30
     numDissocLifetimes = 15
 
     vModelInputBase = makeInputDict()
@@ -71,7 +71,7 @@ def main():
 
     acceptedLifetime = sba.photo_timescale('H2O')
     # Set of water dissociative lifetimes to input into the model
-    waterDisLifetimes = np.linspace(acceptedLifetime/2, acceptedLifetime*2, num=numDissocLifetimes)
+    waterDisLifetimes = np.linspace(acceptedLifetime/2, acceptedLifetime*2, num=numDissocLifetimes, endpoint=True)
 
     # Assuming this constant count in an aperture
     countInAperture = 1e29
@@ -83,7 +83,7 @@ def main():
 
     # Initial 'guess' productions to run the model to scale up or down based on the model results
     # productions = [5e25, 1e26, 1e27, 1e28, 1e29]
-    productions = np.logspace(25, 29, num=numModelProductions, endpoint=True)
+    productions = np.logspace(25, 30, num=numModelProductions, endpoint=True)
     # productions = np.linspace(1e24, 1e29, num=numModelProductions, endpoint=True)
 
     aggregateResults = []
