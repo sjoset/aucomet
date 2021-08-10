@@ -64,7 +64,7 @@ def main():
     vModelInputBase = makeInputDict()
 
     # Aperture to use
-    ap = sba.RectangularAperture((100.0, 100.0) * u.km)
+    ap = sba.RectangularAperture((400000.0, 400000.0) * u.km)
 
     # Ratio of total and dissociative lifetimes, Cochran 1993
     totalToDissoc = 0.93
