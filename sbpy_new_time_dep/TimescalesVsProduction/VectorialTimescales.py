@@ -12,15 +12,28 @@ __author__ = 'Shawn Oset'
 __version__ = '0.0'
 
 
+def q_t(t):
+    return 0
+    # # Gaussian centered peakTime days ago, width of sigma,
+    # #  with peak of peakProduction
+    # peakTime = (3 * u.day).to(u.s).value
+    # sigma = (0.2 * u.day).to(u.s).value
+    # peakProduction = 1e28
+    # if (t > (peakTime + 3*sigma)) or (t < (peakTime - 3*sigma)):
+    #     return 0
+
+    # return peakProduction * np.exp(-np.power(t - peakTime, 2.0) / (2 * np.power(sigma, 2.0)))
+
+
 def main():
 
     quantity_support()
 
-    numModelProductions = 1
-    numDissocLifetimes = 3
+    numModelProductions = 50
+    numDissocLifetimes = 20
 
     # Aperture to use
-    square_ap_size = 100000.0
+    square_ap_size = 1.0e5
     ap = sba.RectangularAperture((square_ap_size, square_ap_size) * u.km)
 
     # Ratio of total and dissociative lifetimes, Cochran 1993
@@ -33,12 +46,8 @@ def main():
     # Assuming this constant count of OH in an aperture
     countInAperture = 1e32
 
-    # Constant production for 50 days is enough to reach steady state
-    daysOfSteadyProduction = 50
-    times_at_production = [daysOfSteadyProduction] * u.day
-
     # Initial 'guess' productions to run the model to scale up or down based on the model results
-    productions = np.logspace(28, 30, num=numModelProductions, endpoint=True)
+    productions = np.logspace(25, 30, num=numModelProductions, endpoint=True)
 
     parent = Phys.from_dict({
         'tau_T': 86430 * u.s,
@@ -55,8 +64,6 @@ def main():
 
     for q in productions:
 
-        production_rates = [q]
-
         # Holds [[modelProduction, lifetime, correctedProduction]]
         resultsArray = []
 
@@ -66,7 +73,7 @@ def main():
             parent['tau_T'][0] = h2olifetime * totalToDissoc
 
             print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {q}:")
-            coma = sba.VectorialModel(Q=production_rates*(1/u.s), dt=times_at_production,
+            coma = sba.VectorialModel(baseQ=q*(1/u.s), Qt=q_t,
                                       parent=parent, fragment=fragment, print_progress=True)
             print("")
 
@@ -74,28 +81,29 @@ def main():
             ap_count = coma.total_number(ap)
 
             # Scale up the production to produce the desired number of counts in aperture
-            calculatedQ = (countInAperture/ap_count)*production_rates[0]
+            calculatedQ = (countInAperture/ap_count)*q
             resultsArray.append([q, h2olifetime.to(u.s).value, calculatedQ])
             print(f"Calculated production: {calculatedQ}")
 
             fragTheory = coma.vModel['NumFragmentsTheory']
             fragGrid = coma.vModel['NumFragmentsFromGrid']
-            print(f"Fragment percentage captured: {(fragGrid/fragTheory):3.5f}")
+            print(f"Grid: {fragGrid}, Theory: {fragTheory}")
+            print(f"Fragment percentage captured: {(fragGrid*100/fragTheory):3.5f}%")
 
-            # Check if this result holds by taking the calculated production and running another model with it;
-            #  the result in the aperture should be countInAperture or very close
-            production_rates = [calculatedQ]
+            # # Check if this result holds by taking the calculated production and running another model with it;
+            # #  the result in the aperture should be countInAperture or very close
 
-            print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {calculatedQ}:")
-            comaCheck = sba.VectorialModel(Q=production_rates*(1/u.s), dt=times_at_production,
-                                           parent=parent, fragment=fragment, print_progress=True)
-            print("")
+            # print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {calculatedQ}:")
+            # comaCheck = sba.VectorialModel(baseQ=calculatedQ*(1/u.s), Qt=q_t,
+            #                                parent=parent, fragment=fragment, print_progress=True)
+            # print("")
 
-            # Count the number of fragments in the aperture
-            ap_count_check = comaCheck.total_number(ap)
+            # # Count the number of fragments in the aperture
+            # ap_count_check = comaCheck.total_number(ap)
 
-            # Does this give the right number in the aperture?
-            print(f"Number in aperture at this production: {ap_count_check:3.5e}\t\tRecovered percent: {(100*ap_count_check/countInAperture):1.7f}%")
+            # # Does this give the right number in the aperture?
+            # print(f"Number in aperture at this production: {ap_count_check:3.5e}\t\tRecovered percent: {(100*ap_count_check/countInAperture):1.7f}%")
+
             print("---------")
 
         aggregateResults.append(resultsArray)
@@ -109,7 +117,6 @@ def main():
 
     # Include details of the calculation
     with open('parameters.txt', 'w') as paramfile:
-        print(f"Using steady production for {times_at_production[0]:05.2e}", file=paramfile)  # noqa: E501
         print(f"Assuming a fixed count in aperture of {countInAperture:05.2e} in {ap}", file=paramfile)
         print(f"Total to dissociative lifetime ratio: {totalToDissoc:03.2f}", file=paramfile)
         print(f"Parent and fragment velocities: {parent['v'][0]:05.2e}, {fragment['v'][0]:05.2e}", file=paramfile)  # noqa: E501

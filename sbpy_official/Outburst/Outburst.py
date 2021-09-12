@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import copy
+# import copy
 
 import numpy as np
 import astropy.units as u
@@ -51,7 +51,7 @@ def findColDensInflectionPoints(coma):
     return radInflectionPts
 
 
-def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, lifetime):
+def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, daysSince):
     """ Show the radial density of the fragment species """
 
     xMin_linear = 0 * u.m
@@ -70,7 +70,7 @@ def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, lifetime):
 
     ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
     ax1.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated radial density of {fragName}, {lifetime:05.2f} water lifetime")
+    fig.suptitle(f"Calculated radial density of {fragName}, {daysSince:05.2f} days after outburst")
 
     ax1.set_xlim([xMin_linear, xMax_linear])
     ax1.plot(linInterpX, linInterpY, color="#688894",  linewidth=2.5, linestyle="-", label="cubic spline")
@@ -88,7 +88,7 @@ def generateRadialPlots(coma, rUnits, volUnits, fragName, filename, lifetime):
     plt.close()
 
 
-def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, lifetime):
+def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, daysSince):
     """ Show the radial density of the fragment species """
 
     xMin_linear = 0 * u.m
@@ -107,7 +107,7 @@ def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, lifetim
 
     ax1.set(xlabel=f'Distance from nucleus, {rUnits.to_string()}')
     ax1.set(ylabel=f"Fragment column density, {cdUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated column density of {fragName}, {lifetime:05.2f} water lifetime")
+    fig.suptitle(f"Calculated column density of {fragName}, {daysSince:05.2f} days after outburst")
 
     ax1.set_xlim([xMin_linear, xMax_linear])
     ax1.plot(linInterpX, linInterpY, color='#688894',  linewidth=2.5, linestyle="-", label="cubic spline")
@@ -127,7 +127,7 @@ def generateColumnDensityPlot(coma, rUnits, cdUnits, fragName, filename, lifetim
 
 
 def generateColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, rUnits, cdUnits, fragName, filename,
-                            lifetime):
+                            daysSince):
     """ 3D plot of column density """
 
     # mesh grid for units native to the interpolation function
@@ -164,7 +164,7 @@ def generateColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, 
     ax.set_xlabel(f'Distance, ({rUnits.to_string()})')
     ax.set_ylabel(f'Distance, ({rUnits.to_string()})')
     ax.set_zlabel(f"Column density, {cdUnits.unit.to_string()}")
-    plt.title(f"Calculated column density of {fragName}, {lifetime:05.2f} water lifetime")
+    plt.title(f"Calculated column density of {fragName}, {daysSince:05.2f} days after outburst")
 
     ax.w_xaxis.set_pane_color(solargreen)
     ax.w_yaxis.set_pane_color(solarblue)
@@ -181,23 +181,19 @@ def generateColumnDensity3D(coma, xMin, xMax, yMin, yMax, gridStepX, gridStepY, 
 def makeInputDict():
 
     # Fill in parameters to run vectorial model
-    HeliocentricDistance = 1.0 * u.AU
+    HeliocentricDistance = 1.4 * u.AU
 
     vModelInput = {}
 
-    # Steady-state production for 50 days
-    vModelInput['TimeAtProductions'] = [50] * u.day
-    # vModelInput['ProductionRates'] = [1e28]
-    vModelInput['ProductionRates'] = [5e29]
-
     # Parent molecule is H2O
     vModelInput['Parent'] = {}
-    vModelInput['Parent']['Velocity'] = 1.0 * (u.km/u.s)
     vModelInput['Parent']['TotalLifetime'] = 86430 * u.s
     vModelInput['Parent']['DissociativeLifetime'] = 101730 * u.s
 
     # vModelInput['Parent']['DissociativeLifetime'] = sba.photo_timescale('H2O')
     # vModelInput['Parent']['TotalLifetime'] = vModelInput['Parent']['DissociativeLifetime']*0.8
+
+    vModelInput['Parent']['Velocity'] = 1.0 * (u.km/u.s)
 
     # Fragment molecule is OH
     vModelInput['Fragment'] = {}
@@ -218,7 +214,7 @@ def makeInputDict():
     # vModelInput['Grid']['NumRadialGridpoints'] = 25
     # vModelInput['Grid']['NumAngularGridpoints'] = 40
 
-    vModelInput['PrintDensityProgress'] = False
+    vModelInput['PrintDensityProgress'] = True
     return vModelInput
 
 
@@ -226,52 +222,60 @@ def main():
 
     quantity_support()
 
+    fragName = 'OH'
     vModelInputBase = makeInputDict()
 
-    # Aperture to use
-    ap = sba.RectangularAperture((100.0, 100.0) * u.km)
+    # Outburst information
+    outburstLength = 5 * u.day
+    baseProduction = 1e28
+    outburstProduction = 1e29
 
-    # Ratio of total and dissociative lifetimes, Cochran 1993
-    totalToDissoc = 0.93
+    # Long enough ago that we reach steady state by the time the outburst happens
+    daysAgoProductionStarts = 50
 
-    production = 1e29
+    # Make images after the outburst until this amount of time goes by
+    daysAfterToStop = 5
+    dayStep = 2
 
-    acceptedLifetime = sba.photo_timescale('H2O')
-    # Set of water dissociative lifetimes
-    waterDisLifetimes = np.linspace(acceptedLifetime/4, acceptedLifetime*2, num=10)
+    # Which outputs?
+    radialDensityPlots = False
+    coldens2DPlots = True
+    coldens3DPlots = False
 
-    # Holds [[lifetime, apertureCount, correctedProduction]]
-    resultsArray = []
+    for daysSince in np.arange(0, daysAfterToStop, step=dayStep):
 
-    # Assuming this constant count in an aperture
-    countInAperture = 1e30
+        # vModelInput = copy.deepcopy(vModelInputBase)
+        vModelInput = vModelInputBase
+        vModelInput['TimeAtProductions'] = [daysAgoProductionStarts, daysSince+outburstLength.to_value(u.day), daysSince] * u.day
+        vModelInput['ProductionRates'] = [baseProduction, outburstProduction, baseProduction]
+        print("")
+        for pair in zip(vModelInput['TimeAtProductions'], vModelInput['ProductionRates']):
+            print(f"Time: {pair[0]:05.2f} ago\t\tProduction rate: {pair[1]:05.2e}")
 
-    for h2olifetime in waterDisLifetimes:
+        print(f"Calculating for {daysSince:05.2f} days since outburst:")
+        coma = sba.VectorialModel(0*(1/u.s), 0 * u.m/u.s, vModelInput)
+        print("")
 
-        vModelInput = copy.deepcopy(vModelInputBase)
-        vModelInput['Parent']['DissociativeLifetime'] = h2olifetime
-        vModelInput['Parent']['TotalLifetime'] = h2olifetime*totalToDissoc
+        plotbasename = f"{daysSince:05.2f}_days_since_outburst"
+        print(f"Generating plots for {plotbasename} ...")
 
-        print(f"Calculating for water lifetime of {h2olifetime:05.2f}:")
-        coma = sba.Haser(production*(1/u.s), 0 * u.m/u.s, vModelInput)
+        # The volume density seems to evolve very quickly, it settles ~0.1 days after a 5-day outburst
+        if radialDensityPlots:
+            generateRadialPlots(coma, u.km, 1/u.cm**3, fragName, plotbasename+'_rdens.png', daysSince)
 
-        # Count the number of fragments in the aperture
-        tNum = coma.total_number(ap)
+        if coldens2DPlots:
+            generateColumnDensityPlot(coma, u.km, 1/u.cm**3, fragName, plotbasename+'_coldens2D.png', daysSince)
 
-        # Scale up the production to produce the desired number of counts in aperture
-        resultsArray.append([h2olifetime, tNum, (countInAperture/tNum)*vModelInput['ProductionRates'][0]])
+        if coldens3DPlots:
+            generateColumnDensity3D(coma, -100000*u.km, 100000*u.km, -100000*u.km, 100000*u.km, 1000, 1000, u.km, 1/u.cm**2,
+                                    fragName, plotbasename+'_coldens3D_view1.png', daysSince)
+            # generateColumnDensity3D(coma, -100000*u.km, 10000*u.km, -100000*u.km, 10000*u.km, 1000, 100, u.km, 1/u.cm**2,
+            #                         fragName, plotbasename+'_coldens3D_view2.png', daysSince)
 
-    # Output the results to file
-    with open("results", "w") as outfile:
-        print(f"Assuming a fixed count in aperture of {countInAperture:05.2e} in aperture 100km square aperture", file=outfile)
-        print(f"Total to dissociative lifetime ratio: {totalToDissoc:03.2f}", file=outfile)
-        print(f"Parent and fragment velocities: {vModelInputBase['Parent']['Velocity']:05.2e}, {vModelInputBase['Fragment']['Velocity']:05.2e}", file=outfile)
-
-        print("Photo Tscale\tAp Count\tCalc Production", file=outfile)
-        for row in resultsArray:
-            for col in row:
-                print(f"{col:08.6e}\t", end='', file=outfile)
-            print("", file=outfile)
+    # generate the gifs with
+    # convert -delay 25 -loop 0 -layers OptimizePlus *rdens.png outburst_rdens.gif
+    # convert -delay 25 -loop 0 -layers OptimizePlus *coldens2D.png outburst_coldens2D.gif
+    # convert -delay 25 -loop 0 -layers OptimizePlus *coldens3D_view1.png outburst_coldens3D_view1.gif
 
 
 if __name__ == '__main__':

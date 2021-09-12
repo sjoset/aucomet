@@ -12,58 +12,16 @@ __author__ = 'Shawn Oset'
 __version__ = '0.0'
 
 
-def makeInputDict():
-
-    # Fill in parameters to run vectorial model
-    HeliocentricDistance = 1.0 * u.AU
-
-    vModelInput = {}
-
-    vModelInput['ProductionRates'] = [1e28]
-
-    # Parent molecule is H2O
-    vModelInput['Parent'] = {}
-    vModelInput['Parent']['Velocity'] = 1.0 * (u.km/u.s)
-    vModelInput['Parent']['TotalLifetime'] = 86430 * u.s
-    vModelInput['Parent']['DissociativeLifetime'] = 101730 * u.s
-
-    # vModelInput['Parent']['DissociativeLifetime'] = sba.photo_timescale('H2O')
-    # vModelInput['Parent']['TotalLifetime'] = vModelInput['Parent']['DissociativeLifetime']*0.8
-
-    # Fragment molecule is OH
-    vModelInput['Fragment'] = {}
-    # Cochran and Schleicher, 1993
-    vModelInput['Fragment']['Velocity'] = 1.05 * u.km/u.s
-    vModelInput['Fragment']['TotalLifetime'] = sba.photo_timescale('OH') * 0.93
-    # vModelInput['Fragment']['TotalLifetime'] = 129000 * u.s
-
-    # Adjust some things for heliocentric distance
-    rs2 = HeliocentricDistance.value**2
-    vModelInput['Parent']['TotalLifetime'] *= rs2
-    vModelInput['Parent']['DissociativeLifetime'] *= rs2
-    vModelInput['Fragment']['TotalLifetime'] *= rs2
-    # Cochran and Schleicher, 1993
-    vModelInput['Parent']['Velocity'] /= np.sqrt(HeliocentricDistance.value)
-
-    vModelInput['Grid'] = {}
-    # vModelInput['Grid']['NumRadialGridpoints'] = 20
-    vModelInput['Grid']['NumRadialGridpoints'] = 50
-    # vModelInput['Grid']['NumAngularGridpoints'] = 20
-    vModelInput['Grid']['NumAngularGridpoints'] = 30
-
-    vModelInput['PrintDensityProgress'] = True
-    return vModelInput
-
-
 def main():
 
     quantity_support()
 
-    numModelProductions = 2
-    numDissocLifetimes = 3
+    numModelProductions = 50
+    numDissocLifetimes = 20
 
     # Aperture to use
-    ap = sba.RectangularAperture((40000.0, 40000.0) * u.km)
+    square_ap_size = 2000000.0
+    ap = sba.RectangularAperture((square_ap_size, square_ap_size) * u.km)
 
     # Ratio of total and dissociative lifetimes, Cochran 1993
     totalToDissoc = 0.93
@@ -72,18 +30,16 @@ def main():
     # Set of water dissociative lifetimes to input into the model
     waterDisLifetimes = np.linspace(acceptedLifetime/2, acceptedLifetime*2, num=numDissocLifetimes, endpoint=True)
 
-    # Assuming this constant count in an aperture
-    countInAperture = 1e29
+    # Assuming this constant count of OH in an aperture
+    countInAperture = 1e32
 
     # Constant production for 50 days is enough to reach steady state
     daysOfSteadyProduction = 50
     times_at_production = [daysOfSteadyProduction] * u.day
 
     # Initial 'guess' productions to run the model to scale up or down based on the model results
-    # productions = np.logspace(25, 30, num=numModelProductions, endpoint=True)
-    productions = np.logspace(27, 30, num=numModelProductions, endpoint=True)
+    productions = np.logspace(26, 30, num=numModelProductions, endpoint=True)
 
-    # Parent and fragment
     parent = Phys.from_dict({
         'tau_T': 86430 * u.s,
         'tau_d': 101730 * u.s,
@@ -110,17 +66,37 @@ def main():
             parent['tau_T'][0] = h2olifetime * totalToDissoc
 
             print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {q}:")
-            coma = sba.VectorialModel(Q=production_rates*(1/u.s), dt=times_at_production, parent=parent, fragment=fragment,
-                                      print_progress=True)
+            coma = sba.VectorialModel(Q=production_rates*(1/u.s), dt=times_at_production,
+                                      parent=parent, fragment=fragment, print_progress=True)
+            print("")
 
             # Count the number of fragments in the aperture
-            tNum = coma.total_number(ap)
-            # print(f"In aperture: {tNum:5.2e}")
+            ap_count = coma.total_number(ap)
 
             # Scale up the production to produce the desired number of counts in aperture
-            calculatedQ = (countInAperture/tNum) * production_rates[0]
+            calculatedQ = (countInAperture/ap_count)*production_rates[0]
             resultsArray.append([q, h2olifetime.to(u.s).value, calculatedQ])
-            print(f"\nCalculated production: {calculatedQ}")
+            print(f"Calculated production: {calculatedQ}")
+
+            fragTheory = coma.vModel['NumFragmentsTheory']
+            fragGrid = coma.vModel['NumFragmentsFromGrid']
+            print(f"Fragment percentage captured: {(fragGrid/fragTheory):3.5f}")
+
+            # Check if this result holds by taking the calculated production and running another model with it;
+            #  the result in the aperture should be countInAperture or very close
+            production_rates = [calculatedQ]
+
+            # print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {calculatedQ}:")
+            # comaCheck = sba.VectorialModel(Q=production_rates*(1/u.s), dt=times_at_production,
+            #                                parent=parent, fragment=fragment, print_progress=True)
+            # print("")
+
+            # # Count the number of fragments in the aperture
+            # ap_count_check = comaCheck.total_number(ap)
+
+            # # Does this give the right number in the aperture?
+            # print(f"Number in aperture at this production: {ap_count_check:3.5e}\t\tRecovered percent: {(100*ap_count_check/countInAperture):1.7f}%")
+            # print("---------")
 
         aggregateResults.append(resultsArray)
 
@@ -130,7 +106,6 @@ def main():
     # Save the run data as numpy binary data because plaintext saving only works for 2d or 1d arrays
     with open('output.npdata', 'wb') as outfile:
         np.save(outfile, agArray)
-    print("Saved numpy data.")
 
     # Include details of the calculation
     with open('parameters.txt', 'w') as paramfile:
