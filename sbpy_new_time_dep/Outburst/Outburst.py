@@ -4,7 +4,6 @@ import sys
 # import copy
 
 import numpy as np
-# import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.visualization import quantity_support
 import sbpy.activity as sba
@@ -16,11 +15,85 @@ __author__ = 'Shawn Oset'
 __version__ = '0.0'
 
 
+class OutburstFactory:
+
+    def __init__(self, type):
+        self.supported_types = {'square pulse', 'gaussian', 'sine wave'}
+        self.type = type
+
+    def create_outburst(self, **kwargs):
+        if self.type == "square pulse":
+            allowed_keys = {'amplitude', 't_start', 'duration'}
+            self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
+            return self.make_square_pulse_q_t()
+        elif self.type == "gaussian":
+            allowed_keys = {'amplitude', 't_max', 'std_dev'}
+            self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
+            return self.make_gaussian_q_t()
+        elif self.type == "sine wave":
+            allowed_keys = {'amplitude', 't_start', 'tend'}
+            self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
+            return self.make_sine_q_t()
+        else:
+            return None
+
+    def make_square_pulse_q_t(self):
+        tstart_in_secs = self.tstart.to(u.s).value
+        tend_in_secs = (self.tstart - self.duration).to(u.s).value
+        amplitude_in_invsecs = self.amplitude.to(1/(u.s)).value
+
+        def q_t(t):
+            # Comparisons seem backward because of our weird time system
+            if t < tstart_in_secs and t > tend_in_secs:
+                return amplitude_in_invsecs
+            else:
+                return 0
+
+        return q_t
+
+    def make_gaussian_q_t(self):
+        t_max_in_secs = self.t_max.to(u.s).value
+        std_dev_in_secs = self.std_dev.to(u.s).value
+        amplitude_in_invsecs = self.amplitude.to(1/(u.s)).value
+
+        def q_t(t):
+            return amplitude_in_invsecs * np.e**-(((t - t_max_in_secs)**2)/(2*std_dev_in_secs**2))
+
+        return q_t
+
+
+# def make_square_pulse_q_t(amplitude, tstart, tend):
+#     tstart_in_secs = tstart.to(u.s).value
+#     tend_in_secs = tend.to(u.s).value
+
+#     def q_t(t):
+#         # Comparisons seem backward because of our weird time system
+#         if t < tstart_in_secs and t > tend_in_secs:
+#             return amplitude
+#         else:
+#             return 0
+
+#     return q_t
+
+
+# def make_gaussian_q_t(amplitude, tmax, std_dev):
+#     tmax_in_secs = tmax.to(u.s).value
+#     std_dev_in_secs = std_dev.to(u.s).value
+
+#     def q_t(t):
+#         return amplitude * np.e**-(((t - tmax_in_secs)**2)/(2*std_dev_in_secs**2))
+
+#     return q_t
+
+
 def make_sine_q_t(amplitude, period, delta):
     period_in_secs = period.to(u.s).value
+    delta_in_secs = delta.to(u.s).value
 
     def q_t(t):
-        return 0.5 * amplitude * (np.sin((2 * np.pi * t)/period_in_secs + delta) + 1)
+        return 0.5 * amplitude * (
+                np.sin((2 * np.pi * t)/period_in_secs + delta_in_secs) + 1
+                )
 
     return q_t
 
@@ -51,30 +124,73 @@ def main():
     # Baseline production
     base_q = 1e28
 
-    # amplitude of outburst
-    outburst_amplitude = 1e28
-    # peak-to-peak period of outburst
-    outburst_period = 20 * u.hour
+    # Dictionary to hold outburst data
+    outburst = {}
+    outburster = OutburstFactory("gaussian")
 
-    # Make images until this amount of time goes by, at this time step
-    day_end = 10
-    day_step = 0.2
+    if outburster.type == "gaussian":
+        # amplitude of outburst
+        outburst['amplitude'] = 2e28
+        # standard deviation of gaussian
+        outburst['std_dev'] = 3 * u.hour
+    elif outburster.type == "sine wave":
+        # amplitude of outburst
+        outburst['amplitude'] = 2e28
+        # peak-to-peak period of outburst
+        outburst['period'] = 20 * u.hour
+    elif outburster.type == "square pulse":
+        # amplitude of outburst
+        outburst['amplitude'] = 2e28
+        # starts at t = tstart
+        outburst['duration'] = 2.0 * u.day
+    else:
+        print("Unsupported outburst type! Exiting.")
+        return
+
+    # Run model until this amount of time goes by, at this time step
+    day_end = 5
+    day_step = 0.5
 
     # Which outputs?
-    radialDensityPlots = False
+    radialDensityPlots = True
     coldens2DPlots = True
     coldens3DPlots = True
 
     for days_since_start in np.arange(0, day_end, step=day_step):
 
-        q_t = make_sine_q_t(outburst_amplitude, outburst_period,
-                            delta=(days_since_start*u.day).to(u.s).value)
-        # debug_times_hour = np.arange((day_end*u.day).to(u.hour).value, step=1)
-        # debug_times_seconds = np.array(list(map(lambda x:
-        #                                (x*u.hour).to(u.s).value,
-        #                                debug_times_hour)))
-        # debug_prods = q_t(debug_times_seconds)
-        # print(np.c_[debug_times_hour, debug_prods])
+        # # Gaussian
+        # # --------
+        # q_t = make_gaussian_q_t(outburst_amplitude,
+        #                         tmax*u.day,
+        #                         outburst_std_dev)
+
+        # Sine Wave
+        # ---------
+        # q_t = make_sine_q_t(outburst_amplitude, outburst_period,
+        #                     delta=days_since_start*u.day)
+
+        # q_t = make_square_pulse_q_t(outburst_amplitude, tstart*u.day, tend*u.day)
+
+        if outburster.type == "gaussian":
+            t_max = days_since_start - (day_end/2)
+            q_t = outburster.create_outburst(
+                                             amplitude=outburst['amplitude']*(1/u.s),
+                                             t_max=t_max*u.day,
+                                             std_dev=outburst['std_dev']
+                                             )
+        elif outburster.type == "sine wave":
+            q_t = outburster.create_outburst(
+                                             amplitude=outburst['amplitude']*(1/u.s),
+                                             period=outburst['period'],
+                                             delta=days_since_start*u.day
+                                             )
+        elif outburster.type == "square pulse":
+            tstart = days_since_start - (day_end/2) + (outburst['duration'].value/2)
+            q_t = outburster.create_outburst(
+                                             amplitude=outburst['amplitude']*(1/u.s),
+                                             tstart=tstart*u.day,
+                                             duration=outburst['duration']
+                                             )
 
         print(f"Calculating for t = {days_since_start:05.2f} days:")
         coma = sba.VectorialModel(baseQ=base_q*(1/u.s), Qt=q_t,
@@ -110,10 +226,12 @@ def main():
         print("---------------------------------------")
         print("")
 
-    # generate the gifs with
-    # convert -delay 25 -loop 0 -layers OptimizePlus *rdens.png outburst_rdens.gif
-    # convert -delay 25 -loop 0 -layers OptimizePlus *coldens2D.png outburst_coldens2D.gif
-    # convert -delay 25 -loop 0 -layers OptimizePlus *coldens3D_view1.png outburst_coldens3D_view1.gif
+        # debug_times_hour = np.arange((day_end*u.day).to(u.hour).value, step=1)
+        # debug_times_seconds = np.array(list(map(lambda x:
+        #                                (x*u.hour).to(u.s).value,
+        #                                debug_times_hour)))
+        # debug_prods = q_t(debug_times_seconds)
+        # print(np.c_[debug_times_hour, debug_prods])
 
 
 if __name__ == '__main__':
