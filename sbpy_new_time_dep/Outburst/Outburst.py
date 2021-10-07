@@ -38,13 +38,13 @@ class OutburstFactory:
             return None
 
     def make_square_pulse_q_t(self):
-        tstart_in_secs = self.tstart.to(u.s).value
-        tend_in_secs = (self.tstart - self.duration).to(u.s).value
+        t_start_in_secs = self.t_start.to(u.s).value
+        tend_in_secs = (self.t_start - self.duration).to(u.s).value
         amplitude_in_invsecs = self.amplitude.to(1/(u.s)).value
 
         def q_t(t):
             # Comparisons seem backward because of our weird time system
-            if t < tstart_in_secs and t > tend_in_secs:
+            if t < t_start_in_secs and t > tend_in_secs:
                 return amplitude_in_invsecs
             else:
                 return 0
@@ -63,12 +63,12 @@ class OutburstFactory:
 
 
 # def make_square_pulse_q_t(amplitude, tstart, tend):
-#     tstart_in_secs = tstart.to(u.s).value
+#     t_start_in_secs = tstart.to(u.s).value
 #     tend_in_secs = tend.to(u.s).value
 
 #     def q_t(t):
 #         # Comparisons seem backward because of our weird time system
-#         if t < tstart_in_secs and t > tend_in_secs:
+#         if t < t_start_in_secs and t > tend_in_secs:
 #             return amplitude
 #         else:
 #             return 0
@@ -89,10 +89,11 @@ class OutburstFactory:
 def make_sine_q_t(amplitude, period, delta):
     period_in_secs = period.to(u.s).value
     delta_in_secs = delta.to(u.s).value
+    const_B = (2.0 * np.pi)/period_in_secs
 
     def q_t(t):
-        return 0.5 * amplitude * (
-                np.sin((2 * np.pi * t)/period_in_secs + delta_in_secs) + 1
+        return amplitude * (
+                np.sin(const_B*(t + delta_in_secs)) + 1
                 )
 
     return q_t
@@ -113,12 +114,12 @@ def main():
     parent = Phys.from_dict({
         'tau_T': water_photo_lifetime * total_to_photo_ratio,
         'tau_d': water_photo_lifetime,
-        'v': 1 * u.km/u.s,
+        'v_outflow': 1 * u.km/u.s,
         'sigma': 3e-16 * u.cm**2
         })
     fragment = Phys.from_dict({
         'tau_T': sba.photo_timescale('OH') * 0.93,
-        'v': 1.05 * u.km/u.s
+        'v_photo': 1.05 * u.km/u.s
         })
 
     # Baseline production
@@ -126,7 +127,7 @@ def main():
 
     # Dictionary to hold outburst data
     outburst = {}
-    outburster = OutburstFactory("gaussian")
+    outburster = OutburstFactory("square pulse")
 
     if outburster.type == "gaussian":
         # amplitude of outburst
@@ -140,21 +141,22 @@ def main():
         outburst['period'] = 20 * u.hour
     elif outburster.type == "square pulse":
         # amplitude of outburst
-        outburst['amplitude'] = 2e28
+        # outburst['amplitude'] = 2e28
+        outburst['amplitude'] = 9e28
         # starts at t = tstart
-        outburst['duration'] = 2.0 * u.day
+        outburst['duration'] = 1.0 * u.day
     else:
         print("Unsupported outburst type! Exiting.")
         return
 
     # Run model until this amount of time goes by, at this time step
-    day_end = 5
+    day_end = 10
     day_step = 0.5
 
     # Which outputs?
-    radialDensityPlots = True
+    radialDensityPlots = False
     coldens2DPlots = True
-    coldens3DPlots = True
+    coldens3DPlots = False
 
     for days_since_start in np.arange(0, day_end, step=day_step):
 
@@ -185,16 +187,19 @@ def main():
                                              delta=days_since_start*u.day
                                              )
         elif outburster.type == "square pulse":
-            tstart = days_since_start - (day_end/2) + (outburst['duration'].value/2)
+            t_start = days_since_start - (day_end/2) + (outburst['duration'].value/2)
             q_t = outburster.create_outburst(
                                              amplitude=outburst['amplitude']*(1/u.s),
-                                             tstart=tstart*u.day,
+                                             t_start=t_start*u.day,
                                              duration=outburst['duration']
                                              )
 
         print(f"Calculating for t = {days_since_start:05.2f} days:")
-        coma = sba.VectorialModel(baseQ=base_q*(1/u.s), Qt=q_t,
-                                  parent=parent, fragment=fragment, print_progress=True)
+        coma = sba.VectorialModel(base_q=base_q*(1/u.s),
+                                  parent=parent,
+                                  fragment=fragment,
+                                  q_t=q_t,
+                                  print_progress=True)
         print("")
 
         plotbasename = f"{days_since_start:05.2f}_days"
@@ -202,27 +207,27 @@ def main():
 
         # Do the requested plots
         if radialDensityPlots:
-            vmplot.generateRadialPlots(coma, u.km, 1/u.cm**3, fragName,
-                                       plotbasename+'_rdens.png',
-                                       days_since_start)
+            vmplot.outburst_radial_density_plot(coma, u.km, 1/u.cm**3, fragName,
+                                                plotbasename+'_rdens.png',
+                                                days_since_start)
 
         if coldens2DPlots:
-            vmplot.generateColumnDensityPlot(coma, u.km, 1/u.cm**3, fragName,
-                                             plotbasename+'_coldens2D.png',
-                                             days_since_start)
+            vmplot.outburst_column_density_plot(coma, u.km, 1/u.cm**3, fragName,
+                                                plotbasename+'_coldens2D.png',
+                                                days_since_start)
 
         if coldens3DPlots:
-            vmplot.generateColumnDensity3D(coma, -100000*u.km, 100000*u.km,
-                                           -100000*u.km, 100000*u.km, 1000,
-                                           1000, u.km, 1/u.cm**2, fragName,
-                                           plotbasename+'_coldens3D_view1.png',
-                                           days_since_start)
+            vmplot.outburst_column_density_plot_3d(coma, -100000*u.km, 100000*u.km,
+                                                   -100000*u.km, 100000*u.km, 1000,
+                                                   1000, u.km, 1/u.cm**2, fragName,
+                                                   plotbasename+'_coldens3D_view1.png',
+                                                   days_since_start)
 
-            vmplot.generateColumnDensity3D(coma, -100000*u.km, 10000*u.km,
-                                           -100000*u.km, 10000*u.km, 1000, 100,
-                                           u.km, 1/u.cm**2, fragName,
-                                           plotbasename+'_coldens3D_view2.png',
-                                           days_since_start)
+            vmplot.outburst_column_density_plot_3d(coma, -100000*u.km, 10000*u.km,
+                                                   -100000*u.km, 10000*u.km, 1000, 100,
+                                                   u.km, 1/u.cm**2, fragName,
+                                                   plotbasename+'_coldens3D_view2.png',
+                                                   days_since_start)
         print("---------------------------------------")
         print("")
 

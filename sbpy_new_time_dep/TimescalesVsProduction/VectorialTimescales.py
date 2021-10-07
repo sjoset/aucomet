@@ -29,8 +29,8 @@ def main():
 
     quantity_support()
 
-    numModelProductions = 50
-    numDissocLifetimes = 20
+    numModelProductions = 3
+    numDissocLifetimes = 5
 
     # Aperture to use
     square_ap_size = 1.0e5
@@ -47,17 +47,17 @@ def main():
     countInAperture = 1e32
 
     # Initial 'guess' productions to run the model to scale up or down based on the model results
-    productions = np.logspace(25, 30, num=numModelProductions, endpoint=True)
+    productions = np.logspace(27, 29, num=numModelProductions, endpoint=True)
 
     parent = Phys.from_dict({
         'tau_T': 86430 * u.s,
         'tau_d': 101730 * u.s,
-        'v': 1 * u.km/u.s,
+        'v_outflow': 1 * u.km/u.s,
         'sigma': 3e-16 * u.cm**2
         })
     fragment = Phys.from_dict({
         'tau_T': sba.photo_timescale('OH') * 0.93,
-        'v': 1.05 * u.km/u.s
+        'v_photo': 1.05 * u.km/u.s
         })
 
     aggregateResults = []
@@ -73,7 +73,7 @@ def main():
             parent['tau_T'][0] = h2olifetime * totalToDissoc
 
             print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {q}:")
-            coma = sba.VectorialModel(baseQ=q*(1/u.s), Qt=q_t,
+            coma = sba.VectorialModel(base_q=q*(1/u.s),
                                       parent=parent, fragment=fragment, print_progress=True)
             print("")
 
@@ -85,24 +85,24 @@ def main():
             resultsArray.append([q, h2olifetime.to(u.s).value, calculatedQ])
             print(f"Calculated production: {calculatedQ}")
 
-            fragTheory = coma.vModel['NumFragmentsTheory']
-            fragGrid = coma.vModel['NumFragmentsFromGrid']
+            fragTheory = coma.vmodel['num_fragments_theory']
+            fragGrid = coma.vmodel['num_fragments_grid']
             print(f"Grid: {fragGrid}, Theory: {fragTheory}")
             print(f"Fragment percentage captured: {(fragGrid*100/fragTheory):3.5f}%")
 
-            # # Check if this result holds by taking the calculated production and running another model with it;
-            # #  the result in the aperture should be countInAperture or very close
+            # Check if this result holds by taking the calculated production and running another model with it;
+            #  the result in the aperture should be countInAperture or very close
 
-            # print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {calculatedQ}:")
-            # comaCheck = sba.VectorialModel(baseQ=calculatedQ*(1/u.s), Qt=q_t,
-            #                                parent=parent, fragment=fragment, print_progress=True)
-            # print("")
+            print(f"Calculating for water lifetime of {h2olifetime:05.2f} and production {calculatedQ}:")
+            comaCheck = sba.VectorialModel(base_q=calculatedQ*(1/u.s),
+                                           parent=parent, fragment=fragment, print_progress=True)
+            print("")
 
-            # # Count the number of fragments in the aperture
-            # ap_count_check = comaCheck.total_number(ap)
+            # Count the number of fragments in the aperture
+            ap_count_check = comaCheck.total_number(ap)
 
-            # # Does this give the right number in the aperture?
-            # print(f"Number in aperture at this production: {ap_count_check:3.5e}\t\tRecovered percent: {(100*ap_count_check/countInAperture):1.7f}%")
+            # Does this give the right number in the aperture?
+            print(f"Number in aperture at this production: {ap_count_check:3.5e}\t\tRecovered percent: {(100*ap_count_check/countInAperture):1.7f}%")
 
             print("---------")
 

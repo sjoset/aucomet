@@ -1,0 +1,2 @@
+Assuming a fixed count in aperture of 1.00e+32 in Rectangular aperture, dimensions 100000.0×100000.0 km
+Total to dissociative lifetime ratio: 0.93
