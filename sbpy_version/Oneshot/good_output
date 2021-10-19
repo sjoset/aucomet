@@ -1,0 +1,117 @@
+Loading input from parameters.yaml ...
+Calculating fragment density using vectorial model ...
+No valid time dependence specified, assuming steadyproduction of 1e+30 1 / s.
+Computing: 3.3 %Computing: 6.7 %Computing: 10.0 %Computing: 13.3 %Computing: 16.7 %Computing: 20.0 %Computing: 23.3 %Computing: 26.7 %Computing: 30.0 %Computing: 33.3 %Computing: 36.7 %Computing: 40.0 %Computing: 43.3 %Computing: 46.7 %Computing: 50.0 %Computing: 53.3 %Computing: 56.7 %Computing: 60.0 %Computing: 63.3 %Computing: 66.7 %Computing: 70.0 %Computing: 73.3 %Computing: 76.7 %Computing: 80.0 %Computing: 83.3 %Computing: 86.7 %Computing: 90.0 %Computing: 93.3 %Computing: 96.7 %Computing: 100.0 %
+
+Radius (km) vs Fragment density (1/cm3)
+---------------------------------------
+   17647.1 km : 48871.6581 1 / cm3
+   19072.4 km : 43936.6357 1 / cm3
+   20613.0 km : 39430.4273 1 / cm3
+   22277.9 km : 35320.2266 1 / cm3
+   24077.3 km : 31575.6193 1 / cm3
+   26022.1 km : 28168.3965 1 / cm3
+   28124.0 km : 25072.3998 1 / cm3
+   30395.6 km : 22263.3589 1 / cm3
+   32850.7 km : 19718.7552 1 / cm3
+   35504.1 km : 17417.6885 1 / cm3
+   38371.9 km : 15340.7572 1 / cm3
+   41471.2 km : 13469.9443 1 / cm3
+   44821.0 km : 11788.5127 1 / cm3
+   48441.2 km : 10280.9089 1 / cm3
+   52353.9 km : 8932.6752 1 / cm3
+   56582.6 km : 7730.3661 1 / cm3
+   61152.9 km : 6661.4721 1 / cm3
+   66092.4 km : 5714.3509 1 / cm3
+   71430.8 km : 4878.1619 1 / cm3
+   77200.4 km : 4142.8099 1 / cm3
+   83436.0 km : 3498.8906 1 / cm3
+   90175.3 km : 2937.6420 1 / cm3
+   97458.9 km : 2450.9064 1 / cm3
+  105330.9 km : 2031.0870 1 / cm3
+  113838.7 km : 1671.1185 1 / cm3
+  123033.6 km : 1364.4372 1 / cm3
+  132971.3 km : 1104.9580 1 / cm3
+  143711.6 km : 887.0536 1 / cm3
+  155319.5 km : 705.5336 1 / cm3
+  167865.0 km : 555.6339 1 / cm3
+  181423.8 km : 433.0005 1 / cm3
+  196077.7 km : 333.6786 1 / cm3
+  211915.3 km : 254.1020 1 / cm3
+  229032.1 km : 191.0797 1 / cm3
+  247531.5 km : 141.7815 1 / cm3
+  267525.0 km : 103.7255 1 / cm3
+  289133.6 km :  74.7568 1 / cm3
+  312487.4 km :  53.0202 1 / cm3
+  337727.7 km :  36.6792 1 / cm3
+  365006.6 km :  23.7393 1 / cm3
+  394488.9 km :  15.4407 1 / cm3
+  426352.5 km :   9.9962 1 / cm3
+  460789.8 km :   6.3792 1 / cm3
+  498008.7 km :   4.0419 1 / cm3
+  538233.8 km :   2.4793 1 / cm3
+  581708.0 km :   1.4887 1 / cm3
+  628693.7 km :   0.8808 1 / cm3
+  679474.5 km :   0.5092 1 / cm3
+  734357.0 km :   0.2857 1 / cm3
+  793672.4 km :   0.1545 1 / cm3
+
+Radius (km) vs Column density (1/cm2)
+-------------------------------------
+  17647 km :	3.218e+14 1 / cm2
+  19072 km :	3.049e+14 1 / cm2
+  20613 km :	2.884e+14 1 / cm2
+  22278 km :	2.723e+14 1 / cm2
+  24077 km :	2.564e+14 1 / cm2
+  26022 km :	2.409e+14 1 / cm2
+  28124 km :	2.258e+14 1 / cm2
+  30396 km :	2.111e+14 1 / cm2
+  32851 km :	1.968e+14 1 / cm2
+  35504 km :	1.829e+14 1 / cm2
+  38372 km :	1.695e+14 1 / cm2
+  41471 km :	1.566e+14 1 / cm2
+  44821 km :	1.441e+14 1 / cm2
+  48441 km :	1.321e+14 1 / cm2
+  52354 km :	1.207e+14 1 / cm2
+  56583 km :	1.098e+14 1 / cm2
+  61153 km :	9.939e+13 1 / cm2
+  66092 km :	8.956e+13 1 / cm2
+  71431 km :	8.031e+13 1 / cm2
+  77200 km :	7.162e+13 1 / cm2
+  83436 km :	6.351e+13 1 / cm2
+  90175 km :	5.598e+13 1 / cm2
+  97459 km :	4.902e+13 1 / cm2
+ 105331 km :	4.263e+13 1 / cm2
+ 113839 km :	3.680e+13 1 / cm2
+ 123034 km :	3.152e+13 1 / cm2
+ 132971 km :	2.678e+13 1 / cm2
+ 143712 km :	2.255e+13 1 / cm2
+ 155320 km :	1.880e+13 1 / cm2
+ 167865 km :	1.553e+13 1 / cm2
+ 181424 km :	1.268e+13 1 / cm2
+ 196078 km :	1.024e+13 1 / cm2
+ 211915 km :	8.169e+12 1 / cm2
+ 229032 km :	6.431e+12 1 / cm2
+ 247531 km :	4.991e+12 1 / cm2
+ 267525 km :	3.814e+12 1 / cm2
+ 289134 km :	2.864e+12 1 / cm2
+ 312487 km :	2.107e+12 1 / cm2
+ 337728 km :	1.505e+12 1 / cm2
+ 365007 km :	1.041e+12 1 / cm2
+ 394489 km :	7.212e+11 1 / cm2
+ 426352 km :	4.925e+11 1 / cm2
+ 460790 km :	3.313e+11 1 / cm2
+ 498009 km :	2.186e+11 1 / cm2
+ 538234 km :	1.398e+11 1 / cm2
+ 581708 km :	8.705e+10 1 / cm2
+ 628694 km :	5.225e+10 1 / cm2
+ 679475 km :	2.937e+10 1 / cm2
+ 734357 km :	1.427e+10 1 / cm2
+ 793672 km :	0.000e+00 1 / cm2
+Theoretical total number of fragments in coma:  6.787555334337956e+34
+Total number of fragments from density grid integration:  6.625319234460269e+34
+Percent of total fragments recovered by integrating column density over
+	Large rectangular aperture:  95.35977479935299
+	Large circular aperture:  97.18738419238394
+	Annular aperture, inner radius 500000 km, outer radius of entire grid:
+	 97.18820107801284

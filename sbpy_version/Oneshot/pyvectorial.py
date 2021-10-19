@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# import copy
+import copy
 import numpy
 import os
 import sys
@@ -15,7 +15,7 @@ import sbpy.activity as sba
 from sbpy.data import Phys
 from argparse import ArgumentParser
 
-# from VMPlot import vmplot
+from VMPlot import vmplot
 
 __author__ = 'Shawn Oset, Lauren Lyons'
 __version__ = '0.0'
@@ -40,58 +40,58 @@ def read_parameters_from_file(filepath):
     return paramYAMLData
 
 
-def show_radial_plots(coma, r_units, volUnits, frag_name):
-    """ Show the radial density of the fragment species """
+# def show_radial_plots(coma, r_units, volUnits, frag_name):
+#     """ Show the radial density of the fragment species """
 
-    x_min_logplot = 2
-    x_max_logplot = 8
+#     x_min_logplot = 2
+#     x_max_logplot = 8
 
-    x_min_linear = (0 * u.km).to(u.m)
-    x_max_linear = (2000 * u.km).to(u.m)
+#     x_min_linear = (0 * u.km).to(u.m)
+#     x_max_linear = (2000 * u.km).to(u.m)
 
-    lin_interp_x = np.linspace(x_min_linear.value, x_max_linear.value, num=200)
-    lin_interp_y = coma.vmodel['r_dens_interpolation'](lin_interp_x)/(u.m**3)
-    lin_interp_x *= u.m
-    lin_interp_x.to(r_units)
+#     lin_interp_x = np.linspace(x_min_linear.value, x_max_linear.value, num=200)
+#     lin_interp_y = coma.vmodel['r_dens_interpolation'](lin_interp_x)/(u.m**3)
+#     lin_interp_x *= u.m
+#     lin_interp_x.to(r_units)
 
-    log_interp_x = np.logspace(x_min_logplot, x_max_logplot, num=200)
-    log_interp_y = coma.vmodel['r_dens_interpolation'](log_interp_x)/(u.m**3)
-    log_interp_x *= u.m
-    log_interp_x.to(r_units)
+#     log_interp_x = np.logspace(x_min_logplot, x_max_logplot, num=200)
+#     log_interp_y = coma.vmodel['r_dens_interpolation'](log_interp_x)/(u.m**3)
+#     log_interp_x *= u.m
+#     log_interp_x.to(r_units)
 
-    plt.style.use('Solarize_Light2')
+#     plt.style.use('Solarize_Light2')
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+#     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 
-    ax1.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
-    ax1.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
-    ax2.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
-    ax2.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
-    fig.suptitle(f"Calculated radial density of {frag_name}")
+#     ax1.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
+#     ax1.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
+#     ax2.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
+#     ax2.set(ylabel=f"Fragment density, {volUnits.unit.to_string()}")
+#     fig.suptitle(f"Calculated radial density of {frag_name}")
 
-    ax1.set_xlim([x_min_linear, x_max_linear])
-    ax1.plot(lin_interp_x, lin_interp_y, color="red",  linewidth=1.5, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vmodel['radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'bo', label="model")
-    ax1.plot(coma.vmodel['radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'g--', label="linear interpolation")
+#     ax1.set_xlim([x_min_linear, x_max_linear])
+#     ax1.plot(lin_interp_x, lin_interp_y, color="red",  linewidth=1.5, linestyle="-", label="cubic spline")
+#     ax1.plot(coma.vmodel['radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'bo', label="model")
+#     ax1.plot(coma.vmodel['radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'g--', label="linear interpolation")
 
-    ax2.set_xscale('log')
-    ax2.set_yscale('log')
-    ax2.loglog(coma.vmodel['fast_radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'bo', label="model")
-    ax2.loglog(coma.vmodel['fast_radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'g--', label="linear interpolation")
-    ax2.loglog(log_interp_x, log_interp_y, color="red",  linewidth=1.5, linestyle="-", label="cubic spline")
+#     ax2.set_xscale('log')
+#     ax2.set_yscale('log')
+#     ax2.loglog(coma.vmodel['fast_radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'bo', label="model")
+#     ax2.loglog(coma.vmodel['fast_radial_grid'], coma.vmodel['radial_density'].to(volUnits), 'g--', label="linear interpolation")
+#     ax2.loglog(log_interp_x, log_interp_y, color="red",  linewidth=1.5, linestyle="-", label="cubic spline")
 
-    ax1.set_ylim(bottom=0)
-    ax2.set_ylim(bottom=0.1)
+#     ax1.set_ylim(bottom=0)
+#     ax2.set_ylim(bottom=0.1)
 
-    # Mark the beginning of the collision sphere
-    ax1.axvline(x=coma.vmodel['collision_sphere_radius'], color=solarblue)
-    ax2.axvline(x=coma.vmodel['collision_sphere_radius'], color=solarblue)
+#     # Mark the beginning of the collision sphere
+#     ax1.axvline(x=coma.vmodel['collision_sphere_radius'], color=solarblue)
+#     ax2.axvline(x=coma.vmodel['collision_sphere_radius'], color=solarblue)
 
-    # Mark the collision sphere
-    plt.text(coma.vmodel['collision_sphere_radius']*2, lin_interp_y[0]*2, 'Collision Sphere Edge', color=solarblue)
+#     # Mark the collision sphere
+#     plt.text(coma.vmodel['collision_sphere_radius']*2, lin_interp_y[0]*2, 'Collision Sphere Edge', color=solarblue)
 
-    plt.legend(loc='upper right', frameon=False)
-    plt.show()
+#     plt.legend(loc='upper right', frameon=False)
+#     plt.show()
 
 
 def show_column_density_plots(coma, r_units, cd_units, frag_name):
@@ -243,6 +243,26 @@ def tag_input_with_units(input_yaml):
     input_yaml['fragment']['v_photo'] *= u.km/u.s
     input_yaml['fragment']['tau_T'] *= u.s
 
+    # positional info
+    input_yaml['position']['d_heliocentric'] *= u.AU
+
+
+def transform_input(input_yaml):
+
+    tr_method = input_yaml['position']['transform_method']
+
+    if tr_method == 'cochran_schleicher_93':
+        rh = input_yaml['position']['d_heliocentric'].to(u.AU).value
+        sqrh = np.sqrt(rh)
+        print(f"Transforming parent v_outflow and tau_d using {tr_method} at heliocentric distance {rh}.")
+
+        v_old = copy.deepcopy(input_yaml['parent']['v_outflow'])
+        tau_d_old = copy.deepcopy(input_yaml['parent']['tau_d'])
+        input_yaml['parent']['v_outflow'] *= 0.85/sqrh
+        input_yaml['parent']['tau_d'] *= rh**2
+        print(f"\tParent outflow: {v_old} -> {input_yaml['parent']['v_outflow']}")
+        print(f"\tParent tau_d: {tau_d_old} -> {input_yaml['parent']['tau_d']}")
+
 
 def run_vmodel(input_yaml):
 
@@ -250,6 +270,10 @@ def run_vmodel(input_yaml):
 
     # apply proper units to the input
     tag_input_with_units(input_yaml)
+
+    # apply any transformations to the input data for heliocentric distance
+    transform_input(input_yaml)
+    print(input_yaml['parent']['tau_d'])
 
     # build parent and fragment inputs
     parent = Phys.from_dict(input_yaml['parent'])
@@ -272,7 +296,6 @@ def run_vmodel(input_yaml):
                                                         radial_points=input_yaml['grid']['radial_points'],
                                                         angular_points=input_yaml['grid']['angular_points'],
                                                         radial_substeps=input_yaml['grid']['radial_substeps'],
-                                                        angular_substeps=input_yaml['grid']['angular_substeps'],
                                                         print_progress=input_yaml['printing']['print_progress']
                                                         )
         elif t_var_type == "gaussian":
@@ -297,7 +320,6 @@ def run_vmodel(input_yaml):
                                   radial_points=input_yaml['grid']['radial_points'],
                                   angular_points=input_yaml['grid']['angular_points'],
                                   radial_substeps=input_yaml['grid']['radial_substeps'],
-                                  angular_substeps=input_yaml['grid']['angular_substeps'],
                                   print_progress=input_yaml['printing']['print_progress'])
 
     return coma
@@ -380,7 +402,8 @@ def main():
     frag_name = input_yaml['fragment']['name']
 
     if input_yaml['plotting']['show_radial_plots']:
-        show_radial_plots(coma, u.km, 1/u.cm**3, frag_name)
+        # vmplot.show_radial_plots(coma, u.km, 1/u.cm**3, frag_name)
+        vmplot.radial_density_plots(coma, r_units=u.km, voldens_units=1/u.cm**3, frag_name='OH')
 
     if input_yaml['plotting']['show_column_density_plots']:
         show_column_density_plots(coma, u.km, 1/u.cm**2, frag_name)

@@ -123,7 +123,7 @@ def main():
         })
 
     # Baseline production
-    base_q = 1e28
+    base_q = 1e27
 
     # Dictionary to hold outburst data
     outburst = {}
@@ -142,7 +142,7 @@ def main():
     elif outburster.type == "square pulse":
         # amplitude of outburst
         # outburst['amplitude'] = 2e28
-        outburst['amplitude'] = 9e28
+        outburst['amplitude'] = 5e27
         # starts at t = tstart
         outburst['duration'] = 1.0 * u.day
     else:
@@ -155,8 +155,8 @@ def main():
 
     # Which outputs?
     radialDensityPlots = False
-    coldens2DPlots = True
-    coldens3DPlots = False
+    coldens2DPlots = False
+    coldens3DPlots = True
 
     for days_since_start in np.arange(0, day_end, step=day_step):
 

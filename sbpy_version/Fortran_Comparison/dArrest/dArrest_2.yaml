@@ -1,7 +1,6 @@
 production:
     # parent production in molecules/s
-    # base_q: 3.8e+28
-    base_q: 1.e+30
+    base_q: 1.e+28
 
     # time_variation_type: "binned"
     # # rates of production, in molecules/s
@@ -20,9 +19,9 @@ parent:
     # outflow velocity of parent, km/s
     v_outflow: 0.85
     # total lifetime of parent molecule, seconds
-    tau_T: 86430
+    tau_T: 65000
     # dissociative lifetime of molecule, seconds
-    tau_d: 101730
+    tau_d: 72500
     # approximate cross section for most molecules we care about, cm^2
     sigma: 3.0e-16
 
@@ -31,28 +30,39 @@ fragment:
     # velocity of fragment, km/s
     v_photo: 1.05
     # total lifetime of fragment molecule, seconds
-    # tau_T: 129000
-    tau_T: 80000
+    tau_T: 160000
 
+# python version parameters
 grid:
-    radial_points: 50
-    angular_points: 30
-    radial_substeps: 12  # can probably leave this alone
-    angular_substeps: 7  # this one too
+    radial_points: 150
+    angular_points: 50
+    radial_substeps: 100
 
+# for python results
 printing:
     print_progress: True
+    print_time_dependence: False
+    print_radial_density: False
+    print_column_density: False
+    show_fragment_agreement_check: False
+    show_aperture_checks: False
 
-    print_time_dependence: True
-
-    print_radial_density: True
-    print_column_density: True
-
-    show_agreement_check: True
-    show_aperture_checks: True
-
+# for python results
 plotting:
     show_radial_plots: False
     show_column_density_plots: False
     show_3d_column_density_centered: False
     show_3d_column_density_off_center: False
+
+# Other info
+misc:
+    comet_name: "dArrest_2"
+    r_helio: 1.2949
+    delta: 0.7651
+    gfactor: 2.60e-4
+    transform_method: "festou_fortran"
+
+fortran_version:
+    vmodel_binary: './fvm'
+    outfile: 'fort.16'
+    infile: 'fparam.dat'
