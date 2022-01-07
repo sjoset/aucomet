@@ -1,0 +1,448 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bbm}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{calc}
+\usepackage{anyfontsize}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage[linkbordercolor={1 0 0}, colorlinks=true, urlcolor=blue, linkcolor=blue]{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{titling}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{cancel}
+\usepackage{xcolor}
+\usepackage{mathtools}
+\usepackage{background}
+\usepackage{siunitx}
+\usepackage{upgreek}
+\usepackage{etoolbox}
+\usepackage{dsfont}
+\usepackage{scalerel}
+\usepackage{chemformula}
+\usepackage{vhistory}
+
+\usepackage[pdftex,outline]{contour}
+
+\setlength{\headheight}{30pt}
+
+% background and colors
+
+% my colors
+\definecolor{myblack}{HTML}{301e2a}
+\definecolor{mybblack}{HTML}{82787f}
+
+\definecolor{myred}{HTML}{c74a77}
+\definecolor{mybred}{HTML}{dbafad}
+
+\definecolor{mygreen}{HTML}{afac7c}
+\definecolor{mybgreen}{HTML}{dbd89c}
+
+\definecolor{mypeach}{HTML}{dbb89c}
+\definecolor{mybpeach}{HTML}{e9d4c3}
+
+\definecolor{myblue}{HTML}{688894}
+\definecolor{mybblue}{HTML}{a4b7be}
+
+\definecolor{mydarkblue}{HTML}{485f67}
+\definecolor{mybdarkblue}{HTML}{7e8f94}
+
+\definecolor{mydarkred}{HTML}{772c47}
+\definecolor{mybdarkred}{HTML}{9f6b7e}
+
+\definecolor{mywhite}{HTML}{d8d7dc}
+\definecolor{mybwhite}{HTML}{e7e7ea}
+
+\definecolor{pal1}{HTML}{b52604}
+\definecolor{pal2}{HTML}{e24a07}
+\definecolor{pal3}{HTML}{ff9136}
+\definecolor{pal4}{HTML}{0c4052}
+\definecolor{pal5}{HTML}{125066}
+
+\definecolor{sunbright}{HTML}{c8a669}
+\definecolor{sun}{HTML}{ffcc33}
+% my colors
+
+% theme coloring
+\colorlet{bgleftcol}{mywhite}
+\colorlet{bgrightcol}{mywhite}
+
+\definecolor{beginboxcol}{HTML}{9c9078}
+\colorlet{resultboxcol}{beginboxcol!60}
+
+\colorlet{charcoal}{myblack}
+\colorlet{eqntagcol}{myblack}
+
+\colorlet{zetrefcol}{mygreen}
+\colorlet{documenttextcol}{myblack}
+
+% title page coloring
+
+\colorlet{coverpagetitletextcol}{mybgreen}
+\colorlet{coverpagetitletextcol2}{mygreen}
+\colorlet{coverpagesubtitletextcol}{mypeach}
+\colorlet{coverpagenamecol}{mybpeach}
+\colorlet{coverpagenamecol2}{mypeach}
+\colorlet{cometoutlinecol}{mybblue}
+\colorlet{cometoutlinecol2}{mybblue}
+
+% for equation tag bolding
+\newcommand\boldtag{\refstepcounter{equation}\tag*{\color{eqntagcol}{(\textbf{\theequation})}}}
+
+\backgroundsetup{
+    scale=1,
+    angle=0,
+    opacity=1,
+    contents={\begin{tikzpicture}[remember picture,overlay]
+            \path [left color = bgleftcol,middle color = bgleftcol!30, right color = bgrightcol] (current page.south west)rectangle (current page.north east);   % Adjust the position of the logo.
+            % Transparent background images under the text
+            % \node[opacity=0.1] {\includegraphics[scale=1]{./pumpkinbg.png}};
+            % \node[opacity=0.1] {\includegraphics[scale=1]{./batsbg.png}};
+        \end{tikzpicture}
+    }
+}
+
+% begin macros
+
+% quantum general
+\newcommand{\comm}[2]{\ensuremath{[ #1 , #2 ]}}
+\newcommand{\Lz}{\ensuremath{L_z}}
+\newcommand{\Hx}{\ensuremath{H_x}}
+\newcommand{\Hy}{\ensuremath{H_y}}
+\newcommand{\px}{\ensuremath{p_x}}
+\newcommand{\py}{\ensuremath{p_y}}
+\newcommand{\psinx}{\psi_{n_x}}
+\newcommand{\psiny}{\psi_{n_y}}
+\newcommand{\psinxny}{\psi_{n_x n_y}}
+\newcommand{\Ex}{E_{n_x}}
+\newcommand{\Ey}{E_{n_y}}
+\newcommand{\Exy}{E_{n_x n_y}}
+\newcommand{\raisex}{\ensuremath{a_{x+}}}
+\newcommand{\lowerx}{\ensuremath{a_{x-}}}
+\newcommand{\raisey}{\ensuremath{a_{y+}}}
+\newcommand{\lowery}{\ensuremath{a_{y-}}}
+\newcommand{\expect}[3]{\left\langle #1 \middle| #2 \middle| #3 \right\rangle}
+% \newcommand{\expectn}[1]{\left\langle n \middle| #1 \middle| n \right\rangle}
+\newcommand{\expectn}[1]{\expect{n}{#1}{n}}
+\newcommand{\expectnx}[1]{\expect{n_x}{#1}{n_x}}
+\newcommand{\expectny}[1]{\expect{n_y}{#1}{n_y}}
+
+% Spherical harmonics
+\DeclarePairedDelimiterX\norm[1]\lVert\rVert{\ifblank{#1}{\,\cdot\,}{#1}}
+\DeclarePairedDelimiterX\abs[1]{\lvert}{\rvert}{\ifblank{#1}{\,\cdot\,}{#1}}
+\DeclarePairedDelimiterX\innerp[2]{\langle}{\rangle}{\ifblank{#1#2}{\,\cdot\,,\cdot\,}{#1,#2}}
+\newcommand{\sharm}[3][]{\ifblank{#1}{Y_{#2 #3}}{\prescript{}{#1}Y_{#2 #3}}}
+\newcommand{\ylm}{\sharm{\ell}{m}}
+
+% for bras and kets
+\DeclarePairedDelimiter\bra{\langle}{\rvert}
+\DeclarePairedDelimiter\ket{\lvert}{\rangle}
+\DeclarePairedDelimiterX\braket[2]{\langle}{\rangle}{#1 \delimsize\vert #2}
+
+\newcommand{\freemomentum}[1]{\frac{{#1}^2}{2m}}
+\newcommand{\harmonicpot}[1]{\frac{1}{2}m \omega^2 {#1}^2}
+
+\newcommand{\Enxny}{\ensuremath{E_{n_{x}n_{y}}}}
+
+\newcommand{\xLz}{\comm{x}{\Lz}}
+\newcommand{\yLz}{\comm{y}{\Lz}}
+\newcommand{\pxLz}{\comm{\px}{\Lz}}
+\newcommand{\pyLz}{\comm{\py}{\Lz}}
+
+\newcommand{\coordRLfactor}[1]{\ensuremath{{\left( \frac{\hbar}{2 m \omega} \right)}^{#1}}}
+
+\newcommand{\newproblem}[1]{\section*{\contour{mybblack}{\textcolor{myblack}{#1}}}}
+\newcommand{\problempart}[1]{\subsection*{\contour{mybblack}{\textcolor{myblack}{#1}}}}
+
+\newcommand{\fortranfile}[1]{\textcolor{myred}{\textbf{#1}}}
+\newcommand{\fortranvar}[1]{\textcolor{myblue}{\textbf{#1}}}
+\newcommand{\varexpl}[1]{\textcolor{mybblue}{\textbf{#1}}}
+\newcommand{\mytodo}[1]{\colorbox{resultboxcol}{\textbf{#1}}}
+\newcommand{\pythonvar}[1]{\colorbox{mybblue}{\textbf{#1}}}
+\newcommand{\magicnumber}[1]{\textcolor{myred}{\textbf{#1}}}
+% end macros
+
+% page style stuff
+\pagestyle{fancyplain}
+% \lhead{Doc Title}
+% \rhead{Shawn Oset}
+
+
+
+\color{documenttextcol}
+% start the document already
+\begin{document}
+
+% title page
+% Thanks to u/ModyTex:
+% https://www.reddit.com/r/LaTeX/comments/fw9kxe/violet_cover_page_done_in_latex_check_the_first/
+\pagestyle{empty}
+
+\begin{tikzpicture}[remember picture,overlay]
+
+\fill[charcoal] (current page.south west) rectangle (current page.north east);
+
+\foreach \i in {2.5,...,30}
+% {\node[circle,draw,myblue,ultra thick,minimum size=\i cm,draw opacity=(32.5-\i)/30] at ($(current page.west)+(2.5,-5)$) {} ;}
+    % \node[circle,draw,minimum size=2.6 cm,fill=cometoutlinecol,cometoutlinecol] at ($(current page.west)+(2.5,-5)$) {};
+    \node[circle,draw,minimum size=2.5 cm,fill=myblue,myblue, path picture={
+            \node [opacity=0.5] at (path picture bounding box.center){
+                    \includegraphics[scale=0.067]{images/planet2.png}
+                };
+        }] at ($(current page.west)+(2.5,-5)$) {};
+    % \draw[cometoutlinecol2] ($(current page.west)+(2.0,-3.85)$) arc (110:-72:1.27cm);
+
+\begin{scope}[scale=0.35, transform shape]
+\foreach \i in {2.5,...,30}
+{\node[circle,draw,sun,thick,minimum size=\i cm,draw opacity=(32.5-\i)/30] at ($(current page.west)+(50,30)$) {} ;}
+    \node[circle,draw,minimum size=2.6 cm,fill=sunbright,sunbright] at ($(current page.west)+(50,30)$) {};
+    \node[circle,draw,minimum size=2.5 cm,fill=sun,sun] at ($(current page.west)+(50,30)$) {};
+\end{scope}
+
+\node[left,coverpagetitletextcol,minimum width=0.625*\paperwidth,minimum height=3cm, rounded corners] at ($(current page.north east)+(0,-9.5)$){{\fontsize{25}{30} \selectfont \bfseries Vectorial Model - Fortran Source Guide}};
+\node[left,coverpagetitletextcol2,minimum width=0.625*\paperwidth,minimum height=3cm, rounded corners] at ($(current page.north east)+(0,-10.5)$){{\fontsize{20}{30} \selectfont \bfseries vm.f by Festou}};
+\node[left,coverpagenamecol,minimum width=0.625*\paperwidth,minimum height=2cm, rounded corners] at ($(current page.north east)+(0,-14)$){{\Large \textsc{Shawn Oset}}};
+
+\end{tikzpicture}
+
+
+\newpage
+
+\newproblem{Program Flow}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\problempart{Input Parameters}
+\begin{itemize}
+    \item Read \fortranfile{fparam.dat} to seed input parameters
+    \item Read \fortranfile{stdin} to let user adjust parameters at runtime
+    \item Write our possibly adjusted set of parameters back out to \fortranfile{fparam.dat}
+\end{itemize}
+
+\problempart{Miscellaneous Calculations}
+\begin{itemize}
+    \item Calculate collision sphere radius, \fortranvar{RCOLL}
+    \item Adjust some parameters to account for changes due to heliocentric distance with factor \(\fortranvar{RHELIO}^2\): photo \& total lifetimes of the parent, and total lifetime of the fragment.
+          Adjust the excitation rate by \(\frac{1}{r^2}\)
+\end{itemize}
+
+\problempart{Call Functions}
+\begin{itemize}
+    \item SETUP() to calculate radius of the coma (``coma'' referring to extent of parent molecules only in this program), collision sphere
+    \item SDENT() to calculate how dissociation scatters fragments around the nucleus
+    \item SYM() to obtain a radial distribution of fragments based on the heavy symmetry of the problem
+    \item VERIF() to count the total number of fragments in two different ways as a sanity check
+\end{itemize}
+
+\problempart{Column Density Calculation}
+\begin{itemize}
+    \item Calculate column density at impact parameters out to a maximum of 85\% of the edge of the grid by calling SLINS
+    \item Trapeziums and Gaussian integration both used for comparison and sanity check
+    \item Column densities printed to \fortranfile{fort.16}
+\end{itemize}
+
+\problempart{Aperture Calculations}
+\begin{itemize}
+    \item Call SLIT() with three different hard-coded values for Hubble and the IUE satellites, along with one user-defined rectangular aperture to calculate average brightness
+    \item Print results of aperture calculations to \fortranfile{fort.16}
+\end{itemize}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\newproblem{fparam.dat - Input Parameters}
+\begin{itemize}
+    \item Line 1 - Name of the comet, string
+    \item Line 2 - Heliocentric and geocentric distance of the comet, separated by whitespace
+    \item Line 3 - Number of production/time steps that are valid, integer
+    \item Line 4 \(\to\) Line 23 - Production rate (float) and time in days ago it happened (float), separated by whitespace
+    \item Line 24 - Velocity of parent species molecules, float
+    \item Line 25 - Total lifetime of parent species, float
+    \item Line 26 - Dissociative lifetime of parent species, float
+    \item Line 27 - Destruction level of the parent species, float
+    \item Line 28 - Name of the fragment species molecules, string
+    \item Line 29 - Excitation rate of the fragment species, float
+    \item Line 30 - Velocity of the fragment species, in km/s, float
+    \item Line 31 - Total lifetime of the fragment species, float
+    \item Line 32 - Destruction level of the fragment species, float
+    \item Line 33 - Slit dimensions, width and length (floats), separated by whitespace
+\end{itemize}
+
+\newproblem{fort.16 - Output}
+Holds all results, including radial volume density, column density, checks, and aperture brightness.
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\newproblem{Functions}
+
+\problempart{Function SETUP}
+\begin{itemize}
+    \item Calculate various quantities to be used later by vectorial model and print them to \fortranfile{fort.16}
+    \item Convert distance and time units of some variables to match
+    \item Build a grid of angles and distances to store density contributions - hard-coded pseudo-logarithmic scale in the radii, linearly spaced angles
+\end{itemize}
+
+\problempart{Function SDENT - Volume Density Grid Calculation}
+Calculates the fragment volume density contribution due to parents flowing outward along positive z-axis, with the nucleus at the origin.
+The 2-d grid only tracks the fragment spray of one outflow axis, and we perform an integration later due to the high symmetry of the problem to add up the contribution of all outflow axes over the spherical surface \((\theta, \phi)\)
+Hard-coded to only track fragments for \magicnumber{8} lifetimes, which might limit accuracy for high productions!
+
+\begin{itemize}
+    \item Initialize density array \fortranvar{DENS(I,J)} to zeros
+    \item Calculate some variables for use inside the loops
+    \item Loop over elements of the density grid \fortranvar{DENS(I,J)}
+        \begin{itemize}
+            \item Apply conditions from vectorial model to compute some constraints
+            \item Apply vectorial model equations here to compute the density at \fortranvar{DENS(I,J)} by integrating radially along the section of the contributing axis that can contribute fragments to this point in space
+        \end{itemize}
+    \item Loop through the \fortranvar{DENS} array and fill in last element of each \fortranvar{DENS(I,\_)} manually with zero or the previous value in the array as a cutoff for the outer-radius edge of the grid
+\end{itemize}
+
+\problempart{Function SYM - Angular Integration for Radial Density}
+\begin{itemize}
+    \item The array \fortranvar{DENS(I,J)} contains how one axis sprays fragments around the nucleus
+    \item We need to integrate over the \(\theta\) dependence to get a density distribution that is only a function of \(r\).
+    \item This integration is performed here in \fortranvar{SYM} and printed out to \fortranfile{fort.16}, and the radial volume density is stored in \fortranvar{DENR(I)}.
+\end{itemize}
+
+\problempart{Function VERIF - Counting Fragment Species}
+\begin{itemize}
+    \item Computes the total number of fragments theoretically and by integrating the radial density out to \fortranvar{DIM}, the maximum radius the model tracks the fragments
+    \item The closer the ratio is to 1, the less fragments are unaccounted for by a bad grid resolution or bad integration
+\end{itemize}
+
+\problempart{Function SLINS - Column Density and Accuracy Check}
+\begin{itemize}
+    \item Computes the column density at various impact parameters with two different methods, trapeziums and Gaussian integration
+    \item Fills \fortranvar{TH(..)} with column densities
+\end{itemize}
+
+\problempart{Slit Brightness}
+Calculations of brightness through three hard-coded slits and one user-defined slit is performed based on average column density inside slits
+
+\newproblem{Variable Legend}
+\problempart{Initialization}
+Variables filled in during initialization
+\begin{itemize}
+    \item \fortranvar{COMET} - String of comet's name, 72 characters long
+    \item \fortranvar{RHL} - Comet's heliocentric distance
+    \item \fortranvar{DGO} - Comet's geocentric distance
+    \item \fortranvar{NSTEPS} - Number of different gas production rates over time
+    \item \fortranvar{QP} - Array of production rates in molecules/second
+    \item \fortranvar{TOU} - Array of times, in days ago, that rates \fortranvar{QP} were active
+    \item \fortranvar{VPAR} - Velocity of parent molecules in km/s initially but converted to cm/s when used
+    \item \fortranvar{TAUPT1} - Total lifetime of the parent molecule, in seconds
+    \item \fortranvar{TAUPD1} - Dissociative lifetime of the parent molecule, in seconds
+    \item \fortranvar{DESTP} - Destruction level of the parent, in percent
+    \item \fortranvar{RADICAL} - String of the fragment species' name, 72 characters long
+    \item \fortranvar{GEXC0} - Excitation rate of fragment species at 1 AU, in photons per molecule per second
+    \item \fortranvar{VDG} - Velocity of fragment species, in km/s initially but converted to cm/s when used
+    \item \fortranvar{TAUGT1} - Lifetime of fragment species, in seconds
+    \item \fortranvar{DESTR} - Destruction level of fragment species
+    \item \fortranvar{XW} - Slit dimensions perpendicular to sun-comet axis
+    \item \fortranvar{XL} - Slit dimensions along sun-comet axis
+    \item \fortranvar{NF} - Size of angular dimension for density grid \fortranvar{DENS}, hardcoded as \magicnumber{26}
+    \item \fortranvar{AA} - Size of radial dimension for density grid \fortranvar{DENS}, hardcoded as \magicnumber{150}
+    \item \fortranvar{SIGMA} - Approximate cross section of molecules in inverse squared cm
+    \item \fortranvar{utherm} - Thermal velocity, used in collision sphere radius calculation
+    \item \fortranvar{rcoll} - Collision radius, only reported as output and not used further
+    \item \fortranvar{RHELIO} - Comet's heliocentric distance, copy of \fortranvar{RHL}
+    \item \fortranvar{RH2} - Comet's heliocentric distance, squared
+    \item \fortranvar{TAUPT} - Total lifetime of parent molecule in seconds, adjusted to non-1 AU distances
+    \item \fortranvar{TAUPD} - Dissociative lifetime of parent molecule in seconds, adjusted to non-1 AU distances
+    \item \fortranvar{TAUGT} - Lifetime of fragment species in seconds, adjusted to non-1 AU distances
+    \item \fortranvar{GEXC} - Excitation rate \fortranvar{GEXC0}, adjusted to non-1 AU distances
+    \item \fortranvar{DELTA} - Comet's geocentric distance, copy of \fortranvar{DGO}
+\end{itemize}
+
+\problempart{Setup}
+Variables in function \fortranvar{SETUP}
+
+First, we use \textbf{chunk} to mean one of the \magicnumber{10} areas of radial space this calculation uses, with smaller separations nearer to the nucleus (higher spatial resolution).
+
+We use \textbf{gridpoints} to refer to the smaller subdivisions within each of these \magicnumber{10} \textbf{chunks}, with this program using a hardcoded \magicnumber{15} \textbf{gridpoints} for every \textbf{chunk}.
+The spacing between \textbf{gridpoints} for a given \textbf{chunk} is a multiple of \fortranvar{RES}, the "quantum" of radial distance in the grid.
+Near the nucleus in the first \textbf{chunk}, the \textbf{gridpoints} are \magicnumber{1} quantum apart, which eventually climbs to \magicnumber{60} quanta apart at the last \textbf{chunk}, which is furthest from the nucleus.
+
+
+\begin{itemize}
+    \item \fortranvar{CDIM} - Product of \(\beta\), the inverse scale length of the fragment species, and the radius \(r\) of sphere at which \fortranvar{DESTR} percent of fragment species are destroyed: \(-\log \left( 1 - \fortranvar{DESTR}/100\right)\) \mytodo{Festou eq. 16} \mytodo{Festou eq. 6}
+    \item \fortranvar{GDIM} - Product of \(\beta\), the inverse scale length of the parent species, and the radius \(r\) of sphere at which \fortranvar{DESTP} percent of fragment species are destroyed: \(-\log \left( 1 - \fortranvar{DESTP}/100\right)\) \mytodo{Festou eq. 16} \mytodo{Festou eq. 6}
+    \item \fortranvar{RCOMA} - Radius of the coma, as limited by the time since parent production started, in centimeters
+    \item \fortranvar{DIM1} - Permanent flow regime radius, in centimeters
+    \item \fortranvar{DIM2} - Outburst situation radius as calculated with initial production, in centimeters
+    \item \fortranvar{DIM} - Minimum of \fortranvar{DIM1} and \fortranvar{DIM2}, in centimeters.  Marks the outer edge or maximum radius that our \fortranvar{X} array grid will cover, used for the maximum distance to track fragments.
+    \item \fortranvar{EPSI} - Angle epsilon from \mytodo{Festou Figure 4}: maximum angle that can contribute based on velocities of fragments and parents.
+    \item \fortranvar{TPERM} - Time necessary to create a permanent flow regime
+    \item \fortranvar{TPP} - Dissociative lifetime of parent molecule in seconds, copy of \fortranvar{TAUPD1}
+    \item \fortranvar{TPPT} - Total lifetime of parent molecule in seconds, copy of \fortranvar{TAUPT1}
+    \item \fortranvar{TGG} - Lifetime of fragment species in seconds, copy of \fortranvar{TAUGT1}
+    \item \fortranvar{VVP} - Velocity of parent molecules in km/s
+    \item \fortranvar{VVD} - Velocity of fragment species in km/s
+    \item \fortranvar{RCCC} - Radius of the coma \fortranvar{RCOMA} in kilometers
+    \item \fortranvar{DDIM} - Copy of \fortranvar{DIM} but in kilometers
+    \item \fortranvar{TV} - Scale length \(\beta^{-1} = v \cdot \tau\) of parent molecule \mytodo{Festou Eq. 6}
+    \item \fortranvar{QN} - Array whose elements are \fortranvar{QP}/\fortranvar{VPAR} - production per unit distance of parent molecules, used in the radial integration part of the calculation
+    \item \fortranvar{COEFF} - Used later in density calculation, defined as the inverse of \(4 \pi\) \fortranvar{TAUPD}
+    \item \fortranvar{NBB} - Array that is ten-element hardcoded list of increasing numbers that "determine the calculations accuracy".  Each of these elements describe a \textbf{chunk} of radial space, and how much space each chunk's \magicnumber{15} \textbf{gridpoints} occupy.  It starts out small, so the radial \textbf{gridpoints} are close together, and then climb to be very far apart away from the nucleus.
+    \item \fortranvar{N2} - Sum of elements of \fortranvar{NBB}, which comes out to \magicnumber{174}.  We use this to map radial space from [\magicnumber{0}, \fortranvar{DIM}] to a grid with this many \textbf{chunks}, with each chunk further subdivided.
+    \item \fortranvar{A} - Defined as \fortranvar{AA}/Length of \fortranvar{NBB}, both hardcoded, which comes out to \magicnumber{15}
+    \item \fortranvar{L} - Copy of \fortranvar{A}, but in integer format, also \magicnumber{15}
+    \item \fortranvar{RES} - Computed as \fortranvar{DIM} / (\fortranvar{N2} \(\cdot\) \fortranvar{L}), which comes out as \fortranvar{DIM} / \magicnumber{2610} - seems to be the spatial resolution of the \textbf{gridpoints} - 1 unit of grid is this much radial distance
+    \item \fortranvar{JMAX} - Index of last element of radial arrays \fortranvar{DENS}, \fortranvar{X}, and \fortranvar{XCOORD}.  Length of \fortranvar{NBB} times \fortranvar{L}, which comes out to be \magicnumber{150}, but not guaranteed to be a copy of \fortranvar{AA} because of the integer conversion.  This set of magic numbers doesn't get rounded so they are in fact the same.
+    \item \fortranvar{DALFA} - Defined as \fortranvar{EPSI}/\fortranvar{NF} - the maximum contributing angle cut up into \fortranvar{NF} parts.
+    \item \fortranvar{DRES} - This is the "local" radial distance between grid points within any given \textbf{chunk}.
+\end{itemize}
+
+\problempart{XCOORD and X arrays}
+The distance \fortranvar{DIM} is divided into \magicnumber{10} different regions (\textbf{chunks}), of increasing spatial size, growing as you get farther from the nucleus.
+In each of these chunks, the \fortranvar{X} array is filled with \magicnumber{15} samples of this \textbf{chunk}, equally spaced along it.
+For an illustration of order-of-magnitude, for the example data we used, the spatial sampling varied from 400 km \textbf{chunks} near the nucleus to roughly 24,000 km \textbf{chunks} near the edge of \fortranvar{DIM}.
+
+The only difference between \fortranvar{X} and \fortranvar{XCOORD} is their units, in \textbf{cm} and \textbf{km} respectively.
+
+\begin{itemize}
+    \item This grid is roughly logarithmic in the radial coordinate, and linear in the angular coordinate
+    \item Functions like numpy's logspace can produce a similar radial grid
+\end{itemize}
+
+% Setup description complete, move on to SDENT
+
+\problempart{Density Calcultion, SDENT}
+Variables in function \fortranvar{SDENT}
+\begin{itemize}
+    \item \fortranvar{VDGG} - Defined as \fortranvar{VDG} squared
+    \item \fortranvar{VPARR} - Defined as \fortranvar{VPAR} squared
+    \item \fortranvar{TLIMI} - Defined as \magicnumber{8} times \fortranvar{TAUGT}, the lifetime of the fragment species, which is the maximum amount of time beyond which we assume all fragments have decayed
+    \item \fortranvar{RLIM} - Either \fortranvar{RCOMA} or cut off shorter when \fortranvar{EPSI} \(< \pi\).  The maximum radius to consider during the density grid calculations.
+    \item \fortranvar{RC1} - Defined as one third of \fortranvar{RCOMA}
+    \item \fortranvar{RC2} - Defined as two thirds of \fortranvar{RCOMA}
+    \item \fortranvar{RD} - Defined as half of \fortranvar{DIM} + \fortranvar{RCOMA}
+    \item \fortranvar{R2} - Defined as \fortranvar{RCOMA} squared
+    \item \fortranvar{ANGLE} - Current angle we are looping through, calculated based on \fortranvar{DALFA} and the current index for the angular part of the array, \fortranvar{J}
+    \item \fortranvar{DIST} - Taken directly from the \fortranvar{X} array, based on the radial index along the density grid, \fortranvar{I}
+    \item \fortranvar{XX} - Defined as \fortranvar{DIST} \(\cdot \sin\) \fortranvar{ANGLE}, x coord of our density gridpoint
+    \item \fortranvar{YY} - Defined as \fortranvar{DIST} \(\cdot \cos\) \fortranvar{ANGLE}, y coord of our density gridpoint
+    \item \fortranvar{DRLIM} - How far along the contributing axis to integrate, based on maximum fragment ejection angle
+\end{itemize}
+
+
+\vspace{1em}
+\hrule
+
+\end{document}
