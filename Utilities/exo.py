@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import time
 import sys
 import urllib
 import csv
+import datetime
 from bs4 import BeautifulSoup
 # conda install beautifulsoup4
 
@@ -10,18 +12,31 @@ from bs4 import BeautifulSoup
 # given day in Auburn, AL
 
 
-def main():
+def utc_string_to_local_string(utcstr):
+    hr, min = map(int, utcstr.split(':'))
+    hr -= 6
+    if hr < 0:
+        hr += 24
+    return f"{hr:02d}:{min:02d}"
 
-    # coords for Auburn
-    baseurl = 'http://var2.astro.cz/ETD/predictions.php?delka=-85.48&sirka=32.7'
+
+def build_url_list(num_days):
+
+    url_base = 'http://var2.astro.cz/ETD/predictions.php?JDmidnight='
+    url_end = '&delka=-85.48&sirka=32.7'
+
+    # 1721424.5 is standard conversion adjustment for julian date, an extra +1 because we want
+    # to advance to midnight tonight, which is technically tomorrow
+    jdmid_today = datetime.datetime.today().toordinal() + 1721424.5 + 1
+
+    url_list = [f"{url_base}{jdmid_today+i:7.05f}{url_end}" for i in range(num_days)]
+    return url_list
+
+
+def get_etd_targets(soup):
+
     # added to the beginning of urls for prediction images
     prediction_urlbase = 'http://var2.astro.cz/ETD/'
-    output_filename = 'exoplanet_targets.csv'
-
-    print("Downloading exoplanet data from ", baseurl, " ...")
-    page = urllib.request.urlopen(baseurl)
-    print("Done, processing ...")
-    soup = BeautifulSoup(page, features="lxml")
 
     # 2 other tables before the exoplanet table
     exoplanet_table = soup.find_all("table")[2]
@@ -52,24 +67,12 @@ def main():
     # transit start times, utc and local
     # start time is inside the second td element in the row
     target_start_utc = [x.find_all("td")[1].contents[0] for x in good_targets]
-    target_start_local = []
-    for x in target_start_utc:
-        hr, min = map(int, x.split(':'))
-        hr -= 6
-        if hr < 0:
-            hr += 24
-        target_start_local.append(f"{hr:02d}:{min:02d}")
+    target_start_local = map(utc_string_to_local_string, target_start_utc)
 
     # transit end times, utc and local
     # end time is inside the fourth td element in the row
     target_end_utc = [x.find_all("td")[3].contents[0] for x in good_targets]
-    target_end_local = []
-    for x in target_end_utc:
-        hr, min = map(int, x.split(':'))
-        hr -= 6
-        if hr < 0:
-            hr += 24
-        target_end_local.append(f"{hr:02d}:{min:02d}")
+    target_end_local = map(utc_string_to_local_string, target_end_utc)
 
     # magnitude of targets and the magnitude depth of transit
     # sixth td element of the row
@@ -79,15 +82,45 @@ def main():
 
     # build table
     target_data = list(zip(target_names, target_start_utc, target_end_utc, target_start_local, target_end_local, target_mags, target_mag_depths, target_RAdecs, target_preds))
+    # empty row padding
+    target_data.append(("", "", "", "", "", "", "", "", ""))
+    return target_data
 
-    print("Done, writing data to ", output_filename, " ...")
 
-    # write table
-    with open(output_filename, 'w') as outfile:
-        csv_out = csv.writer(outfile)
-        csv_out.writerow(['Name', 'Start UTC', 'End UTC', 'Start Local', 'End Local', 'Mag', 'Depth', 'Coords', 'Sky Image'])
-        for row in target_data:
-            csv_out.writerow(row)
+def main():
+
+    number_of_days = 5
+    output_filename = 'exoplanet_targets.csv'
+    urllist = build_url_list(number_of_days)
+
+    print(f"Downloading data for {number_of_days} days total (including today) ...")
+    print("Trying these urls:")
+    for i in urllist:
+        print(i)
+    print("")
+
+    # all exoplanet transit data for the next couple of days
+    days_from_now = 0
+    for url in urllist:
+        print("Downloading exoplanet data from ", url, " ...")
+        page = urllib.request.urlopen(url)
+
+        print("Done, processing ...")
+        soup = BeautifulSoup(page, features="lxml")
+        target_data = get_etd_targets(soup)
+
+        print("Done, appending data to ", output_filename, " ...")
+        with open(output_filename, 'a') as outfile:
+            target_data_day = datetime.datetime.today() + datetime.timedelta(days=days_from_now)
+            outfile.write(f"# {target_data_day.strftime('%Y-%m-%d')},,,,,,,,\n")
+
+            csv_out = csv.writer(outfile)
+            csv_out.writerow(['Name', 'Start UTC', 'End UTC', 'Start Local', 'End Local', 'Mag', 'Depth', 'Coords', 'Sky Image'])
+            for row in target_data:
+                csv_out.writerow(row)
+
+        days_from_now += 1
+        time.sleep(1)
 
     print("Done!")
 
