@@ -15,9 +15,9 @@ import sbpy.activity as sba
 from sbpy.data import Phys
 from argparse import ArgumentParser
 
-from VMPlot import vmplot
+from vm_plotter import vm_plotter
 
-__author__ = 'Shawn Oset, Lauren Lyons'
+__author__ = 'Shawn Oset'
 __version__ = '0.0'
 
 solarbluecol = np.array([38, 139, 220]) / 255.
@@ -402,8 +402,8 @@ def main():
     frag_name = input_yaml['fragment']['name']
 
     if input_yaml['plotting']['show_radial_plots']:
-        # vmplot.show_radial_plots(coma, u.km, 1/u.cm**3, frag_name)
-        vmplot.radial_density_plots(coma, r_units=u.km, voldens_units=1/u.cm**3, frag_name='OH')
+        # vm_plotter.show_radial_plots(coma, u.km, 1/u.cm**3, frag_name)
+        vm_plotter.radial_density_plots(coma, r_units=u.km, voldens_units=1/u.cm**3, frag_name='OH')
 
     if input_yaml['plotting']['show_column_density_plots']:
         show_column_density_plots(coma, u.km, 1/u.cm**2, frag_name)
@@ -421,4 +421,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    ys.exit(main())

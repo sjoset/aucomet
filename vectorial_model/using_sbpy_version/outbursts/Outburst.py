@@ -9,7 +9,7 @@ from astropy.visualization import quantity_support
 import sbpy.activity as sba
 from sbpy.data import Phys
 
-from VMPlot import vmplot
+from vm_plotter import vm_plotter
 
 __author__ = 'Shawn Oset'
 __version__ = '0.0'
@@ -207,23 +207,23 @@ def main():
 
         # Do the requested plots
         if radialDensityPlots:
-            vmplot.outburst_radial_density_plot(coma, u.km, 1/u.cm**3, fragName,
+            vm_plotter.outburst_radial_density_plot(coma, u.km, 1/u.cm**3, fragName,
                                                 plotbasename+'_rdens.png',
                                                 days_since_start)
 
         if coldens2DPlots:
-            vmplot.outburst_column_density_plot(coma, u.km, 1/u.cm**3, fragName,
+            vm_plotter.outburst_column_density_plot(coma, u.km, 1/u.cm**3, fragName,
                                                 plotbasename+'_coldens2D.png',
                                                 days_since_start)
 
         if coldens3DPlots:
-            vmplot.outburst_column_density_plot_3d(coma, -100000*u.km, 100000*u.km,
+            vm_plotter.outburst_column_density_plot_3d(coma, -100000*u.km, 100000*u.km,
                                                    -100000*u.km, 100000*u.km, 1000,
                                                    1000, u.km, 1/u.cm**2, fragName,
                                                    plotbasename+'_coldens3D_view1.png',
                                                    days_since_start)
 
-            vmplot.outburst_column_density_plot_3d(coma, -100000*u.km, 10000*u.km,
+            vm_plotter.outburst_column_density_plot_3d(coma, -100000*u.km, 10000*u.km,
                                                    -100000*u.km, 10000*u.km, 1000, 100,
                                                    u.km, 1/u.cm**2, fragName,
                                                    plotbasename+'_coldens3D_view2.png',
