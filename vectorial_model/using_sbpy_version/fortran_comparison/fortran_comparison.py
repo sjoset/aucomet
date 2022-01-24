@@ -22,6 +22,21 @@ __author__ = 'Shawn Oset'
 __version__ = '0.0'
 
 
+text_blue = (104, 136, 148)
+text_peach = (219, 184, 156)
+text_green = (175, 172, 124)
+text_red = (199, 74, 119)
+text_bblue = (164, 183, 190)
+text_bpeach = (233, 212, 195)
+text_bgreen = (219, 216, 156)
+text_bred = (219, 175, 173)
+
+
+def colored(color_tuple, text):
+    r, g, b = color_tuple
+    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
+
+
 def read_parameters_from_file(filepath):
     """Read the YAML file with all of the input parameters in it"""
     with open(filepath, 'r') as stream:
@@ -127,7 +142,6 @@ def run_vmodel(input_yaml):
 
     # apply any transformations to the input data for heliocentric distance
     transform_input(input_yaml)
-    print(input_yaml['parent']['tau_d'])
 
     # build parent and fragment inputs
     parent = Phys.from_dict(input_yaml['parent'])
@@ -331,7 +345,7 @@ def main():
             )  # the nargs=? specifies 0 or 1 arguments: it is optional
     args = parser.parse_args()
 
-    print(f'Loading input from {args.parameterfile[0]} ...')
+    print(colored(text_bblue, f'Loading input from {args.parameterfile[0]} ...'))
     # Read in our stuff
     input_yaml = read_parameters_from_file(args.parameterfile[0])
 

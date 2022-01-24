@@ -1,6 +1,6 @@
 production:
     # parent production in molecules/s
-    base_q: 1.e+26
+    base_q: 1.e+28
 
     # time_variation_type: "binned"
     # # rates of production, in molecules/s
