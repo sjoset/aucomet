@@ -20,6 +20,10 @@ solarwhite = (solarblackcol[0], solarblackcol[1], solarblackcol[2], 1)
 
 
 def find_cdens_inflection_points(coma):
+    """
+        Look for changes in sign of second derivative of the column density,
+        given a vectorial model coma and return a list of inflection points
+    """
 
     xs = np.linspace(0, 5e8, num=100)
     concavity = coma.vmodel['column_density_interpolation'].derivative(nu=2)

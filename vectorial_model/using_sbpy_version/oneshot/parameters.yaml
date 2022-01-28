@@ -1,7 +1,7 @@
 production:
     # parent production in molecules/s
     # base_q: 3.8e+28
-    base_q: 1.e+29
+    base_q: 1.e+27
 
     # time_variation_type: "binned"
     # # rates of production, in molecules/s
@@ -33,6 +33,12 @@ fragment:
     # total lifetime of fragment molecule, seconds
     # tau_T: 129000
     tau_T: 80000
+
+position:
+    # distance in AU
+    d_heliocentric: 1.4
+    # adjustments to apply to input data
+    transform_method: 'cochran_schleicher_93'
 
 grid:
     radial_points: 50

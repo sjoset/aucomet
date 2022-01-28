@@ -216,8 +216,10 @@ def print_binned_times(production_dict):
 
 
 def tag_input_with_units(input_yaml):
+    """
+        Takes an input dictionary and applies astropy units to relevant parameters
+    """
 
-    # apply units to data loaded from file
     input_yaml['production']['base_q'] *= (1/u.s)
 
     # handle the variation types
@@ -248,6 +250,12 @@ def tag_input_with_units(input_yaml):
 
 
 def transform_input(input_yaml):
+    """
+        Take input dictionary and adjust parameters based on things like heliocentric distance
+        and empirical relations
+
+        The particular set of transformations is controlled by transform_method in the input dictionary
+    """
 
     tr_method = input_yaml['position']['transform_method']
 
@@ -262,9 +270,14 @@ def transform_input(input_yaml):
         input_yaml['parent']['tau_d'] *= rh**2
         print(f"\tParent outflow: {v_old} -> {input_yaml['parent']['v_outflow']}")
         print(f"\tParent tau_d: {tau_d_old} -> {input_yaml['parent']['tau_d']}")
+    else:
+        print("No valid tranformation of input data specified -- input unaltered")
 
 
 def run_vmodel(input_yaml):
+    """
+        Given input dictionary read from yaml file, run vectorial model and return the coma object
+    """
 
     print("Calculating fragment density using vectorial model ...")
 
@@ -421,4 +434,4 @@ def main():
 
 
 if __name__ == '__main__':
-    ys.exit(main())
+    sys.exit(main())
