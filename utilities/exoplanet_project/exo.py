@@ -14,10 +14,19 @@ from bs4 import BeautifulSoup
 
 def utc_string_to_local_string(utcstr):
     hr, min = map(int, utcstr.split(':'))
-    hr -= 6
+    hr += -6
     if hr < 0:
         hr += 24
     return f"{hr:02d}:{min:02d}"
+
+
+# Auburn's GMT offset is -6, function untested for other zones
+# def utc_string_to_local_string(utcstr, gmtoffset):
+#     hr, min = map(int, utcstr.split(':'))
+#     hr += gmtoffset
+#     if hr < 0:
+#         hr += 24
+#     return f"{hr:02d}:{min:02d}"
 
 
 def build_url_list(num_days):
@@ -67,6 +76,7 @@ def get_etd_targets(soup):
     # transit start times, utc and local
     # start time is inside the second td element in the row
     target_start_utc = [x.find_all("td")[1].contents[0] for x in good_targets]
+    print(f"Converting {target_start_utc} ...")
     target_start_local = map(utc_string_to_local_string, target_start_utc)
 
     # transit end times, utc and local

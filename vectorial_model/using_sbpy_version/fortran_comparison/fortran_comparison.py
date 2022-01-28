@@ -318,14 +318,15 @@ def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points,
 
     if out_file is not None:
         with open(out_file, 'w') as f:
-            print("\nvolume density at fortran gridpoints, py/fort", file=f)
-            print(v_ratios, file=f)
-            print(f"Average: {np.average(v_ratios)}\t\tMax:\
-                    {np.amax(v_ratios)}\t\tMin: {np.amin(v_ratios)}", file=f)
-            print("\ncolumn density at fortran gridpoints, py/fort", file=f)
-            print(c_ratios, file=f)
-            print(f"Average: {np.average(c_ratios)}\t\tMax:\
-                    {np.amax(c_ratios)}\t\tMin: {np.amin(c_ratios)}", file=f)
+            with redirect_stdout(f):
+                print("\nvolume density at fortran gridpoints, py/fort")
+                print(v_ratios)
+                print(f"Average: {np.average(v_ratios)}\t\tMax:\
+                        {np.amax(v_ratios)}\t\tMin: {np.amin(v_ratios)}")
+                print("\ncolumn density at fortran gridpoints, py/fort")
+                print(c_ratios)
+                print(f"Average: {np.average(c_ratios)}\t\tMax:\
+                    {np.amax(c_ratios)}\t\tMin: {np.amin(c_ratios)}")
 
 
 def main():
