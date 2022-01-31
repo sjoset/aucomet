@@ -71,10 +71,10 @@ grid:
 printing:
     print_progress: True
 
-    print_binned_times: True
+    print_binned_times: False
 
-    print_radial_density: True
-    print_column_density: True
+    print_radial_density: False
+    print_column_density: False
 
     show_agreement_check: True
     show_aperture_checks: True

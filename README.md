@@ -5,15 +5,17 @@ Repository for various comet and space science related work
 ## Environment Setup for dev version of sbpy
 
 ### Create conda environment
-    conda create -n sbpy_dev
-    conda activate sbpy_dev
+    conda create -n sbpydev
+    conda activate sbpydev
 
 ### install astropy as per the docs, which at the time of writing was
     conda install astropy
-    conda install -c astropy -c defaults scipy h5py beautifulsoup4 html5lib bleach pyyaml pandas sortedcontainers pytz matplotlib setuptools mpmath bottleneck jplephem asdf
+    conda install -c astropy -c defaults scipy matplotlib h5py beautifulsoup4 html5lib bleach pandas sortedcontainers pytz setuptools mpmath bottleneck jplephem asdf pyarrow
+
+To run tests we also need
     pip3 install pytest-astropy sphinx-astropy
 
-### install astropy by cloning the git repo
+### install sbpy by cloning the git repo
     git clone https://github.com/sjoset/sbpy.git
     cd sbpy
 

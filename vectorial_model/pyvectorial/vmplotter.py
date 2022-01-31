@@ -33,14 +33,14 @@ mywhite = "#d8d7dc"
 mybwhite = "#e7e7ea"
 
 
-def find_cdens_inflection_points(coma):
+def find_cdens_inflection_points(vmodel):
     """
         Look for changes in sign of second derivative of the column density,
         given a vectorial model coma and return a list of inflection points
     """
 
     xs = np.linspace(0, 5e8, num=100)
-    concavity = coma.vmodel['column_density_interpolation'].derivative(nu=2)
+    concavity = vmodel['column_density_interpolation'].derivative(nu=2)
     ys = concavity(xs)
 
     # for pair in zip(xs, ys):
@@ -58,7 +58,7 @@ def find_cdens_inflection_points(coma):
     inflection_points = inflection_points[inflection_points > 0]
 
     # Only want inflection points outside the collision sphere
-    csphere_radius = coma.vmodel['collision_sphere_radius'].to_value(u.m)
+    csphere_radius = vmodel['collision_sphere_radius'].to_value(u.m)
     inflection_points = inflection_points[inflection_points > csphere_radius]
 
     inflection_points = inflection_points * u.m
@@ -95,7 +95,7 @@ def outburst_column_density_plot_3d(coma, x_min, x_max, y_min, y_max, grid_step_
     plt.close()
 
 
-def radial_density_plots(coma, r_units, voldens_units, frag_name, show_plots=True, out_file=None):
+def radial_density_plots(vmodel, r_units, voldens_units, frag_name, show_plots=True, out_file=None):
 
     interp_color = myblue
     model_color = myred
@@ -111,12 +111,12 @@ def radial_density_plots(coma, r_units, voldens_units, frag_name, show_plots=Tru
     x_max_linear = (2000 * u.km).to(u.m)
 
     lin_interp_x = np.linspace(x_min_linear.value, x_max_linear.value, num=200)
-    lin_interp_y = coma.vmodel['r_dens_interpolation'](lin_interp_x)/(u.m**3)
+    lin_interp_y = vmodel['r_dens_interpolation'](lin_interp_x)/(u.m**3)
     lin_interp_x *= u.m
     lin_interp_x.to(r_units)
 
     log_interp_x = np.logspace(x_min_logplot, x_max_logplot, num=200)
-    log_interp_y = coma.vmodel['r_dens_interpolation'](log_interp_x)/(u.m**3)
+    log_interp_y = vmodel['r_dens_interpolation'](log_interp_x)/(u.m**3)
     log_interp_x *= u.m
     log_interp_x.to(r_units)
 
@@ -132,33 +132,33 @@ def radial_density_plots(coma, r_units, voldens_units, frag_name, show_plots=Tru
 
     ax1.set_xlim([x_min_linear, x_max_linear])
     ax1.plot(lin_interp_x, lin_interp_y, color=interp_color,  linewidth=2.0, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vmodel['radial_grid'], coma.vmodel['radial_density'].to(voldens_units), 'bo', color=model_color, label="model")
-    ax1.plot(coma.vmodel['radial_grid'], coma.vmodel['radial_density'].to(voldens_units), 'g--', color=linear_color,
+    ax1.plot(vmodel['radial_grid'], vmodel['radial_density'].to(voldens_units), 'o', color=model_color, label="model")
+    ax1.plot(vmodel['radial_grid'], vmodel['radial_density'].to(voldens_units), '--', color=linear_color,
              linewidth=1.0, label="linear interpolation")
 
     ax2.set_xscale('log')
     ax2.set_yscale('log')
     ax2.loglog(log_interp_x, log_interp_y, color=interp_color,  linewidth=2.0, linestyle="-", label="cubic spline")
-    ax2.loglog(coma.vmodel['fast_radial_grid'], coma.vmodel['radial_density'].to(voldens_units), 'bo',
+    ax2.loglog(vmodel['fast_radial_grid'], vmodel['radial_density'].to(voldens_units), 'o',
                color=model_color, label="model")
-    ax2.loglog(coma.vmodel['fast_radial_grid'], coma.vmodel['radial_density'].to(voldens_units), 'g--',
+    ax2.loglog(vmodel['fast_radial_grid'], vmodel['radial_density'].to(voldens_units), '--',
                color=linear_color, linewidth=1.0, label="linear interpolation")
 
     ax1.set_ylim(bottom=0)
     ax2.set_ylim(bottom=0.1)
 
     # Mark the beginning of the collision sphere
-    ax1.axvline(x=coma.vmodel['collision_sphere_radius'], color=csphere_color)
-    ax2.axvline(x=coma.vmodel['collision_sphere_radius'], color=csphere_color)
+    ax1.axvline(x=vmodel['collision_sphere_radius'], color=csphere_color)
+    ax2.axvline(x=vmodel['collision_sphere_radius'], color=csphere_color)
 
     # Text for the collision sphere
-    plt.text(coma.vmodel['collision_sphere_radius']*2, lin_interp_y[0]/10, 'Collision Sphere Edge',
+    plt.text(vmodel['collision_sphere_radius']*2, lin_interp_y[0]/10, 'Collision Sphere Edge',
              color=csphere_text_color)
 
     plt.legend(loc='upper right', frameon=False)
 
     # Find possible inflection points
-    for ipoint in find_cdens_inflection_points(coma):
+    for ipoint in find_cdens_inflection_points(vmodel):
         ax1.axvline(x=ipoint, color=inflection_color)
 
     if show_plots:
@@ -169,7 +169,7 @@ def radial_density_plots(coma, r_units, voldens_units, frag_name, show_plots=Tru
     return plt, fig, ax1, ax2
 
 
-def column_density_plots(coma, r_units, cd_units, frag_name, show_plots=True, out_file=None):
+def column_density_plots(vmodel, r_units, cd_units, frag_name, show_plots=True, out_file=None):
 
     interp_color = myblue
     model_color = myred
@@ -185,12 +185,12 @@ def column_density_plots(coma, r_units, cd_units, frag_name, show_plots=True, ou
     x_max_linear = (2000 * u.km).to(u.m)
 
     lin_interp_x = np.linspace(x_min_linear.value, x_max_linear.value, num=200)
-    lin_interp_y = coma.vmodel['column_density_interpolation'](lin_interp_x)/(u.m**2)
+    lin_interp_y = vmodel['column_density_interpolation'](lin_interp_x)/(u.m**2)
     lin_interp_x *= u.m
     lin_interp_x.to(r_units)
 
     log_interp_x = np.logspace(x_min_logplot, x_max_logplot, num=200)
-    log_interp_y = coma.vmodel['column_density_interpolation'](log_interp_x)/(u.m**2)
+    log_interp_y = vmodel['column_density_interpolation'](log_interp_x)/(u.m**2)
     log_interp_x *= u.m
     log_interp_x.to(r_units)
 
@@ -206,38 +206,38 @@ def column_density_plots(coma, r_units, cd_units, frag_name, show_plots=True, ou
 
     ax1.set_xlim([x_min_linear, x_max_linear])
     ax1.plot(lin_interp_x, lin_interp_y, color=interp_color,  linewidth=2.0, linestyle="-", label="cubic spline")
-    ax1.plot(coma.vmodel['column_density_grid'], coma.vmodel['column_densities'], 'o', color=model_color, label="model")
-    ax1.plot(coma.vmodel['column_density_grid'], coma.vmodel['column_densities'], '--', color=linear_color,
+    ax1.plot(vmodel['column_density_grid'], vmodel['column_densities'], 'o', color=model_color, label="model")
+    ax1.plot(vmodel['column_density_grid'], vmodel['column_densities'], '--', color=linear_color,
              label="linear interpolation", linewidth=1.0)
 
     ax2.set_xscale('log')
     ax2.set_yscale('log')
     ax2.loglog(log_interp_x, log_interp_y, color=interp_color,  linewidth=2.0, linestyle="-", label="cubic spline")
-    ax2.loglog(coma.vmodel['column_density_grid'], coma.vmodel['column_densities'], 'o', color=model_color, label="model")
-    ax2.loglog(coma.vmodel['column_density_grid'], coma.vmodel['column_densities'], '--', color=linear_color,
+    ax2.loglog(vmodel['column_density_grid'], vmodel['column_densities'], 'o', color=model_color, label="model")
+    ax2.loglog(vmodel['column_density_grid'], vmodel['column_densities'], '--', color=linear_color,
                label="linear interpolation", linewidth=1.0)
 
     # limits for plot 1
     ax1.set_ylim(bottom=0)
 
     # limits for plot 2
-    # ax2.set_xlim(right=coma.vmodel['max_grid_radius'])
+    # ax2.set_xlim(right=vmodel['max_grid_radius'])
 
     # Mark the beginning of the collision sphere
-    ax1.axvline(x=coma.vmodel['collision_sphere_radius'], color=csphere_color)
-    ax2.axvline(x=coma.vmodel['collision_sphere_radius'], color=csphere_color)
+    ax1.axvline(x=vmodel['collision_sphere_radius'], color=csphere_color)
+    ax2.axvline(x=vmodel['collision_sphere_radius'], color=csphere_color)
 
     # Only plot as far as the maximum radius of our grid on log-log plot
-    ax2.axvline(x=coma.vmodel['max_grid_radius'])
+    ax2.axvline(x=vmodel['max_grid_radius'])
 
     # Mark the collision sphere
-    plt.text(coma.vmodel['collision_sphere_radius']*1.1, lin_interp_y[0]/10, 'Collision Sphere Edge',
+    plt.text(vmodel['collision_sphere_radius']*1.1, lin_interp_y[0]/10, 'Collision Sphere Edge',
              color=csphere_text_color)
 
     plt.legend(loc='upper right', frameon=False)
 
     # Find possible inflection points
-    for ipoint in find_cdens_inflection_points(coma):
+    for ipoint in find_cdens_inflection_points(vmodel):
         ax1.axvline(x=ipoint, color=inflection_color)
         ax2.axvline(x=ipoint, color=inflection_color, linewidth=0.5)
 
@@ -249,13 +249,13 @@ def column_density_plots(coma, r_units, cd_units, frag_name, show_plots=True, ou
     return plt, fig, ax1, ax2
 
 
-def column_density_plot_3d(coma, x_min, x_max, y_min, y_max, grid_step_x, grid_step_y, r_units, cd_units,
+def column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max, grid_step_x, grid_step_y, r_units, cd_units,
                            frag_name, view_angles=(90, 90), show_plots=True, out_file=None):
 
     x = np.linspace(x_min.to(u.m).value, x_max.to(u.m).value, grid_step_x)
     y = np.linspace(y_min.to(u.m).value, y_max.to(u.m).value, grid_step_y)
     xv, yv = np.meshgrid(x, y)
-    z = coma.vmodel['column_density_interpolation'](np.sqrt(xv**2 + yv**2))
+    z = vmodel['column_density_interpolation'](np.sqrt(xv**2 + yv**2))
     # column_density_interpolation spits out m^-2
     fz = (z/u.m**2).to(cd_units)
 
