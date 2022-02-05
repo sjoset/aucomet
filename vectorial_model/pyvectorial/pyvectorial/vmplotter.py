@@ -4,6 +4,9 @@ import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
 
+import matplotlib.cm as cmx
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import Normalize
 
 solarbluecol = np.array([38, 139, 220]) / 255.
 solarblue = (solarbluecol[0], solarbluecol[1], solarbluecol[2], 1)
@@ -258,3 +261,118 @@ def column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max, grid_step_x, grid
         plt.savefig(out_file)
 
     return plt, fig, ax, surf
+
+
+def build_spray_fortran(spray):
+    """ Takes a spray read from the fortran version's output and gives us easily plottable data """
+
+    # get close to the nucleus - fortran distances are in km
+    spray = np.array([x for x in spray if x[0] < 10000])
+
+    rs = spray[:, 0]
+    thetas = spray[:, 1]
+    zs = spray[:, 2]
+
+    xs = rs*np.sin(thetas)
+    ys = rs*np.cos(thetas)
+
+    return xs, ys, zs
+
+
+def plot_spray_fortran(spray):
+    """ Do the actual plotting of the fragment spray """
+
+    xs, ys, zs = build_spray_fortran(spray)
+
+    colorsMap = 'jet'
+    cm = plt.get_cmap(colorsMap)
+    cNorm = Normalize(vmin=np.min(zs), vmax=np.max(zs))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
+    ax.scatter(xs, ys, zs, c=scalarMap.to_rgba(zs))
+    scalarMap.set_array(zs)
+    fig.colorbar(scalarMap)
+    plt.show()
+
+
+def build_spray_python(vmodel, mirrored=False):
+    """ Return plottable data from a finished python vectorial model run """
+
+    vm_rs = vmodel['fast_radial_grid']
+    vm_thetas = vmodel['angular_grid']
+
+    spraylist = []
+    for (i, j), vdens in np.ndenumerate(vmodel['density_grid']):
+        spraylist.append([vm_rs[i], vm_thetas[j], vdens])
+    spray = np.array(spraylist)
+
+    # get close to the nucleus
+    spray = np.array([x for x in spray if x[0] < 10000000])
+
+    rs = spray[:, 0]
+    thetas = spray[:, 1]
+    zs = spray[:, 2]
+
+    xs = rs*np.sin(thetas)
+    ys = rs*np.cos(thetas)
+
+    if mirrored:
+        xs = np.append(xs, -1*xs)
+        ys = np.append(ys, ys)
+        zs = np.append(zs, zs)
+
+    return xs, ys, zs
+
+
+def plot_spray_python(vmodel, mirrored=False, trisurf=False):
+    """ Plot the spray """
+
+    xs, ys, zs = build_spray_python(vmodel, mirrored)
+
+    zmask = 50
+    # zs = np.ma.masked_where(zs <= np.min(zs)*10, zs)
+    zs = np.ma.masked_where(zs >= np.min(zs)*zmask, zs)
+
+    colorsMap = 'viridis'
+    cm = plt.get_cmap(colorsMap)
+    # cNorm = Normalize(vmin=0, vmax=2.e7)
+    cNorm = Normalize(vmin=np.min(zs), vmax=zmask*np.min(zs))
+    # cNorm = Normalize(vmin=np.min(zs), vmax=max(zs)/10)
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
+
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    if trisurf:
+        ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
+    ax.scatter(xs, ys, zs, c=scalarMap.to_rgba(zs))
+    scalarMap.set_array(zs)
+    fig.colorbar(scalarMap)
+    plt.show()
+
+
+def plot_sprays(f_spray, vmodel):
+    """ Combined plotting of forran and vectorial model results """
+
+    pxs, pys, pzs = build_spray_python(vmodel)
+    # convert python distances to km from m
+    pxs = pxs/1000
+    pys = pys/1000
+    # convert python density to 1/cm**3 from 1/m**3
+    pzs = pzs/1e6
+    fxs, fys, fzs = build_spray_fortran(f_spray)
+
+    colorsMap = 'viridis'
+    cm = plt.get_cmap(colorsMap)
+    cNorm = Normalize(vmin=np.min(pzs), vmax=np.max(pzs))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    # ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
+    ax.scatter(pxs, pys, pzs, c=scalarMap.to_rgba(pzs))
+    # ax.scatter(fxs, fys, fzs, c=scalarMap.to_rgba(fzs))
+    ax.scatter(fxs, fys, fzs, color='red')
+    scalarMap.set_array(pzs)
+    fig.colorbar(scalarMap)
+    plt.show()

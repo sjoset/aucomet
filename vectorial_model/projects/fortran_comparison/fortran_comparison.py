@@ -10,14 +10,14 @@ import logging as log
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-from scipy.interpolate import griddata
-import matplotlib.pyplot as plt
+# from scipy.interpolate import griddata
+# import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from contextlib import redirect_stdout
 
-import matplotlib.cm as cmx
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import Normalize
+# import matplotlib.cm as cmx
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib.colors import Normalize
 
 import pyvectorial as pyv
 
@@ -111,124 +111,27 @@ def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points,
                     {np.amax(c_ratios)}\t\tMin: {np.amin(c_ratios)}")
 
 
-def build_spray_fortran(spray):
+# def plot_spray_python_interpolated(f_spray, vmodel):
 
-    # get close to the nucleus - fortran distances are in km
-    spray = np.array([x for x in spray if x[0] < 10000])
+#     # TODO: figure out how to make this less ugly
+#     xs, ys, zs = build_spray_python(vmodel)
+#     xs = xs/1e3
+#     ys = ys/1e3
+#     zs /= 1e9
+#     # xs, ys, zs = build_spray_fortran(f_spray)
 
-    rs = spray[:, 0]
-    thetas = spray[:, 1]
-    zs = spray[:, 2]
+#     xi = np.logspace(-1, 2, 700)
+#     yi = np.logspace(-1, 2, 700)
+#     # xi = np.linspace(0, 100, 500)
+#     # yi = np.linspace(-100, 400, 1000)
+#     xi, yi = np.meshgrid(xi, yi)
 
-    xs = rs*np.sin(thetas)
-    ys = rs*np.cos(thetas)
-
-    return xs, ys, zs
-
-
-def plot_spray_fortran(spray):
-
-    xs, ys, zs = build_spray_fortran(spray)
-
-    colorsMap = 'jet'
-    cm = plt.get_cmap(colorsMap)
-    cNorm = Normalize(vmin=min(zs), vmax=max(zs))
-    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
-    ax.scatter(xs, ys, zs, c=scalarMap.to_rgba(zs))
-    scalarMap.set_array(zs)
-    fig.colorbar(scalarMap)
-    plt.show()
-
-
-def build_spray_python(vmodel):
-
-    vm_rs = vmodel['fast_radial_grid']
-    vm_thetas = vmodel['angular_grid']
-
-    spraylist = []
-    for (i, j), vdens in np.ndenumerate(vmodel['density_grid']):
-        spraylist.append([vm_rs[i], vm_thetas[j], vdens])
-    spray = np.array(spraylist)
-
-    # get close to the nucleus
-    spray = np.array([x for x in spray if x[0] < 10000000])
-
-    rs = spray[:, 0]
-    thetas = spray[:, 1]
-    zs = spray[:, 2]
-
-    xs = rs*np.sin(thetas)
-    ys = rs*np.cos(thetas)
-
-    return xs, ys, zs
-
-
-def plot_spray_python(vmodel):
-
-    xs, ys, zs = build_spray_python(vmodel)
-
-    colorsMap = 'jet'
-    cm = plt.get_cmap(colorsMap)
-    cNorm = Normalize(vmin=min(zs), vmax=max(zs))
-    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
-    ax.scatter(xs, ys, zs, c=scalarMap.to_rgba(zs))
-    scalarMap.set_array(zs)
-    fig.colorbar(scalarMap)
-    plt.show()
-
-
-def plot_sprays(f_spray, vmodel):
-
-    pxs, pys, pzs = build_spray_python(vmodel)
-    # convert python distances to km from m
-    pxs = pxs/1000
-    pys = pys/1000
-    # convert python density to 1/cm**3 from 1/m**3
-    pzs = pzs/1e6
-    fxs, fys, fzs = build_spray_fortran(f_spray)
-
-    colorsMap = 'jet'
-    cm = plt.get_cmap(colorsMap)
-    cNorm = Normalize(vmin=min(pzs), vmax=max(pzs))
-    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    # ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
-    ax.scatter(pxs, pys, pzs, c=scalarMap.to_rgba(pzs))
-    # ax.scatter(fxs, fys, fzs, c=scalarMap.to_rgba(fzs))
-    ax.scatter(fxs, fys, fzs, color='red')
-    scalarMap.set_array(pzs)
-    fig.colorbar(scalarMap)
-    plt.show()
-
-
-def plot_spray_python_interpolated(f_spray, vmodel):
-
-    # TODO: figure out how to make this less ugly
-    xs, ys, zs = build_spray_python(vmodel)
-    xs = xs/1e3
-    ys = ys/1e3
-    zs /= 1e9
-    # xs, ys, zs = build_spray_fortran(f_spray)
-
-    xi = np.logspace(-1, 2, 700)
-    yi = np.logspace(-1, 2, 700)
-    # xi = np.linspace(0, 100, 500)
-    # yi = np.linspace(-100, 400, 1000)
-    xi, yi = np.meshgrid(xi, yi)
-
-    zi = griddata((xs, ys), zs, (xi, yi), method='cubic')
-    plt.figure()
-    plt.contour(xi, yi, zi, 15, linewidths=0.5, colors='k')
-    plt.contourf(xi, yi, zi, 500, cmap='magma')
-    plt.colorbar()
-    plt.show()
+#     zi = griddata((xs, ys), zs, (xi, yi), method='cubic')
+#     plt.figure()
+#     plt.contour(xi, yi, zi, 15, linewidths=0.5, colors='k')
+#     plt.contourf(xi, yi, zi, 500, cmap='magma')
+#     plt.colorbar()
+#     plt.show()
 
 
 def main():
@@ -281,8 +184,8 @@ def main():
     print_comparison(coma, vgrid, vdens, cgrid, cdens, 'comparison_out')
 
     # plot_spray_fortran(spray)
-    # plot_spray_python(coma.vmodel)
-    plot_sprays(spray, coma.vmodel)
+    pyv.plot_spray_python(coma.vmodel, mirrored=True, trisurf=True)
+    pyv.plot_sprays(spray, coma.vmodel)
     # plot_spray_python_interpolated(spray, coma.vmodel)
 
 
