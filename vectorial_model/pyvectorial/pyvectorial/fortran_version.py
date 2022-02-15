@@ -75,7 +75,7 @@ def read_fortran_vm_output(fort16_file, read_spray=False):
     fort16_voldens = range(14, 27)
     # Column density is on line 53 - 70
     fort16_coldens = range(52, 70)
-    # Spray array starts at line 175
+    # Spray array starts at line 175 through to the end
     fort16_spray = 175
 
     vol_grid_points = []

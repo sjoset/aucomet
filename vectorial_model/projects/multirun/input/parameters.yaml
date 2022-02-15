@@ -1,0 +1,88 @@
+production:
+    # parent production in molecules/s
+    base_q: [1.e+28, 2.e+28, 5.e+28, 1.e+29]
+
+    # time_variation_type: "binned"
+    # # # rates of production, in molecules/s
+    # q_t:
+    #     - 1.e+28
+    #     - 3.e+29
+    #     - 1.e+28
+    # # # times these productions started, in days ago
+    # times_at_productions:
+    #     - 30
+    #     - 3
+    #     - 1
+
+    # time_variation_type: "gaussian"
+    # # amplitude in molecules/s
+    # amplitude: 3.e28
+    # # std_dev in hours
+    # std_dev: 20.0
+    # # time at peak in hours ago
+    # t_max: 48.0
+
+    # time_variation_type: "sine wave"
+    # # amplitude in molecules/s
+    # amplitude: 3.e28
+    # # period in hours
+    # period: 20.0
+    # # delta, angular offset in hours
+    # delta: 0.0
+
+    # time_variation_type: "square pulse"
+    # # amplitude in molecules/s
+    # amplitude: 3.e28
+    # # start of pulse, in hours ago
+    # t_start: 20.0
+    # # duration in hours
+    # duration: 5.0
+
+parent:
+    name: "H2O"
+    # outflow velocity of parent, km/s
+    v_outflow: 0.85
+    # dissociative lifetime of molecule, seconds
+    tau_d: [90000, 101730, 130000]
+    # tau_d: 101730
+    # approximate cross section for most molecules we care about, cm^2
+    sigma: 3.0e-16
+    # ratio of total lifetime to dissociative lifetime
+    T_to_d_ratio: 0.93
+
+fragment:
+    name: "OH"
+    # velocity of fragment, km/s
+    v_photo: 1.05
+    # total lifetime of fragment molecule, seconds
+    tau_T: 129000
+    # tau_T: [10000.0, 14736.842105263157, 19473.684210526313, 24210.526315789473, 28947.36842105263, 33684.21052631579, 38421.05263157895, 43157.8947368421, 47894.73684210526, 52631.57894736842, 57368.42105263157, 62105.26315789473, 66842.1052631579, 71578.94736842104, 76315.7894736842, 81052.63157894736, 85789.47368421052, 90526.31578947368, 95263.15789473684, 100000.0]
+
+position:
+    # distance in AU
+    # d_heliocentric: 1.4
+    d_heliocentric: 1.0
+    # adjustments to apply to input data
+    transform_method: 'cochran_schleicher_93'
+
+grid:
+    radial_points: 50
+    angular_points: 30
+    radial_substeps: 50
+
+printing:
+    print_progress: True
+
+    print_binned_times: True
+
+    print_radial_density: True
+    print_column_density: True
+
+    show_agreement_check: True
+    show_aperture_checks: True
+
+plotting:
+    show_radial_plots: False
+    show_column_density_plots: False
+    show_3d_column_density_centered: False
+    show_3d_column_density_off_center: False

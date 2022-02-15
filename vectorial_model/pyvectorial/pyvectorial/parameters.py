@@ -59,12 +59,14 @@ def transform_input_yaml(input_yaml):
     log.info("Transforming input parameters using method %s", tr_method)
 
     if tr_method == 'cochran_schleicher_93':
+        # This overwrites v_outflow with its own value!
+
         rh = input_yaml['position']['d_heliocentric'].to(u.AU).value
         sqrh = np.sqrt(rh)
 
         v_old = copy.deepcopy(input_yaml['parent']['v_outflow'])
         tau_d_old = copy.deepcopy(input_yaml['parent']['tau_d'])
-        input_yaml['parent']['v_outflow'] *= 0.85/sqrh
+        input_yaml['parent']['v_outflow'] = 0.85/sqrh * u.km/u.s
         input_yaml['parent']['tau_d'] *= rh**2
         log.debug("Parent outflow: %s --> %s", v_old, input_yaml['parent']['v_outflow'])
         log.debug("Parent tau_d: %s --> %s", tau_d_old, input_yaml['parent']['tau_d'])
@@ -103,8 +105,8 @@ def tag_input_with_units(input_yaml):
 
     # parent
     input_yaml['parent']['v_outflow'] *= u.km/u.s
-    input_yaml['parent']['tau_T'] *= u.s
     input_yaml['parent']['tau_d'] *= u.s
+    input_yaml['parent']['tau_T'] = input_yaml['parent']['tau_d'] * input_yaml['parent']['T_to_d_ratio']
     input_yaml['parent']['sigma'] *= u.cm**2
 
     # fragment
@@ -113,3 +115,31 @@ def tag_input_with_units(input_yaml):
 
     # positional info
     input_yaml['position']['d_heliocentric'] *= u.AU
+
+
+def strip_input_of_units(input_yaml):
+    """
+        Takes an input dictionary with astropy units and strips units, opposite of tag_input_with_units(),
+        but returns a new dictionary instead of modifying in place
+    """
+
+    # TODO: remove the float() calls once the bug in pyyaml writing decimal numbers is fixed
+    # https://github.com/yaml/pyyaml/issues/255
+
+    new_yaml = copy.deepcopy(input_yaml)
+
+    new_yaml['production']['base_q'] = float(input_yaml['production']['base_q'].to(1/u.s).value)
+
+    new_yaml['parent']['v_outflow'] = float(input_yaml['parent']['v_outflow'].to(u.km/u.s).value)
+    new_yaml['parent']['tau_T'] = float(input_yaml['parent']['tau_T'].to(u.s).value)
+    new_yaml['parent']['tau_d'] = float(input_yaml['parent']['tau_d'].to(u.s).value)
+    new_yaml['parent']['sigma'] = float(input_yaml['parent']['sigma'].to(u.cm**2).value)
+
+    # fragment
+    new_yaml['fragment']['v_photo'] = float(input_yaml['fragment']['v_photo'].to(u.km/u.s).value)
+    new_yaml['fragment']['tau_T'] = float(input_yaml['fragment']['tau_T'].to(u.s).value)
+
+    # positional info
+    new_yaml['position']['d_heliocentric'] = float(input_yaml['position']['d_heliocentric'].to(u.AU).value)
+
+    return new_yaml
