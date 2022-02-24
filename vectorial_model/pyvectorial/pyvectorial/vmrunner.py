@@ -1,6 +1,6 @@
 
 import logging as log
-import astropy.units as u
+# import astropy.units as u
 import sbpy.activity as sba
 from sbpy.data import Phys
 
@@ -10,7 +10,9 @@ from .timedependentproduction import TimeDependentProduction
 
 def run_vmodel(input_yaml):
     """
-        Given input dictionary read from yaml file, run vectorial model and return the coma object
+        Given input dictionary with astropy units, run vectorial model and return the coma object
+
+        Constructs parent & fragment Phys objects, along with any time dependence function
     """
 
     log.info("Calculating fragment density using vectorial model ...")
@@ -41,38 +43,14 @@ def run_vmodel(input_yaml):
                                                         print_progress=input_yaml['printing']['print_progress']
                                                         )
         elif t_var_type == "gaussian":
-            log.debug("Found gaussian production ...")
-            amplitude = input_yaml['production']['amplitude']
-            t_max = input_yaml['production']['t_max']
-            std_dev = input_yaml['production']['std_dev']
-            log.debug("Amplitude: %s molecules/s, t_max: %s hrs, std_dev: %s hrs", amplitude, t_max, std_dev)
-
             prod_var = TimeDependentProduction(t_var_type)
-            q_t = prod_var.create_production(amplitude=amplitude*(1/u.s),
-                                             t_max=t_max*u.hour,
-                                             std_dev=std_dev*u.hour)
+            q_t = prod_var.create_production(**input_yaml['production'])
         elif t_var_type == "sine wave":
-            log.debug("Found sine wave production ...")
-            amplitude = input_yaml['production']['amplitude']
-            period = input_yaml['production']['period']
-            delta = input_yaml['production']['delta']
-            log.debug("Amplitude: %s molecules/s, period: %s hrs, delta: %s hrs", amplitude, period, delta)
-
             prod_var = TimeDependentProduction(t_var_type)
-            q_t = prod_var.create_production(amplitude=amplitude*(1/u.s),
-                                             period=period*u.hour,
-                                             delta=delta*u.hour)
+            q_t = prod_var.create_production(**input_yaml['production'])
         elif t_var_type == "square pulse":
-            log.debug("Found square pulse production ...")
-            amplitude = input_yaml['production']['amplitude']
-            t_start = input_yaml['production']['t_start']
-            duration = input_yaml['production']['duration']
-            log.debug("Amplitude: %s molecules/s, t_start: %s hrs, duration: %s hrs", amplitude, t_start, duration)
-
             prod_var = TimeDependentProduction(t_var_type)
-            q_t = prod_var.create_production(amplitude=amplitude*(1/u.s),
-                                             t_start=t_start*u.hour,
-                                             duration=duration*u.hour)
+            q_t = prod_var.create_production(**input_yaml['production'])
 
     # if the binned constructor above hasn't been called, we have work to do
     if coma is None:

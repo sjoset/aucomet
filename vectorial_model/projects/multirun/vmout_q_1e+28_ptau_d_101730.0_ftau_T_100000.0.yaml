@@ -20,7 +20,7 @@ plotting:
   show_radial_plots: false
 position:
   d_heliocentric: 1.0
-  transform_method: cochran_schleicher_93
+  transform_method: null
 printing:
   print_binned_times: true
   print_column_density: true
@@ -31,5 +31,5 @@ printing:
 production:
   base_q: 1.0e+28
 pyvectorial_info:
-  date_run: 02 14 2022
+  date_run: 02 23 2022
   vmodel_pickle: vmout_q_1e+28_ptau_d_101730.0_ftau_T_100000.0.vm

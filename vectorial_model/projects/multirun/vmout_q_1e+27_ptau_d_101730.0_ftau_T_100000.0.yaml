@@ -10,8 +10,8 @@ parent:
   T_to_d_ratio: 0.93
   name: H2O
   sigma: 3.0e-16
-  tau_T: 83700.0
-  tau_d: 90000.0
+  tau_T: 94608.90000000001
+  tau_d: 101730.0
   v_outflow: 0.85
 plotting:
   show_3d_column_density_centered: false
@@ -29,7 +29,7 @@ printing:
   show_agreement_check: true
   show_aperture_checks: true
 production:
-  base_q: 1.0e+28
+  base_q: 1.0e+27
 pyvectorial_info:
   date_run: 02 23 2022
-  vmodel_pickle: vmout_q_1e+28_ptau_d_90000.0_ftau_T_100000.0.vm
+  vmodel_pickle: vmout_q_1e+27_ptau_d_101730.0_ftau_T_100000.0.vm

@@ -1,6 +1,6 @@
 fragment:
   name: OH
-  tau_T: 100000.0
+  tau_T: 129000.0
   v_photo: 1.05
 grid:
   angular_points: 30
@@ -29,7 +29,7 @@ printing:
   show_agreement_check: true
   show_aperture_checks: true
 production:
-  base_q: 1.0e+28
+  base_q: 1.0e+27
 pyvectorial_info:
   date_run: 02 23 2022
-  vmodel_pickle: vmout_q_1e+28_ptau_d_90000.0_ftau_T_100000.0.vm
+  vmodel_pickle: vmout_q_1e+27_ptau_d_90000.0_ftau_T_129000.0.vm

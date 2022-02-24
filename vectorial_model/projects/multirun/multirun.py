@@ -56,12 +56,12 @@ def get_parameter_sets(input_yaml):
     # Look at these inputs and build all possible combinations for running
     allowed_variations = [
         input_yaml['production']['base_q'],
-        # input_yaml['parent']['tau_T'],
         input_yaml['parent']['tau_d'],
         input_yaml['fragment']['tau_T']
         ]
 
     # check if it is a list, and if not, make it a list of length 1
+    # TODO: this doesn't handle lists of one only one element
     for av in allowed_variations:
         if av.size != 1:
             varying_parameters.append(av)
@@ -144,9 +144,10 @@ def main():
 
         psave = pyv.strip_input_of_units(pset)
         # The data has already been transformed, so if we re-use the dumped yaml, we don't want to transform it again
-        psave['transform_method'] = None
+        psave['position']['transform_method'] = None
 
-        pyv.save_vmodel(pyv.strip_input_of_units(pset), coma.vmodel, 'vmout_'+file_string_id_from_parameters(pset))
+        pyv.save_vmodel(psave, coma.vmodel, 'vmout_'+file_string_id_from_parameters(pset))
+        # pyv.save_vmodel(pyv.strip_input_of_units(pset), coma.vmodel, 'vmout_'+file_string_id_from_parameters(pset))
 
 
 if __name__ == '__main__':

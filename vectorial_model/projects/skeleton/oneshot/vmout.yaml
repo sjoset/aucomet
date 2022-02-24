@@ -1,6 +1,6 @@
 fragment:
   name: OH
-  tau_T: 100000.0
+  tau_T: 80000
   v_photo: 1.05
 grid:
   angular_points: 30
@@ -10,8 +10,7 @@ parent:
   T_to_d_ratio: 0.93
   name: H2O
   sigma: 3.0e-16
-  tau_T: 83700.0
-  tau_d: 90000.0
+  tau_d: 101730
   v_outflow: 0.85
 plotting:
   show_3d_column_density_centered: false
@@ -19,8 +18,8 @@ plotting:
   show_column_density_plots: false
   show_radial_plots: false
 position:
-  d_heliocentric: 1.0
-  transform_method: null
+  d_heliocentric: 1.4
+  transform_method: cochran_schleicher_93
 printing:
   print_binned_times: true
   print_column_density: true
@@ -30,6 +29,15 @@ printing:
   show_aperture_checks: true
 production:
   base_q: 1.0e+28
+  q_t:
+  - 1.0e+28
+  - 3.0e+29
+  - 1.0e+28
+  time_variation_type: binned
+  times_at_productions:
+  - 30
+  - 3
+  - 1
 pyvectorial_info:
   date_run: 02 23 2022
-  vmodel_pickle: vmout_q_1e+28_ptau_d_90000.0_ftau_T_100000.0.vm
+  vmodel_pickle: vmout.vm
