@@ -20,7 +20,7 @@ def produce_fortran_fparam(input_yaml):
     """
 
     # TODO: binned time production should also be handled here
-    fparam_outfile = input_yaml['fortran_version']['infile']
+    fparam_outfile = input_yaml['fortran_version']['in_file']
 
     with open(fparam_outfile, 'w') as out_file:
         with redirect_stdout(out_file):
@@ -44,7 +44,7 @@ def produce_fortran_fparam(input_yaml):
             print(f"{input_yaml['fragment']['tau_T'].to(u.s).value}")
             print("99.0")
             # Custom aperture size, unused for our purposes so these are dummy values
-            print("  900.000000       3000.00000")
+            print("  100.000000       100.00000")
 
 
 def run_fortran_vmodel(fortran_vmodel_binary):
@@ -63,26 +63,25 @@ def run_fortran_vmodel(fortran_vmodel_binary):
     log.info("fortran run complete, return code %s", p2.returncode)
 
 
-def read_fortran_vm_output(fort16_file, read_spray=False):
+def read_fortran_vm_output(fort16_file, read_sputter=False):
 
     """
         Takes the output of the fortran code and returns the volume & column density,
         along the gridpoints of each
     """
-    # TODO: read the spray array
 
     # Volume density is on line 15 - 27
     fort16_voldens = range(14, 27)
     # Column density is on line 53 - 70
     fort16_coldens = range(52, 70)
-    # Spray array starts at line 175 through to the end
-    fort16_spray = 175
+    # sputter array starts at line 175 through to the end
+    fort16_sputter = 175
 
     vol_grid_points = []
     col_grid_points = []
     col_dens = []
     vol_dens = []
-    spray = []
+    sputter = []
     with open(fort16_file) as in_file:
         for i, line in enumerate(in_file):
             if i in fort16_voldens:
@@ -93,9 +92,9 @@ def read_fortran_vm_output(fort16_file, read_spray=False):
                 vals = [float(x) for x in line.split()]
                 col_grid_points.extend(vals[0::2])
                 col_dens.extend(vals[1::2])
-            if i >= fort16_spray and read_spray:
+            if i >= fort16_sputter and read_sputter:
                 vals = [float(x) for x in line.split()]
-                spray.append(vals)
+                sputter.append(vals)
 
     # These are the units the fortran output uses
     vol_grid_points *= u.km
@@ -103,7 +102,7 @@ def read_fortran_vm_output(fort16_file, read_spray=False):
     vol_dens *= 1/u.cm**3
     col_dens *= 1/u.cm**2
 
-    spray = np.array(spray)
-    spray = spray.astype(float)
+    sputter = np.array(sputter)
+    sputter = sputter.astype(float)
 
-    return vol_grid_points, vol_dens, col_grid_points, col_dens, spray
+    return vol_grid_points, vol_dens, col_grid_points, col_dens, sputter

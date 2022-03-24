@@ -11,7 +11,7 @@ import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
 # from scipy.interpolate import griddata
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from contextlib import redirect_stdout
 
@@ -68,35 +68,55 @@ def process_args():
     return args
 
 
-def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points,
-                     col_dens, out_file=None):
+def calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_dens):
 
-    v_ratios = []
-    c_ratios = []
+    v_list = []
+    c_list = []
     # Sometimes python grid is smaller than fortran version
     max_r = coma.vmodel['max_grid_radius'].to(u.m).value
 
-    print("\nvolume density at fortran gridpoints, py/fort")
     for i, r in enumerate(vol_grid_points):
         r_m = r.to(u.m).value
         if r_m > max_r:
             continue
-        v_ratios.append(((coma.vmodel['r_dens_interpolation'](r_m) *
-                        (1/u.m**3)) / vol_dens[i]).decompose().value)
+        ratio = ((coma.vmodel['r_dens_interpolation'](r_m) * (1/u.m**3)) / vol_dens[i]).decompose().value
+        v_list.append([r_m, ratio])
 
-    print(v_ratios)
-    print(f"Average: {np.average(v_ratios)}\t\tMax: {np.amax(v_ratios)}\t\tMin: {np.amin(v_ratios)}")
+    v_array = np.array(v_list)
+    vrs = v_array[:, 0]
+    v_ratios = v_array[:, 1]
 
-    print("\ncolumn density at fortran gridpoints, py/fort")
     for i, r in enumerate(col_grid_points):
         r_m = r.to(u.m).value
         if r_m > max_r:
             continue
-        c_ratios.append(((coma.vmodel['column_density_interpolation'](r_m) *
-                        (1/u.m**2)) / col_dens[i]).decompose().value)
+        ratio = ((coma.vmodel['column_density_interpolation'](r_m) * (1/u.m**2)) / col_dens[i]).decompose().value
+        c_list.append([r_m, ratio])
 
+    c_array = np.array(c_list)
+    crs = c_array[:, 0]
+    c_ratios = c_array[:, 1]
+
+    return vrs, v_ratios, crs, c_ratios
+
+
+def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_dens, out_file=None):
+
+    vrs, v_ratios, crs, c_ratios = calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_dens)
+    print("\nvolume density at fortran gridpoints, py/fort")
+
+    print(v_ratios)
+    for r, vr in zip(vrs, v_ratios):
+        print(f"r: {r/1000} km\tpy/fort: {vr}")
+    print(f"Average: {np.average(v_ratios)}\t\tMax: {np.amax(v_ratios)}\t\tMin: {np.amin(v_ratios)}")
+
+    print("\ncolumn density at fortran gridpoints, py/fort")
     print(c_ratios)
+    for r, cr in zip(crs, c_ratios):
+        print(f"r: {r/1000} km\tpy/fort: {cr}")
     print(f"Average: {np.average(c_ratios)}\t\tMax: {np.amax(c_ratios)}\t\tMin: {np.amin(c_ratios)}")
+
+    plot_cdens_comparison(crs, c_ratios, out_file)
 
     if out_file is not None:
         with open(out_file, 'w') as f:
@@ -105,20 +125,53 @@ def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points,
                 print(v_ratios)
                 print(f"Average: {np.average(v_ratios)}\t\tMax:\
                         {np.amax(v_ratios)}\t\tMin: {np.amin(v_ratios)}")
+                for r, vr in zip(vrs, v_ratios):
+                    print(f"r: {r/1000} km\tpy/fort: {vr}")
                 print("\ncolumn density at fortran gridpoints, py/fort")
                 print(c_ratios)
                 print(f"Average: {np.average(c_ratios)}\t\tMax:\
                     {np.amax(c_ratios)}\t\tMin: {np.amin(c_ratios)}")
+                for r, cr in zip(crs, c_ratios):
+                    print(f"r: {r/1000} km\tpy/fort: {cr}")
 
 
-# def plot_spray_python_interpolated(f_spray, vmodel):
+def plot_cdens_comparison(rs, c_ratios, out_file=None):
+
+    r_units = u.m
+    plt.style.use('Solarize_Light2')
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+
+    ax.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
+    ax.set(ylabel="Column density ratio, py/fortran")
+    fig.suptitle("Calculated column density ratios, python/fortran")
+    # print(rs, c_ratios)
+    # print(np.min(rs), np.max(rs))
+
+    # ax.set_xbound(lower=np.min(rs), upper=np.max(rs))
+    ax.set_xscale('log')
+    ax.set_ylim([0, 1.5])
+    ax.plot(rs, c_ratios, color="#688894",  linewidth=2.0)
+    # ax.plot(rs, c_ratios, color="#688894",  linewidth=2.0, linestyle="-")
+    # ax.plot(vmodel['column_density_grid'], vmodel['column_densities'], 'o', color=model_color, label="model")
+    # ax1.plot(vmodel['column_density_grid'], vmodel['column_densities'], '--', color=linear_color,
+    #          label="linear interpolation", linewidth=1.0)
+
+    plt.legend(loc='upper right', frameon=False)
+
+    if out_file:
+        plt.savefig(out_file + '.png')
+    plt.show()
+
+
+# def plot_sputter_python_interpolated(f_sputter, vmodel):
 
 #     # TODO: figure out how to make this less ugly
-#     xs, ys, zs = build_spray_python(vmodel)
+#     xs, ys, zs = build_sputter_python(vmodel)
 #     xs = xs/1e3
 #     ys = ys/1e3
 #     zs /= 1e9
-#     # xs, ys, zs = build_spray_fortran(f_spray)
+#     # xs, ys, zs = build_sputter_fortran(f_sputter)
 
 #     xi = np.logspace(-1, 2, 700)
 #     yi = np.logspace(-1, 2, 700)
@@ -144,6 +197,9 @@ def main():
     log.debug("Loading input from %s ....", args.parameterfile[0])
     # Read in our stuff
     input_yaml, raw_yaml = pyv.get_input_yaml(args.parameterfile[0])
+
+    # output filenames
+    out_file = 'c_ftau_' + str(raw_yaml['fragment']['tau_T'])
 
     # actually do it
     coma = pyv.run_vmodel(input_yaml)
@@ -179,14 +235,15 @@ def main():
     # convert our input to something fortran version can digest and run it
     pyv.produce_fortran_fparam(raw_yaml)
     pyv.run_fortran_vmodel(input_yaml['fortran_version']['vmodel_binary'])
-    vgrid, vdens, cgrid, cdens, spray = pyv.read_fortran_vm_output(input_yaml['fortran_version']['outfile'], read_spray=True)
+    vgrid, vdens, cgrid, cdens, sputter = pyv.read_fortran_vm_output(input_yaml['fortran_version']['out_file'], read_sputter=True)
 
-    print_comparison(coma, vgrid, vdens, cgrid, cdens, 'comparison_out')
+    print_comparison(coma, vgrid, vdens, cgrid, cdens, out_file)
 
-    # plot_spray_fortran(spray)
-    pyv.plot_spray_python(coma.vmodel, mirrored=True, trisurf=True)
-    pyv.plot_sprays(spray, coma.vmodel)
-    # plot_spray_python_interpolated(spray, coma.vmodel)
+    # pyv.plot_sputter_fortran(sputter)
+    # pyv.plot_sputter_python(coma.vmodel, mirrored=True, trisurf=True)
+    # pyv.plot_sputters(sputter, coma.vmodel)
+
+    # plot_sputter_python_interpolated(sputter, coma.vmodel)
 
 
 if __name__ == '__main__':

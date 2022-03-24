@@ -1,0 +1,259 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bbm}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{calc}
+\usepackage{anyfontsize}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage[linkbordercolor={1 0 0}, colorlinks=true, urlcolor=blue, linkcolor=blue]{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{titling}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{cancel}
+\usepackage{xcolor}
+\usepackage{mathtools}
+
+\usepackage{silence}
+\WarningsOff[everypage]
+\usepackage{background}
+
+\usepackage{siunitx}
+\usepackage{upgreek}
+\usepackage{etoolbox}
+\usepackage{dsfont}
+\usepackage{scalerel}
+\usepackage{chemformula}
+\usepackage{vhistory}
+
+\usepackage[pdftex,outline]{contour}
+
+\setlength{\headheight}{30pt}
+
+% background and colors
+
+% my colors
+\definecolor{myblack}{HTML}{301e2a}
+\definecolor{mybblack}{HTML}{82787f}
+
+\definecolor{myred}{HTML}{c74a77}
+\definecolor{mybred}{HTML}{dbafad}
+
+\definecolor{mygreen}{HTML}{afac7c}
+\definecolor{mybgreen}{HTML}{dbd89c}
+
+\definecolor{mypeach}{HTML}{dbb89c}
+\definecolor{mybpeach}{HTML}{e9d4c3}
+
+\definecolor{myblue}{HTML}{688894}
+\definecolor{mybblue}{HTML}{a4b7be}
+
+\definecolor{mydarkblue}{HTML}{485f67}
+\definecolor{mybdarkblue}{HTML}{7e8f94}
+
+\definecolor{mydarkred}{HTML}{772c47}
+\definecolor{mybdarkred}{HTML}{9f6b7e}
+
+\definecolor{mywhite}{HTML}{d8d7dc}
+\definecolor{mybwhite}{HTML}{e7e7ea}
+
+\definecolor{pal1}{HTML}{b52604}
+\definecolor{pal2}{HTML}{e24a07}
+\definecolor{pal3}{HTML}{ff9136}
+\definecolor{pal4}{HTML}{0c4052}
+\definecolor{pal5}{HTML}{125066}
+
+\definecolor{sunbright}{HTML}{c8a669}
+\definecolor{sun}{HTML}{ffcc33}
+% my colors
+
+% theme coloring
+\colorlet{bgleftcol}{mywhite}
+\colorlet{bgrightcol}{mywhite}
+
+\definecolor{beginboxcol}{HTML}{9c9078}
+\colorlet{resultboxcol}{beginboxcol!60}
+
+\colorlet{charcoal}{myblack}
+\colorlet{eqntagcol}{myblack}
+
+\colorlet{zetrefcol}{mygreen}
+\colorlet{documenttextcol}{myblack}
+
+% title page coloring
+
+\colorlet{coverpagetitletextcol}{mybgreen}
+\colorlet{coverpagetitletextcol2}{mygreen}
+\colorlet{coverpagesubtitletextcol}{mypeach}
+\colorlet{coverpagenamecol}{mybpeach}
+\colorlet{coverpagenamecol2}{mypeach}
+\colorlet{cometoutlinecol}{mybblue}
+\colorlet{cometoutlinecol2}{mybblue}
+
+% for equation tag bolding
+\newcommand\boldtag{\refstepcounter{equation}\tag*{\color{eqntagcol}{(\textbf{\theequation})}}}
+
+\backgroundsetup{
+    scale=1,
+    angle=0,
+    opacity=1,
+    contents={\begin{tikzpicture}[remember picture,overlay]
+            \path [left color = bgleftcol,middle color = bgleftcol!30, right color = bgrightcol] (current page.south west)rectangle (current page.north east);   % Adjust the position of the logo.
+            % Transparent background images under the text
+            % \node[opacity=0.1] {\includegraphics[scale=1]{./pumpkinbg.png}};
+            % \node[opacity=0.1] {\includegraphics[scale=1]{./batsbg.png}};
+        \end{tikzpicture}
+    }
+}
+
+% begin macros
+
+% quantum general
+\newcommand{\comm}[2]{\ensuremath{[ #1 , #2 ]}}
+\newcommand{\Lz}{\ensuremath{L_z}}
+\newcommand{\Hx}{\ensuremath{H_x}}
+\newcommand{\Hy}{\ensuremath{H_y}}
+\newcommand{\px}{\ensuremath{p_x}}
+\newcommand{\py}{\ensuremath{p_y}}
+\newcommand{\psinx}{\psi_{n_x}}
+\newcommand{\psiny}{\psi_{n_y}}
+\newcommand{\psinxny}{\psi_{n_x n_y}}
+\newcommand{\Ex}{E_{n_x}}
+\newcommand{\Ey}{E_{n_y}}
+\newcommand{\Exy}{E_{n_x n_y}}
+\newcommand{\raisex}{\ensuremath{a_{x+}}}
+\newcommand{\lowerx}{\ensuremath{a_{x-}}}
+\newcommand{\raisey}{\ensuremath{a_{y+}}}
+\newcommand{\lowery}{\ensuremath{a_{y-}}}
+\newcommand{\expect}[3]{\left\langle #1 \middle| #2 \middle| #3 \right\rangle}
+% \newcommand{\expectn}[1]{\left\langle n \middle| #1 \middle| n \right\rangle}
+\newcommand{\expectn}[1]{\expect{n}{#1}{n}}
+\newcommand{\expectnx}[1]{\expect{n_x}{#1}{n_x}}
+\newcommand{\expectny}[1]{\expect{n_y}{#1}{n_y}}
+
+% Spherical harmonics
+\DeclarePairedDelimiterX\norm[1]\lVert\rVert{\ifblank{#1}{\,\cdot\,}{#1}}
+\DeclarePairedDelimiterX\abs[1]{\lvert}{\rvert}{\ifblank{#1}{\,\cdot\,}{#1}}
+\DeclarePairedDelimiterX\innerp[2]{\langle}{\rangle}{\ifblank{#1#2}{\,\cdot\,,\cdot\,}{#1,#2}}
+\newcommand{\sharm}[3][]{\ifblank{#1}{Y_{#2 #3}}{\prescript{}{#1}Y_{#2 #3}}}
+\newcommand{\ylm}{\sharm{\ell}{m}}
+
+% for bras and kets
+\DeclarePairedDelimiter\bra{\langle}{\rvert}
+\DeclarePairedDelimiter\ket{\lvert}{\rangle}
+\DeclarePairedDelimiterX\braket[2]{\langle}{\rangle}{#1 \delimsize\vert #2}
+
+\newcommand{\freemomentum}[1]{\frac{{#1}^2}{2m}}
+\newcommand{\harmonicpot}[1]{\frac{1}{2}m \omega^2 {#1}^2}
+
+\newcommand{\Enxny}{\ensuremath{E_{n_{x}n_{y}}}}
+
+\newcommand{\xLz}{\comm{x}{\Lz}}
+\newcommand{\yLz}{\comm{y}{\Lz}}
+\newcommand{\pxLz}{\comm{\px}{\Lz}}
+\newcommand{\pyLz}{\comm{\py}{\Lz}}
+
+\newcommand{\coordRLfactor}[1]{\ensuremath{{\left( \frac{\hbar}{2 m \omega} \right)}^{#1}}}
+
+\newcommand{\newproblem}[1]{\section*{\contour{mybblack}{\textcolor{myblack}{#1}}}}
+\newcommand{\problempart}[1]{\subsection*{\contour{mybblack}{\textcolor{myblack}{#1}}}}
+% end macros
+
+% page style stuff
+\pagestyle{fancyplain}
+% \lhead{Doc Title}
+% \rhead{Shawn Oset}
+
+
+
+\color{documenttextcol}
+% start the document already
+\begin{document}
+
+% title page
+% Thanks to u/ModyTex:
+% https://www.reddit.com/r/LaTeX/comments/fw9kxe/violet_cover_page_done_in_latex_check_the_first/
+\pagestyle{empty}
+
+\begin{tikzpicture}[remember picture,overlay]
+
+\fill[charcoal] (current page.south west) rectangle (current page.north east);
+
+\foreach \i in {2.5,...,30}
+{\node[circle,draw,myblue,ultra thick,minimum size=\i cm,draw opacity=(32.5-\i)/30] at ($(current page.west)+(2.5,-5)$) {} ;}
+    \node[circle,draw,minimum size=2.6 cm,fill=cometoutlinecol,cometoutlinecol] at ($(current page.west)+(2.5,-5)$) {};
+    \node[circle,draw,minimum size=2.5 cm,fill=myblue,myblue] at ($(current page.west)+(2.5,-5)$) {};
+    \draw[cometoutlinecol2] ($(current page.west)+(2.0,-3.85)$) arc (110:-72:1.27cm);
+
+\begin{scope}[scale=0.35, transform shape]
+\foreach \i in {2.5,...,30}
+{\node[circle,draw,sun,thick,minimum size=\i cm,draw opacity=(32.5-\i)/30] at ($(current page.west)+(50,30)$) {} ;}
+    \node[circle,draw,minimum size=2.6 cm,fill=sunbright,sunbright] at ($(current page.west)+(50,30)$) {};
+    \node[circle,draw,minimum size=2.5 cm,fill=sun,sun] at ($(current page.west)+(50,30)$) {};
+\end{scope}
+
+\node[left,coverpagetitletextcol,minimum width=0.625*\paperwidth,minimum height=3cm, rounded corners] at ($(current page.north east)+(0,-9.5)$){{\fontsize{25}{30} \selectfont \bfseries Fragment Sputtering Comparison}};
+\node[left,coverpagetitletextcol2,minimum width=0.625*\paperwidth,minimum height=3cm, rounded corners] at ($(current page.north east)+(0,-10.5)$){{\fontsize{20}{30} \selectfont \bfseries Vectorial vs. Haser}};
+\node[left,coverpagesubtitletextcol,minimum width=0.625*\paperwidth,minimum height=2cm, rounded corners] at ($(current page.north east)+(0,-11.5)$){{\huge \textit{}}};
+\node[left,coverpagesubtitletextcol,minimum width=0.625*\paperwidth,minimum height=2cm, rounded corners] at ($(current page.north east)+(0,-12.5)$){{\huge \textit{}}};
+\node[left,coverpagenamecol,minimum width=0.625*\paperwidth,minimum height=2cm, rounded corners] at ($(current page.north east)+(0,-14)$){{\Large \textsc{Shawn Oset}}};
+\node[left,coverpagenamecol2,minimum width=0.625*\paperwidth,minimum height=2cm, rounded corners] at ($(current page.north east)+(0,-15)$){{\Large \textsc{Spring 2022}}};
+
+\end{tikzpicture}
+
+
+\newpage
+
+\newproblem{Problem Statement}
+TODO: write this
+Discrepancies between python vectorial code and fortran -- why it is not a problem.
+
+\newproblem{Vectorial Model for Haser Enthusiasts}
+
+\hrule
+\vspace{5mm}
+
+\problempart{Fragment Sputtering}
+The vectorial model extends the Haser model primarily through its incorporation of fragment momentum changes via photodissociation.
+Instead of a fragment carrying along at the parent's velocity as in the Haser model, the fragments are ejected isotropically in the frame of the parent with a speed determined by the physics of the photodissociation.
+
+\problempart{Outflow Axis}
+Due to the underlying spherical symmetry of the Haser model and the vectorial model's isotropic ejection, we need only to compute how one stream of parents distributes its fragments around the coma.
+
+(Picture of one outflow axis with multiple isotropic fragment sources along it)
+
+This stream is referred to as an outflow axis, and the resulting distribution of fragments is called the fragment sputter.
+In the vectorial model, we use the \(z\)-axis for outflow, with an accompanying spherical coordinate system superimposed with the nucleus at its center.
+
+\problempart{Fragment Sputter}
+To compute this fragment sputter, we place a 2d grid around the coma.
+At each grid point \((r_i, \theta_j)\), we calculate how heavily each point along the outflow axis contributes fragments to \((r_i, \theta_j)\).
+This amounts to a numerical integration along the outflow axis for each grid point.
+
+(Picture with one grid point singled out and multiple axis points contributing to it)
+(Picture should maybe show density of points being higher near the closest points)
+
+The fragments that travel the shortest distance will dominate the contributions to \((r_i, \theta_j)\) due to the exponential decay from photodissociation of fragments.
+There are two factors that influence how well the model can capture these dominating contributions:
+\begin{itemize}
+  \item We must sample the outflow axis around the minimum fragment travel distance more heavily
+  \item (Picture of finer sampling near minimum travel distance)
+  \item The angular grid must be fine enough to encroach on the outflow axis and pick up fragments before they have been destroyed by photodissociation
+  \item (Picture of two different angular grids)
+  \item The radial grid must be fine enough to capture the heavy contributions that occur from parents dissociating near the nucleus
+\end{itemize}
+
+Unfortunately the angular grid size is fixed at 26 subdivisions, which keeps the grid farther away from the
+TODO: If we use same angular grid as fortran, does our new sampling make the results diverge from fortran?
+
+\end{document}

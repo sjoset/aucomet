@@ -10,7 +10,7 @@ parent:
     # tau_T: 86000
     T_to_d_ratio: 0.93
     # dissociative lifetime of molecule, seconds
-    tau_d: 50000
+    tau_d: 100000
     # approximate cross section for most molecules we care about, cm^2
     sigma: 3.0e-16
 
@@ -53,11 +53,11 @@ plotting:
 misc:
     comet_name: "prod_dep_test"
     # comet-earth distance in AU
-    delta: 1.0
+    delta: 0.7410
     # fluorescence factor
     gfactor: 2.33e-4
 
 fortran_version:
     vmodel_binary: 'bin/fvm'
-    out_file: 'fort.16'
-    in_file: 'fparam.dat'
+    outfile: 'fort.16'
+    infile: 'fparam.dat'

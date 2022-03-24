@@ -263,15 +263,15 @@ def column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max, grid_step_x, grid
     return plt, fig, ax, surf
 
 
-def build_spray_fortran(spray):
-    """ Takes a spray read from the fortran version's output and gives us easily plottable data """
+def build_sputter_fortran(sputter):
+    """ Takes a sputter read from the fortran version's output and gives us easily plottable data """
 
     # get close to the nucleus - fortran distances are in km
-    spray = np.array([x for x in spray if x[0] < 10000])
+    sputter = np.array([x for x in sputter if x[0] < 10000])
 
-    rs = spray[:, 0]
-    thetas = spray[:, 1]
-    zs = spray[:, 2]
+    rs = sputter[:, 0]
+    thetas = sputter[:, 1]
+    zs = sputter[:, 2]
 
     xs = rs*np.sin(thetas)
     ys = rs*np.cos(thetas)
@@ -279,10 +279,10 @@ def build_spray_fortran(spray):
     return xs, ys, zs
 
 
-def plot_spray_fortran(spray):
-    """ Do the actual plotting of the fragment spray """
+def plot_sputter_fortran(sputter):
+    """ Do the actual plotting of the fragment sputter """
 
-    xs, ys, zs = build_spray_fortran(spray)
+    xs, ys, zs = build_sputter_fortran(sputter)
 
     colorsMap = 'jet'
     cm = plt.get_cmap(colorsMap)
@@ -290,30 +290,37 @@ def plot_spray_fortran(spray):
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
     fig = plt.figure()
     ax = Axes3D(fig)
+
+    # highlight the outflow axis, along positive y
+    outflow_max = 10000
+    ax.plot([0, 0, 0], [0, outflow_max, 0], color=myblue, lw=2, label='outflow axis')
+    ax.quiver(0, outflow_max/2, 0, 0, outflow_max*0.4, 0, color=mybblue, lw=2)
+
     ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
     ax.scatter(xs, ys, zs, c=scalarMap.to_rgba(zs))
     scalarMap.set_array(zs)
     fig.colorbar(scalarMap)
+    plt.legend(loc='upper right', frameon=False)
     plt.show()
 
 
-def build_spray_python(vmodel, mirrored=False):
+def build_sputter_python(vmodel, mirrored=False):
     """ Return plottable data from a finished python vectorial model run """
 
     vm_rs = vmodel['fast_radial_grid']
     vm_thetas = vmodel['angular_grid']
 
-    spraylist = []
+    sputterlist = []
     for (i, j), vdens in np.ndenumerate(vmodel['density_grid']):
-        spraylist.append([vm_rs[i], vm_thetas[j], vdens])
-    spray = np.array(spraylist)
+        sputterlist.append([vm_rs[i], vm_thetas[j], vdens])
+    sputter = np.array(sputterlist)
 
     # get close to the nucleus
-    spray = np.array([x for x in spray if x[0] < 10000000])
+    sputter = np.array([x for x in sputter if x[0] < 10000000])
 
-    rs = spray[:, 0]
-    thetas = spray[:, 1]
-    zs = spray[:, 2]
+    rs = sputter[:, 0]
+    thetas = sputter[:, 1]
+    zs = sputter[:, 2]
 
     xs = rs*np.sin(thetas)
     ys = rs*np.cos(thetas)
@@ -326,14 +333,16 @@ def build_spray_python(vmodel, mirrored=False):
     return xs, ys, zs
 
 
-def plot_spray_python(vmodel, mirrored=False, trisurf=False):
-    """ Plot the spray """
+def plot_sputter_python(vmodel, mirrored=False, trisurf=False):
+    """ Plot the sputter """
 
-    xs, ys, zs = build_spray_python(vmodel, mirrored)
+    xs, ys, zs = build_sputter_python(vmodel, mirrored)
 
-    zmask = 50
-    # zs = np.ma.masked_where(zs <= np.min(zs)*10, zs)
+    # only color the points less than a threshold value to see the detail
+    # in the tinier sputter values
+    zmask = 10000
     zs = np.ma.masked_where(zs >= np.min(zs)*zmask, zs)
+    # zs = np.ma.masked_where(zs <= np.min(zs)*10, zs)
 
     colorsMap = 'viridis'
     cm = plt.get_cmap(colorsMap)
@@ -344,24 +353,31 @@ def plot_spray_python(vmodel, mirrored=False, trisurf=False):
 
     fig = plt.figure()
     ax = Axes3D(fig)
+
+    # highlight the outflow axis, along positive y
+    outflow_max = 10000000
+    ax.plot([0, 0, 0], [0, outflow_max, 0], color=myblue, lw=2, label='outflow axis')
+    ax.quiver(0, outflow_max/2, 0, 0, outflow_max*0.4, 0, color=mybblue, lw=2)
+
     if trisurf:
         ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
     ax.scatter(xs, ys, zs, c=scalarMap.to_rgba(zs))
     scalarMap.set_array(zs)
     fig.colorbar(scalarMap)
+    plt.legend(loc='upper right', frameon=False)
     plt.show()
 
 
-def plot_sprays(f_spray, vmodel):
-    """ Combined plotting of forran and vectorial model results """
+def plot_sputters(f_sputter, vmodel):
+    """ Combined plotting of fortran and vectorial model results """
 
-    pxs, pys, pzs = build_spray_python(vmodel)
+    pxs, pys, pzs = build_sputter_python(vmodel)
     # convert python distances to km from m
     pxs = pxs/1000
     pys = pys/1000
     # convert python density to 1/cm**3 from 1/m**3
     pzs = pzs/1e6
-    fxs, fys, fzs = build_spray_fortran(f_spray)
+    fxs, fys, fzs = build_sputter_fortran(f_sputter)
 
     colorsMap = 'viridis'
     cm = plt.get_cmap(colorsMap)
@@ -369,10 +385,17 @@ def plot_sprays(f_spray, vmodel):
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
     fig = plt.figure()
     ax = Axes3D(fig)
+
+    # highlight the outflow axis, along positive y
+    outflow_max = 10000
+    ax.plot([0, 0, 0], [0, outflow_max, 0], color=myblue, lw=2, label='outflow axis')
+    ax.quiver(0, outflow_max/2, 0, 0, outflow_max*0.4, 0, color=mybblue, lw=2)
+
     # ax.plot_trisurf(xs, ys, zs, color='white', edgecolors='grey', alpha=0.5)
-    ax.scatter(pxs, pys, pzs, c=scalarMap.to_rgba(pzs))
+    ax.scatter(pxs, pys, pzs, c=scalarMap.to_rgba(pzs), label='python')
     # ax.scatter(fxs, fys, fzs, c=scalarMap.to_rgba(fzs))
-    ax.scatter(fxs, fys, fzs, color='red')
+    ax.scatter(fxs, fys, fzs, color='red', label='fortran')
     scalarMap.set_array(pzs)
+    plt.legend(loc='upper right', frameon=False)
     fig.colorbar(scalarMap)
     plt.show()
