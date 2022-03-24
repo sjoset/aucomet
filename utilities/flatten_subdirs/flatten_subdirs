@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+curimage=1
+
+for i in */; do
+    cd "$i"
+    for j in *.fits; do
+        fnum=$(printf "%05d" $curimage)
+        mv -v "$j" ../"$fnum".fits
+        ((curimage++))
+    done
+    cd ..
+done
