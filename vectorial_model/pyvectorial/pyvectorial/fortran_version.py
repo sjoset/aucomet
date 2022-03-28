@@ -20,6 +20,7 @@ def produce_fortran_fparam(input_yaml):
     """
 
     # TODO: binned time production should also be handled here
+    # TODO: parent and fragment destruction levels should also be handled here
     fparam_outfile = input_yaml['fortran_version']['in_file']
 
     with open(fparam_outfile, 'w') as out_file:
@@ -36,13 +37,13 @@ def produce_fortran_fparam(input_yaml):
             print(f"{input_yaml['parent']['v_outflow'].to(u.km/u.s).value}")
             print(f"{input_yaml['parent']['tau_T'].to(u.s).value}")
             print(f"{input_yaml['parent']['tau_d'].to(u.s).value}")
-            print("95.0")
+            print("99.0")
             # fragment info - gfactor, speed, total lifetime, destruction level
             print(f"{input_yaml['fragment']['name']}")
             print(f"{input_yaml['misc']['gfactor']}")
             print(f"{input_yaml['fragment']['v_photo'].to(u.km/u.s).value}")
             print(f"{input_yaml['fragment']['tau_T'].to(u.s).value}")
-            print("99.0")
+            print("95.0")
             # Custom aperture size, unused for our purposes so these are dummy values
             print("  100.000000       100.00000")
 

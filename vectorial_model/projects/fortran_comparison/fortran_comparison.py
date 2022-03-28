@@ -187,6 +187,25 @@ def plot_cdens_comparison(rs, c_ratios, out_file=None):
 #     plt.show()
 
 
+def dump_python_fragment_sputter(vmodel, out_file):
+
+    with open(out_file, 'w') as f:
+        with redirect_stdout(f):
+            print(f"Coma size: {vmodel['coma_radius'].to(u.km):.6e}")
+            print(f"Collision sphere size: {vmodel['collision_sphere_radius'].to(u.cm):.6e}")
+            print(f"Max grid radius: {vmodel['max_grid_radius'].to(u.km):.6e}")
+            print("Python fragment sputter\n\n")
+            print("radius\tangle\tfragment sputter density")
+            lastr = 0 * u.m
+            for i, j in np.ndindex(vmodel['density_grid'].shape):
+                r = vmodel['radial_grid'][i]
+                theta = vmodel['angular_grid'][j]
+                if lastr != r:
+                    print("")
+                print(f"{r:.5e} {theta:5.9f} {vmodel['density_grid'][i][j]:9.9e}")
+                lastr = r
+
+
 def main():
 
     # astropy units/quantities support in plots
@@ -244,6 +263,8 @@ def main():
     # pyv.plot_sputters(sputter, coma.vmodel)
 
     # plot_sputter_python_interpolated(sputter, coma.vmodel)
+
+    dump_python_fragment_sputter(coma.vmodel, out_file + '_pysputter')
 
 
 if __name__ == '__main__':

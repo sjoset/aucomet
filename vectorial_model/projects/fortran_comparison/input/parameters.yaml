@@ -10,7 +10,7 @@ parent:
     # tau_T: 86000
     T_to_d_ratio: 0.93
     # dissociative lifetime of molecule, seconds
-    tau_d: 50000
+    tau_d: 100000
     # approximate cross section for most molecules we care about, cm^2
     sigma: 3.0e-16
 
@@ -19,7 +19,7 @@ fragment:
     # velocity of fragment, km/s
     v_photo: 1.05
     # total lifetime of fragment molecule, seconds
-    tau_T: 10000
+    tau_T: 500000
 
 position:
     # distance in AU

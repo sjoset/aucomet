@@ -9,8 +9,5 @@ setup(name='pyvectorial',
       author='Shawn Oset',
       author_email='szo0032@auburn.edu',
       url='https://www.github.com/sjoset/aucomet',
-      # packages=find_packages(where='src'),
-      # package_dir={'': 'src'}
       packages=['pyvectorial'],
-      # py_modules=['pyvectorial.py']
      )

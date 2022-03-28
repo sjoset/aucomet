@@ -217,13 +217,14 @@
 \newproblem{Problem Statement}
 TODO: write this
 Discrepancies between python vectorial code and fortran -- why it is not a problem.
+Put a few images here that show the differences
 
 \newproblem{Vectorial Model for Haser Enthusiasts}
 
 \hrule
 \vspace{5mm}
 
-\problempart{Fragment Sputtering}
+% \problempart{Fragment Sputtering}
 The vectorial model extends the Haser model primarily through its incorporation of fragment momentum changes via photodissociation.
 Instead of a fragment carrying along at the parent's velocity as in the Haser model, the fragments are ejected isotropically in the frame of the parent with a speed determined by the physics of the photodissociation.
 
@@ -255,5 +256,26 @@ There are two factors that influence how well the model can capture these domina
 
 Unfortunately the angular grid size is fixed at 26 subdivisions, which keeps the grid farther away from the
 TODO: If we use same angular grid as fortran, does our new sampling make the results diverge from fortran?
+
+For short fragment lifetimes, the fortran clamps the contributions at 8 lifetimes, which means the python will be consistently higher at larger distances
+
+Separate into two regimes: near the nucleus, and near the edge of the grid (or past eight lifetimes)
+
+\problempart{Fortran Fragment Sputter}
+In function SDENT, the variable TLIMI is set to 8 times the fragment lifetime, which can artificially limit the fragment sputter, especially when dealing with large \(Q\).
+The following shows the fragment sputter table for a short and long fragment lifetimes at the edge of the grid:
+% TODO: paste data from the runs into a table here to show the zero counts
+
+\problempart{Fortran Column Density}
+In function SLINS, the following are checked before doing anything:
+\begin{itemize}
+  \item If \(\rho\) is larger than the coma it returns zero, by comparing to X(JMAX), the outermost point in the grid
+  \item If \(\rho\) is closer to the nucleus than the first radial grid point, returns zero by comparing to X(1), the first radial grid point
+\end{itemize}
+
+For the Gaussian integration, the line of sight integration is computed from z = 0 to z = SSUP, where SSUP is limited to a maximum of the edge of the grid, X(JMAX).
+
+\problempart{Python Fragment Sputter}
+Look at the fragment sputter table for equivalent runs
 
 \end{document}
