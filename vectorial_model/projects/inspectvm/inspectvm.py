@@ -121,10 +121,8 @@ def main():
     _, fext = os.path.splitext(fname)
 
     if fext == '.vm':
-        print("vm")
         handle_pickled_vm(fname)
     elif fext == '.yaml':
-        print("yaml")
         handle_vm_yaml(fname)
     else:
         print("Invalid file type")

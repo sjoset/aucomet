@@ -29,5 +29,5 @@ printing:
 production:
   base_q: 1.0e+28
 pyvectorial_info:
-  date_run: 02 23 2022
+  date_run: 04 11 2022
   vmodel_pickle: vmout.vm

@@ -57,8 +57,8 @@ def test_festou92():
     # effective circle is 8.0 radius
     # half geometric mean is 7.07
     # lwp = core.CircularAperture(7.07 * u.arcsec)  # geometric mean
-    # lwp = sba.RectangularAperture((20, 10) * u.arcsec)
-    lwp = sba.RectangularAperture((9.1, 15.3) * u.arcsec)
+    lwp = sba.RectangularAperture((20, 10) * u.arcsec)
+    # lwp = sba.RectangularAperture((9.1, 15.3) * u.arcsec)
 
     Q0 = 1e28 / u.s
     N = []

@@ -1,0 +1,15 @@
+project_directories:
+
+  festou_1992: "Tests vectorial model against data from Festou 1992, comet d'Arrest apparition"
+
+  fortran_comparison: "Runs python and fortran vectorial models with comparison graphs and output"
+
+  haser_compare: "(Unfinished) Runs Haser and vectorial model, compares column density"
+
+  inspectvm: "Loads a pickled .vm file directly, or a .yaml file pointing to a .vm file for plotting"
+
+  multirun: "Main tool for running arbitrary vectorial model with arbitrary parameters, with batch capability"
+
+  outbursts: "(Nearly finished, still edit source instead of loading config) Runs models with time dependence for producing outburst animations"
+
+  timescales_vs_production: "Varies the Q and parent lifetimes to test model stability"

@@ -9,6 +9,7 @@ from astropy.visualization import quantity_support
 from argparse import ArgumentParser
 import sbpy.activity as sba
 import numpy as np
+import matplotlib.pyplot as plt
 
 import pyvectorial as pyv
 
@@ -54,6 +55,31 @@ def run_haser(input_yaml):
     return sba.Haser(Q, v, gamma_p, gamma_f)
 
 
+def plot_cdens_comparison(vmodel, haser, show_plots=True, out_file=None):
+
+    rs, c_ratios = compare_haser(vmodel, haser)
+    r_units = u.km
+    plt.style.use('Solarize_Light2')
+
+    fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+
+    ax.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
+    ax.set(ylabel="Column density ratio, vectorial/Haser")
+    fig.suptitle("Calculated column density ratios, vectorial/Haser")
+
+    ax.set_xscale('log')
+    ax.set_ylim([0.5, 1.5])
+    ax.plot(rs, c_ratios, color="#688894",  linewidth=2.0)
+
+    plt.legend(loc='upper right', frameon=False)
+
+    if out_file:
+        plt.savefig(out_file + '.png')
+    if show_plots:
+        plt.show()
+    plt.close(fig)
+
+
 def compare_haser(vmodel, haser):
 
     end_power = np.log10(vmodel['max_grid_radius'].to(u.km).value)
@@ -64,14 +90,17 @@ def compare_haser(vmodel, haser):
     # print(v_cdens)
     # print(h_cdens)
 
+    cd_ratios = v_cdens / h_cdens
     cds = list(zip(v_cdens, h_cdens))
-    percent_diff = np.abs((v_cdens - h_cdens)/v_cdens)
+    percent_diff = np.abs((v_cdens - h_cdens)/h_cdens)
     print("Column densities:")
     for (v, h) in cds:
         print(f"{v:5.3e}\t\t{h:5.3e}\t\t{(v/h):5.3e}")
 
     avg_diff = np.mean(percent_diff)
     print(f"Average difference: {avg_diff}")
+
+    return rs, cd_ratios
 
 
 def main():
@@ -88,8 +117,9 @@ def main():
     coma = pyv.run_vmodel(input_yaml)
     hcoma = run_haser(input_yaml)
 
-    print("comparing..")
-    compare_haser(coma.vmodel, hcoma)
+    # print("comparing..")
+    # compare_haser(coma.vmodel, hcoma)
+    plot_cdens_comparison(coma.vmodel, hcoma)
 
     if input_yaml['printing']['print_radial_density']:
         pyv.print_radial_density(coma.vmodel)

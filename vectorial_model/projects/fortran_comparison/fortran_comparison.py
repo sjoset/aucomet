@@ -10,7 +10,7 @@ import logging as log
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-# from scipy.interpolate import griddata
+from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from contextlib import redirect_stdout
@@ -100,7 +100,7 @@ def calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_
     return vrs, v_ratios, crs, c_ratios
 
 
-def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_dens, out_file=None):
+def do_cdens_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_dens, frag_lifetime, show_plots=False, out_file=None):
 
     vrs, v_ratios, crs, c_ratios = calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_dens)
     print("\nvolume density at fortran gridpoints, py/fort")
@@ -116,7 +116,7 @@ def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_dens,
         print(f"r: {r/1000} km\tpy/fort: {cr}")
     print(f"Average: {np.average(c_ratios)}\t\tMax: {np.amax(c_ratios)}\t\tMin: {np.amin(c_ratios)}")
 
-    plot_cdens_comparison(crs, c_ratios, out_file)
+    plot_cdens_comparison(crs, c_ratios, frag_lifetime, show_plots=show_plots, out_file=out_file)
 
     if out_file is not None:
         with open(out_file, 'w') as f:
@@ -135,56 +135,28 @@ def print_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_dens,
                     print(f"r: {r/1000} km\tpy/fort: {cr}")
 
 
-def plot_cdens_comparison(rs, c_ratios, out_file=None):
+def plot_cdens_comparison(rs, c_ratios, frag_lifetime, show_plots=True, out_file=None):
 
-    r_units = u.m
+    r_units = u.km
     plt.style.use('Solarize_Light2')
 
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(20, 20))
 
     ax.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
     ax.set(ylabel="Column density ratio, py/fortran")
-    fig.suptitle("Calculated column density ratios, python/fortran")
-    # print(rs, c_ratios)
-    # print(np.min(rs), np.max(rs))
+    fig.suptitle(f"Calculated column density ratios, python/fortran\nFragment lifetime {frag_lifetime:6.0f}")
 
-    # ax.set_xbound(lower=np.min(rs), upper=np.max(rs))
     ax.set_xscale('log')
-    ax.set_ylim([0, 1.5])
+    ax.set_ylim([0.5, 1.5])
     ax.plot(rs, c_ratios, color="#688894",  linewidth=2.0)
-    # ax.plot(rs, c_ratios, color="#688894",  linewidth=2.0, linestyle="-")
-    # ax.plot(vmodel['column_density_grid'], vmodel['column_densities'], 'o', color=model_color, label="model")
-    # ax1.plot(vmodel['column_density_grid'], vmodel['column_densities'], '--', color=linear_color,
-    #          label="linear interpolation", linewidth=1.0)
 
     plt.legend(loc='upper right', frameon=False)
 
     if out_file:
         plt.savefig(out_file + '.png')
-    plt.show()
-
-
-# def plot_sputter_python_interpolated(f_sputter, vmodel):
-
-#     # TODO: figure out how to make this less ugly
-#     xs, ys, zs = build_sputter_python(vmodel)
-#     xs = xs/1e3
-#     ys = ys/1e3
-#     zs /= 1e9
-#     # xs, ys, zs = build_sputter_fortran(f_sputter)
-
-#     xi = np.logspace(-1, 2, 700)
-#     yi = np.logspace(-1, 2, 700)
-#     # xi = np.linspace(0, 100, 500)
-#     # yi = np.linspace(-100, 400, 1000)
-#     xi, yi = np.meshgrid(xi, yi)
-
-#     zi = griddata((xs, ys), zs, (xi, yi), method='cubic')
-#     plt.figure()
-#     plt.contour(xi, yi, zi, 15, linewidths=0.5, colors='k')
-#     plt.contourf(xi, yi, zi, 500, cmap='magma')
-#     plt.colorbar()
-#     plt.show()
+    if show_plots:
+        plt.show()
+    plt.close(fig)
 
 
 def dump_python_fragment_sputter(vmodel, out_file):
@@ -204,6 +176,29 @@ def dump_python_fragment_sputter(vmodel, out_file):
                     print("")
                 print(f"{r:.5e} {theta:5.9f} {vmodel['density_grid'][i][j]:9.9e}")
                 lastr = r
+
+
+def plot_sputter_python_interpolated(vmodel, within_r_km):
+
+    # TODO: figure out how to make this less ugly and actually work
+    xs, ys, zs = pyv.build_sputter_python(vmodel, within_r_km, mirrored=False)
+    xs = xs/1e3
+    ys = ys/1e3
+    zs /= 1e9
+    # xs, ys, zs = build_sputter_fortran(f_sputter)
+
+    xi = np.logspace(-1, 2, 700)
+    yi = np.logspace(-1, 2, 700)
+    # xi = np.linspace(0, 100, 500)
+    # yi = np.linspace(-100, 400, 1000)
+    xi, yi = np.meshgrid(xi, yi)
+
+    zi = griddata((xs, ys), zs, (xi, yi), method='cubic')
+    plt.figure()
+    plt.contour(xi, yi, zi, 15, linewidths=0.5, colors='k')
+    plt.contourf(xi, yi, zi, 500, cmap='magma')
+    plt.colorbar()
+    plt.show()
 
 
 def main():
@@ -256,13 +251,21 @@ def main():
     pyv.run_fortran_vmodel(input_yaml['fortran_version']['vmodel_binary'])
     vgrid, vdens, cgrid, cdens, sputter = pyv.read_fortran_vm_output(input_yaml['fortran_version']['out_file'], read_sputter=True)
 
-    print_comparison(coma, vgrid, vdens, cgrid, cdens, out_file)
+    do_cdens_comparison(coma, vgrid, vdens, cgrid, cdens, frag_lifetime=raw_yaml['fragment']['tau_T'], show_plots=False, out_file=out_file)
 
-    # pyv.plot_sputter_fortran(sputter)
-    # pyv.plot_sputter_python(coma.vmodel, mirrored=True, trisurf=True)
-    # pyv.plot_sputters(sputter, coma.vmodel)
+    pyv.plot_sputter_fortran(sputter, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=out_file + '_sputter_fortran.png')
+    pyv.plot_sputter_fortran(sputter, within_r_km=1000, mirrored=False, trisurf=True, show_plots=False, out_file=out_file + '_sputter_fortran_trisurf.png')
 
-    # plot_sputter_python_interpolated(sputter, coma.vmodel)
+    pyv.plot_sputter_python(coma.vmodel, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=out_file + '_sputter_python.png')
+    pyv.plot_sputter_python(coma.vmodel, within_r_km=1000, mirrored=False, trisurf=True, show_plots=False, out_file=out_file + '_sputter_python_trisurf.png')
+
+    pyv.plot_sputters(sputter, coma.vmodel, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=out_file + '_sputter_combined.png')
+    pyv.plot_sputters(sputter, coma.vmodel, within_r_km=1000, mirrored=True, trisurf=False, show_plots=False, out_file=out_file + '_sputter_combined_mirror.png')
+
+    # # pyv.radial_density_plots(coma.vmodel, u.km, 1/u.cm**3, 'OH')
+    # # pyv.column_density_plots(coma.vmodel, u.km, 1/u.cm**2, 'OH')
+
+    pyv.radial_density_plots_fortran(coma.vmodel, vgrid, vdens, 'OH', show_plots=False, out_file=out_file + '_rdens_fortran.png')
 
     dump_python_fragment_sputter(coma.vmodel, out_file + '_pysputter')
 
