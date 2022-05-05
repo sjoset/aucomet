@@ -210,48 +210,46 @@ def main():
 
     log.debug("Loading input from %s ....", args.parameterfile[0])
     # Read in our stuff
-    input_yaml, raw_yaml = pyv.get_input_yaml(args.parameterfile[0])
+    vmc, vmc_untransformed = pyv.vm_config_from_yaml(args.parameterfile[0])
 
     # output filenames
-    out_file = 'c_ftau_' + str(raw_yaml['fragment']['tau_T'])
+    out_file = 'c_ftau_' + str(vmc_untransformed.fragment.tau_T.to(u.s).value)
 
     # actually do it
-    coma = pyv.run_vmodel(input_yaml)
+    coma = pyv.run_vmodel(vmc)
 
     # handle optional printing
-    if input_yaml['printing']['print_radial_density']:
+    if vmc.etc['print_radial_density']:
         pyv.print_radial_density(coma.vmodel)
-    if input_yaml['printing']['print_column_density']:
+    if vmc.etc['print_column_density']:
         pyv.print_column_density(coma.vmodel)
-    if input_yaml['printing']['show_fragment_agreement_check']:
+    if vmc.etc['show_agreement_check']:
         pyv.show_fragment_agreement(coma.vmodel)
-    if input_yaml['printing']['show_aperture_checks']:
+    if vmc.etc['show_aperture_checks']:
         pyv.show_aperture_checks(coma)
 
     # Show some plots
-    frag_name = input_yaml['fragment']['name']
+    frag_name = vmc.fragment.name
 
-    if input_yaml['plotting']['show_radial_plots']:
+    if vmc.etc['show_radial_plots']:
         pyv.radial_density_plots(coma.vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=frag_name)
 
-    if input_yaml['plotting']['show_column_density_plots']:
+    if vmc.etc['show_column_density_plots']:
         pyv.column_density_plots(coma.vmodel, u.km, 1/u.cm**2, frag_name)
 
-    if input_yaml['plotting']['show_3d_column_density_centered']:
+    if vmc.etc['show_3d_column_density_centered']:
         pyv.column_density_plot_3d(coma.vmodel, -100000*u.km, 100000*u.km, -100000*u.km, 100000*u.km, 1000, 1000, u.km,
                                    1/u.cm**2, frag_name)
 
-    if input_yaml['plotting']['show_3d_column_density_off_center']:
+    if vmc.etc['show_3d_column_density_off_center']:
         pyv.column_density_plot_3d(coma.vmodel, -100000*u.km, 10000*u.km, -100000*u.km, 10000*u.km, 1000, 100, u.km,
                                    1/u.cm**2, frag_name)
 
-    pyv.tag_input_with_units(raw_yaml)
-    # convert our input to something fortran version can digest and run it
-    pyv.produce_fortran_fparam(raw_yaml)
-    pyv.run_fortran_vmodel(input_yaml['fortran_version']['vmodel_binary'])
-    vgrid, vdens, cgrid, cdens, sputter = pyv.read_fortran_vm_output(input_yaml['fortran_version']['out_file'], read_sputter=True)
+    # convert our untransformed input to something fortran version can digest and run it
+    pyv.run_fortran_vmodel(vmc_untransformed)
+    vgrid, vdens, cgrid, cdens, sputter = pyv.read_fortran_vm_output(vmc.etc['out_file'], read_sputter=True)
 
-    do_cdens_comparison(coma, vgrid, vdens, cgrid, cdens, frag_lifetime=raw_yaml['fragment']['tau_T'], show_plots=False, out_file=out_file)
+    do_cdens_comparison(coma, vgrid, vdens, cgrid, cdens, frag_lifetime=vmc_untransformed.fragment.tau_T.to(u.s).value, show_plots=False, out_file=out_file)
 
     pyv.plot_sputter_fortran(sputter, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=out_file + '_sputter_fortran.png')
     pyv.plot_sputter_fortran(sputter, within_r_km=1000, mirrored=False, trisurf=True, show_plots=False, out_file=out_file + '_sputter_fortran_trisurf.png')

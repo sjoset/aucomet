@@ -52,7 +52,7 @@ def main():
     log.debug("Loading input from %s ....", args.parameterfile[0])
 
     # Read in our model config
-    vmc = pyv.vm_config_from_yaml(args.parameterfile[0])
+    vmc, _ = pyv.vm_config_from_yaml(args.parameterfile[0])
 
     # Run the model
     coma = pyv.run_vmodel(vmc)

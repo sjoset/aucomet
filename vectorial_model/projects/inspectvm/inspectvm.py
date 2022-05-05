@@ -71,7 +71,6 @@ def handle_vm_yaml(yamlfile):
     log.debug("Loading input from %s ....", yamlfile)
     # Read in our stuff
     input_yaml = pyv.read_yaml_from_file(yamlfile)
-    # with open(input_yaml['pyvectorial_info']['vmodel_pickle'], 'rb') as vmpickle:
     vmodel = pyv.read_vmodel(input_yaml['pyvectorial_info']['vmodel_pickle'])
 
     if input_yaml['printing']['print_radial_density']:
