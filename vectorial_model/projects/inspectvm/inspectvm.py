@@ -70,43 +70,35 @@ def handle_vm_yaml(yamlfile):
 
     log.debug("Loading input from %s ....", yamlfile)
     # Read in our stuff
-    input_yaml = pyv.read_yaml_from_file(yamlfile)
-    vmodel = pyv.read_vmodel(input_yaml['pyvectorial_info']['vmodel_pickle'])
+    vmc, _ = pyv.vm_config_from_yaml(yamlfile)
+    vmodel = pyv.read_vmodel(vmc.etc['pyv_coma_pickle'])
 
-    if input_yaml['printing']['print_radial_density']:
+    if vmc.etc['print_radial_density']:
         pyv.print_radial_density(vmodel)
-    if input_yaml['printing']['print_column_density']:
+    if vmc.etc['print_column_density']:
         pyv.print_column_density(vmodel)
-
-    if input_yaml['printing']['show_agreement_check']:
+    if vmc.etc['show_agreement_check']:
         pyv.show_fragment_agreement(vmodel)
-
     # This uses the class functions so we can't do this
-    # if input_yaml['printing']['show_aperture_checks']:
+    # if vmc.etc['show_aperture_checks']:
     #     pyv.show_aperture_checks(coma)
 
-    # Show any requested plots
-    frag_name = input_yaml['fragment']['name']
-
-    if input_yaml['plotting']['show_radial_plots']:
-        pyv.radial_density_plots(vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=frag_name)
-
-    if input_yaml['plotting']['show_column_density_plots']:
-        pyv.vmplotter.column_density_plots(vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=frag_name)
-
-    if input_yaml['plotting']['show_3d_column_density_centered']:
+    if vmc.etc['show_radial_plots']:
+        pyv.vmplotter.radial_density_plots(vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=vmc.fragment.name)
+    if vmc.etc['show_column_density_plots']:
+        pyv.vmplotter.column_density_plots(vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=vmc.fragment.name)
+    if vmc.etc['show_3d_column_density_centered']:
         pyv.vmplotter.column_density_plot_3d(vmodel, x_min=-100000*u.km, x_max=100000*u.km,
                                              y_min=-100000*u.km, y_max=100000*u.km,
                                              grid_step_x=1000, grid_step_y=1000,
                                              r_units=u.km, cd_units=1/u.cm**2,
-                                             frag_name=frag_name)
-
-    if input_yaml['plotting']['show_3d_column_density_off_center']:
+                                             frag_name=vmc.fragment.name)
+    if vmc.etc['show_3d_column_density_off_center']:
         pyv.vmplotter.column_density_plot_3d(vmodel, x_min=-100000*u.km, x_max=10000*u.km,
                                              y_min=-100000*u.km, y_max=10000*u.km,
                                              grid_step_x=1000, grid_step_y=1000,
                                              r_units=u.km, cd_units=1/u.cm**2,
-                                             frag_name=frag_name)
+                                             frag_name=vmc.fragment.name)
 
 
 def main():
@@ -119,12 +111,11 @@ def main():
     fname = args.vmfile[0]
     _, fext = os.path.splitext(fname)
 
+    # Assume the file is a yaml file if the extension isn't .vm
     if fext == '.vm':
         handle_pickled_vm(fname)
-    elif fext == '.yaml':
-        handle_vm_yaml(fname)
     else:
-        print("Invalid file type")
+        handle_vm_yaml(fname)
 
 
 if __name__ == '__main__':

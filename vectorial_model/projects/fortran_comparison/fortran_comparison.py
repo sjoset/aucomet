@@ -260,8 +260,8 @@ def main():
     pyv.plot_sputters(sputter, coma.vmodel, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=out_file + '_sputter_combined.png')
     pyv.plot_sputters(sputter, coma.vmodel, within_r_km=1000, mirrored=True, trisurf=False, show_plots=False, out_file=out_file + '_sputter_combined_mirror.png')
 
-    # # pyv.radial_density_plots(coma.vmodel, u.km, 1/u.cm**3, 'OH')
-    # # pyv.column_density_plots(coma.vmodel, u.km, 1/u.cm**2, 'OH')
+    # pyv.radial_density_plots(coma.vmodel, u.km, 1/u.cm**3, 'OH')
+    # pyv.column_density_plots(coma.vmodel, u.km, 1/u.cm**2, 'OH')
 
     pyv.radial_density_plots_fortran(coma.vmodel, vgrid, vdens, 'OH', show_plots=False, out_file=out_file + '_rdens_fortran.png')
 

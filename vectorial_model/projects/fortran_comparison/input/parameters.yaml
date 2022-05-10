@@ -61,7 +61,7 @@ fragment:
   v_photo: 1.05
   # total lifetime of fragment molecule, seconds
   # tau_T: 129000
-  tau_T: 10000
+  tau_T: 30000
 
 comet:
   name: "Cometussy"

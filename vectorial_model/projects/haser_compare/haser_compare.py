@@ -45,10 +45,11 @@ def process_args():
     return args
 
 
-def run_haser(input_yaml):
+def run_haser(vmc):
 
-    Q = input_yaml['production']['base_q']
-    v = input_yaml['parent']['v_outflow']
+    Q = vmc.production.base_q
+    v = vmc.parent.v_outflow
+
     gamma_p = sba.photo_lengthscale('H2O', source='CS93')
     gamma_f = sba.photo_lengthscale('OH', source='CS93')
 
@@ -112,51 +113,40 @@ def main():
 
     log.debug("Loading input from %s ....", args.parameterfile[0])
     # Read in our stuff
-    input_yaml, raw_yaml = pyv.get_input_yaml(args.parameterfile[0])
+    vmc, _ = pyv.vm_config_from_yaml(args.parameterfile[0])
 
-    coma = pyv.run_vmodel(input_yaml)
-    hcoma = run_haser(input_yaml)
+    coma = pyv.run_vmodel(vmc)
+    hcoma = run_haser(vmc)
 
-    # print("comparing..")
-    # compare_haser(coma.vmodel, hcoma)
     plot_cdens_comparison(coma.vmodel, hcoma)
 
-    if input_yaml['printing']['print_radial_density']:
+    if vmc.etc['print_radial_density']:
         pyv.print_radial_density(coma.vmodel)
-    if input_yaml['printing']['print_column_density']:
+    if vmc.etc['print_column_density']:
         pyv.print_column_density(coma.vmodel)
-
-    if input_yaml['printing']['show_agreement_check']:
+    if vmc.etc['show_agreement_check']:
         pyv.show_fragment_agreement(coma.vmodel)
-
-    if input_yaml['printing']['show_aperture_checks']:
+    if vmc.etc['show_aperture_checks']:
         pyv.show_aperture_checks(coma)
 
-    # Show any requested plots
-    frag_name = input_yaml['fragment']['name']
-
-    if input_yaml['plotting']['show_radial_plots']:
-        pyv.vmplotter.radial_density_plots(coma.vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=frag_name)
-
-    if input_yaml['plotting']['show_column_density_plots']:
-        pyv.vmplotter.column_density_plots(coma.vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=frag_name)
-
-    if input_yaml['plotting']['show_3d_column_density_centered']:
+    if vmc.etc['show_radial_plots']:
+        pyv.vmplotter.radial_density_plots(coma.vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=vmc.fragment.name)
+    if vmc.etc['show_column_density_plots']:
+        pyv.vmplotter.column_density_plots(coma.vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=vmc.fragment.name)
+    if vmc.etc['show_3d_column_density_centered']:
         pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=100000*u.km,
                                              y_min=-100000*u.km, y_max=100000*u.km,
                                              grid_step_x=1000, grid_step_y=1000,
                                              r_units=u.km, cd_units=1/u.cm**2,
-                                             frag_name=frag_name)
-
-    if input_yaml['plotting']['show_3d_column_density_off_center']:
+                                             frag_name=vmc.fragment.name)
+    if vmc.etc['show_3d_column_density_off_center']:
         pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=10000*u.km,
                                              y_min=-100000*u.km, y_max=10000*u.km,
                                              grid_step_x=1000, grid_step_y=1000,
                                              r_units=u.km, cd_units=1/u.cm**2,
-                                             frag_name=frag_name)
+                                             frag_name=vmc.fragment.name)
 
-    # save_vmodel(input_yaml_copy, coma, 'vmout')
-    pyv.save_vmodel(raw_yaml, coma.vmodel, 'vmout')
+    pyv.save_vmodel(vmc, coma.vmodel, 'vmout')
 
 
 if __name__ == '__main__':

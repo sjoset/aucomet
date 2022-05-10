@@ -68,7 +68,7 @@ comet:
   rh: 1.4
   # adjustments to apply to input data
   # transform_method: 'cochran_schleicher_93'
-  # transform_method: 'festou_fortran'
+  transform_method: 'festou_fortran'
 
 grid:
   radial_points: 50
@@ -76,15 +76,15 @@ grid:
   radial_substeps: 50
 
 etc:
-  print_progress: False
+  print_progress: True
 
   print_binned_times: False
 
   print_radial_density: False
   print_column_density: False
 
-  show_agreement_check: False
-  show_aperture_checks: False
+  show_agreement_check: True
+  show_aperture_checks: True
 
   show_radial_plots: False
   show_column_density_plots: False
