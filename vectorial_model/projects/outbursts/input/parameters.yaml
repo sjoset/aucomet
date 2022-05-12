@@ -16,34 +16,34 @@ production:
   #       - 3
   #       - 1
 
-  time_variation_type: "gaussian"
-  params:
-    # amplitude in molecules/s
-    amplitude: 3.e28
-    # std_dev in hours
-    std_dev: 20.0
-    # time at peak in hours ago
-    # t_max: [-100.0, -80.0, -60.0, -40.0, -20.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
-    # t_max: [-20.0, -10.0, 0.0, 10.0, 20.0]
-    t_max: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
-
-  # time_variation_type: "sine wave"
+  # time_variation_type: "gaussian"
   # params:
   #   # amplitude in molecules/s
   #   amplitude: 3.e28
-  #   # period in hours
-  #   period: 20.0
-  #   # delta, angular offset in hours
-  #   delta: [-72.0, -48.0, -24.0, 0.0]
+  #   # std_dev in hours
+  #   std_dev: 20.0
+  #   # time at peak in hours ago
+  #   # t_max: [-100.0, -80.0, -60.0, -40.0, -20.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+  #   # t_max: [-20.0, -10.0, 0.0, 10.0, 20.0]
+  #   t_max: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
+
+  time_variation_type: "sine wave"
+  params:
+    # amplitude in molecules/s
+    amplitude: 3.e28
+    # period in hours
+    period: 20.0
+    # delta, angular offset in hours
+    delta: [-72.0, -48.0, -24.0, 0.0]
 
   # time_variation_type: "square pulse"
   # params:
   #   # amplitude in molecules/s
-  #   amplitude: 4.e28
+  #   amplitude: 1.e28
   #   # duration in hours
-  #   duration: 5.0
+  #   duration: 2.0
   #   # start of pulse, in hours ago
-  #   t_start: [48.0, 24.0, 0.0, -24.0]
+  #   t_start: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
 
 parent:
   name: "H2O"

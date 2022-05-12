@@ -2,7 +2,6 @@
 
 import os
 import sys
-import copy
 
 import logging as log
 import astropy.units as u
@@ -67,7 +66,6 @@ def main():
 
     for vmc in vmc_set:
 
-        # TODO: test if run_vmodel modifies its config input
         coma = pyv.run_vmodel(vmc)
 
         if vmc.etc['print_radial_density']:

@@ -87,9 +87,8 @@ def outburst_column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max, grid_ste
     plt, _, ax, _ = pyv.column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max,
             grid_step_x, grid_step_y, r_units, cdens_units,
             frag_name, show_plots=False,
-            vmin=min_coldens.to(cdens_units).value/2.0, vmax=max_coldens.to(cdens_units).value/2.0)
+            vmin=min_coldens.to(cdens_units).value, vmax=max_coldens.to(cdens_units).value/2.5)
     ax.set_title(f"{variation_type} {varying_production_key} = {varying_production_value:05.2f} ago")
-    # ax.set_zlim([min_coldens, max_coldens])
 
     plt.savefig(out_file)
     plt.close()
@@ -105,16 +104,17 @@ def main():
 
     vmc_set = pyv.vm_configs_from_yaml(args.parameterfile[0])
 
+    # figure out what is changing for our outburst dataset
     for variable_key in ['t_max', 'delta', 't_start']:
         if variable_key in vmc_set[0].production.params:
             varying_production_key = variable_key
 
-    # TODO: fix the vertical scale from one frame to the next in all plots
-    comae = [None] * len(vmc_set)
+    # track these to keep the scales on every plot the same
     max_voldens = 0 * (1/u.m**3)
     min_coldens = np.Infinity
     max_coldens = 0 * (1/u.m**2)
 
+    comae = [None] * len(vmc_set)
     for index, vmc in enumerate(vmc_set):
 
         varying_production_value = vmc.production.params[varying_production_key]
@@ -130,8 +130,6 @@ def main():
         if comae[index].vmodel['column_densities'][0] > max_coldens:
             max_coldens = comae[index].vmodel['column_densities'][0]
 
-    # print(f"{max_coldens=}")
-    # Make some headroom on the graph
     min_coldens /= 2.0
     max_coldens *= 7.0/6.0
     max_voldens *= 9.0/6.0
@@ -177,6 +175,8 @@ def main():
                                         min_coldens=min_coldens,
                                         max_coldens=max_coldens
                                         )
+        # reset plotting options back to default because the 3D plots change
+        # a few things that don't play well with the 2d plots
         mpl.rcParams.update(mpl.rcParamsDefault)
         outburst_column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=10000*u.km,
                                         y_min=-100000*u.km, y_max=10000*u.km, grid_step_x=1000,
@@ -188,6 +188,7 @@ def main():
                                         min_coldens=min_coldens,
                                         max_coldens=max_coldens
                                         )
+        # reset them again
         mpl.rcParams.update(mpl.rcParamsDefault)
 
         print("---------------------------------------")
