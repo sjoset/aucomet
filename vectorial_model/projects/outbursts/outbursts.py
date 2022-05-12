@@ -1,46 +1,97 @@
 #!/usr/bin/env python3
 
+import os
 import sys
-# import copy
 
-import numpy as np
+import logging as log
 import astropy.units as u
+import numpy as np
+import matplotlib as mpl
 from astropy.visualization import quantity_support
-import sbpy.activity as sba
-from sbpy.data import Phys
+from argparse import ArgumentParser
 
 import pyvectorial as pyv
-
 __author__ = 'Shawn Oset'
+__version__ = '0.1'
 
 
-def outburst_radial_density_plot(vmodel, r_units, voldens_units, frag_name, out_file, days_since_start):
+def process_args():
 
-    plt, fig, ax1, ax2 = pyv.radial_density_plots(vmodel, r_units, voldens_units, frag_name, show_plots=False)
+    # Parse command-line arguments
+    parser = ArgumentParser(
+        usage='%(prog)s [options] [inputfile]',
+        description=__doc__,
+        prog=os.path.basename(sys.argv[0])
+    )
+    parser.add_argument('--version', action='version', version=__version__)
+    parser.add_argument('--verbose', '-v', action='count', default=0,
+                        help='increase verbosity level')
+    parser.add_argument(
+            'parameterfile', nargs=1, help='YAML file with production and molecule data'
+            )  # the nargs=? specifies 0 or 1 arguments: it is optional
 
-    fig.suptitle(f"Calculated radial density of {frag_name}, t = {days_since_start:05.2f} days")
+    args = parser.parse_args()
+
+    # handle verbosity
+    if args.verbose >= 2:
+        log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
+    elif args.verbose == 1:
+        log.basicConfig(format="%(levelname)s: %(message)s", level=log.INFO)
+    else:
+        log.basicConfig(format="%(levelname)s: %(message)s")
+
+    return args
+
+
+def file_string_id_from_parameters(vmc, frame_number, varying_production_key):
+
+    base_q = vmc.production.base_q.value
+    p_tau_d = vmc.parent.tau_d.value
+    f_tau_T = vmc.fragment.tau_T.value
+
+    return f"{frame_number:03d}_q_{base_q}_ptau_d_{p_tau_d:06.1f}_ftau_T_{f_tau_T:06.1f}_{varying_production_key}_{vmc.production.params[varying_production_key].value:02.1f}"
+
+
+def outburst_radial_density_plots(vmodel, frag_name, out_file, variation_type, varying_production_key, varying_production_value, max_voldens=None):
+
+    # plt, fig, ax1, ax2
+    plt, _, ax1, ax2 = pyv.vmplotter.radial_density_plots(vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=frag_name, show_plots=False)
+    ax1.set_title(f"{variation_type}: {varying_production_key} = {varying_production_value:05.2f} ago")
+    ax2.set_title(f"{variation_type}: {varying_production_key} = {varying_production_value:05.2f} ago")
+    ax1.set_ylim([1e2, max_voldens])
+    ax2.set_ylim([1e2, max_voldens])
 
     plt.savefig(out_file)
     plt.close()
 
 
-def outburst_column_density_plot(vmodel, r_units, cdens_units, frag_name, out_file, days_since_start):
+def outburst_column_density_plots(vmodel, frag_name, out_file, variation_type, varying_production_key, varying_production_value, min_coldens=None, max_coldens=None):
 
-    plt, fig, ax1, ax2 = pyv.column_density_plots(vmodel, r_units, cdens_units, frag_name, show_plots=False)
-    fig.suptitle(f"Calculated column density of {frag_name}, t = {days_since_start:05.2f} days")
+    # plt, fig, ax1, ax2
+    plt, _, ax1, ax2 = pyv.vmplotter.column_density_plots(vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=frag_name, show_plots=False)
+    ax1.set_title(f"{variation_type} {varying_production_key} = {varying_production_value:05.2f} ago")
+    ax2.set_title(f"{variation_type} {varying_production_key} = {varying_production_value:05.2f} ago")
+    ax1.set_ylim([min_coldens, max_coldens])
+    ax2.set_ylim([min_coldens, max_coldens])
 
     plt.savefig(out_file)
     plt.close()
 
 
 def outburst_column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max, grid_step_x, grid_step_y,
-                                    r_units, cdens_units, frag_name, filename, days_since_start):
+                                    r_units, cdens_units, frag_name, out_file,
+                                    variation_type, varying_production_key, varying_production_value,
+                                    min_coldens=None, max_coldens=None):
 
-    plt, fig, ax, surf = pyv.column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max, grid_step_x, grid_step_y, r_units, cdens_units,
-                                                    frag_name, show_plots=False)
-    plt.title(f"Calculated column density of {frag_name}, t = {days_since_start:05.2f} days")
+    # plt, fig, ax, surf
+    plt, _, ax, _ = pyv.column_density_plot_3d(vmodel, x_min, x_max, y_min, y_max,
+            grid_step_x, grid_step_y, r_units, cdens_units,
+            frag_name, show_plots=False,
+            vmin=min_coldens.to(cdens_units).value/2.0, vmax=max_coldens.to(cdens_units).value/2.0)
+    ax.set_title(f"{variation_type} {varying_production_key} = {varying_production_value:05.2f} ago")
+    # ax.set_zlim([min_coldens, max_coldens])
 
-    plt.savefig(filename)
+    plt.savefig(out_file)
     plt.close()
 
 
@@ -48,122 +99,97 @@ def main():
 
     quantity_support()
 
-    fragName = 'OH'
+    args = process_args()
 
-    # Ratio of photodissociative lifetime to total lifetime, Cochran 1993
-    total_to_photo_ratio = 0.93
+    log.debug("Loading input from %s ....", args.parameterfile[0])
 
-    # Cochran & Schleicher '93
-    water_photo_lifetime = sba.photo_timescale('H2O')
+    vmc_set = pyv.vm_configs_from_yaml(args.parameterfile[0])
 
-    parent = Phys.from_dict({
-        'tau_T': water_photo_lifetime * total_to_photo_ratio,
-        'tau_d': water_photo_lifetime,
-        'v_outflow': 1 * u.km/u.s,
-        'sigma': 3e-16 * u.cm**2
-        })
-    fragment = Phys.from_dict({
-        'tau_T': sba.photo_timescale('OH') * 0.93,
-        'v_photo': 1.05 * u.km/u.s
-        })
+    for variable_key in ['t_max', 'delta', 't_start']:
+        if variable_key in vmc_set[0].production.params:
+            varying_production_key = variable_key
 
-    # Baseline production
-    base_q = 1e28
+    # TODO: fix the vertical scale from one frame to the next in all plots
+    comae = [None] * len(vmc_set)
+    max_voldens = 0 * (1/u.m**3)
+    min_coldens = np.Infinity
+    max_coldens = 0 * (1/u.m**2)
 
-    # Dictionary to hold outburst data
-    outburst = {}
-    outburster = pyv.TimeDependentProduction("sine wave")
+    for index, vmc in enumerate(vmc_set):
 
-    if outburster.type == "gaussian":
-        # amplitude of outburst
-        outburst['amplitude'] = 2e28
-        # standard deviation of gaussian
-        outburst['std_dev'] = 3 * u.hour
-    elif outburster.type == "sine wave":
-        # amplitude of outburst
-        outburst['amplitude'] = 2e28
-        # peak-to-peak period of outburst
-        outburst['period'] = 20 * u.hour
-    elif outburster.type == "square pulse":
-        # amplitude of outburst
-        # outburst['amplitude'] = 2e28
-        outburst['amplitude'] = 5e27
-        # starts at t = tstart
-        outburst['duration'] = 1.0 * u.day
-    else:
-        print("Unsupported outburst type! Exiting.")
-        return
+        varying_production_value = vmc.production.params[varying_production_key]
 
-    # Run model until this amount of time goes by, at this time step
-    day_end = 1.5
-    day_step = 0.5
-
-    # Which outputs?
-    radialDensityPlots = False
-    coldens2DPlots = False
-    coldens3DPlots = True
-
-    for days_since_start in np.arange(0, day_end, step=day_step):
-
-        if outburster.type == "gaussian":
-            t_max = days_since_start - (day_end/2)
-            q_t = outburster.create_production(
-                                             amplitude=outburst['amplitude']*(1/u.s),
-                                             t_max=t_max*u.day,
-                                             std_dev=outburst['std_dev']
-                                             )
-        elif outburster.type == "sine wave":
-            q_t = outburster.create_production(
-                                             amplitude=outburst['amplitude']*(1/u.s),
-                                             period=outburst['period'],
-                                             delta=days_since_start*u.day
-                                             )
-        elif outburster.type == "square pulse":
-            t_start = days_since_start - (day_end/2) + (outburst['duration'].value/2)
-            q_t = outburster.create_production(
-                                             amplitude=outburst['amplitude']*(1/u.s),
-                                             t_start=t_start*u.day,
-                                             duration=outburst['duration']
-                                             )
-
-        print(f"Calculating for t = {days_since_start:05.2f} days:")
-        coma = sba.VectorialModel(base_q=base_q*(1/u.s),
-                                  parent=parent,
-                                  fragment=fragment,
-                                  q_t=q_t,
-                                  print_progress=True)
+        print(f"Calculating for {varying_production_key} = {varying_production_value:05.2f} :")
+        comae[index] = pyv.run_vmodel(vmc)
         print("")
 
-        plotbasename = f"{days_since_start:05.2f}_days"
+        if comae[index].vmodel['radial_density'][0] > max_voldens:
+            max_voldens = comae[index].vmodel['radial_density'][0]
+        if comae[index].vmodel['column_densities'][-1] < min_coldens:
+            min_coldens = comae[index].vmodel['column_densities'][-1]
+        if comae[index].vmodel['column_densities'][0] > max_coldens:
+            max_coldens = comae[index].vmodel['column_densities'][0]
+
+    # print(f"{max_coldens=}")
+    # Make some headroom on the graph
+    min_coldens /= 2.0
+    max_coldens *= 7.0/6.0
+    max_voldens *= 9.0/6.0
+
+    for frame_number, (vmc, coma) in enumerate(list(zip(vmc_set, comae))):
+
+        varying_production_value = vmc.production.params[varying_production_key]
+
+        if vmc.etc['print_radial_density']:
+            pyv.print_radial_density(coma.vmodel)
+        if vmc.etc['print_column_density']:
+            pyv.print_column_density(coma.vmodel)
+        if vmc.etc['show_agreement_check']:
+            pyv.show_fragment_agreement(coma.vmodel)
+        if vmc.etc['show_aperture_checks']:
+            pyv.show_aperture_checks(coma)
+
+        plotbasename = file_string_id_from_parameters(vmc, frame_number=frame_number, varying_production_key=varying_production_key)
 
         # save the model for inspection later
-        pyv.pickle_vmodel(coma.vmodel, plotbasename)
+        # pyv.save_vmodel(vmc, coma.vmodel, 'vmout_'+file_string_id_from_parameters(vmc, varying_production_key))
 
         print(f"Generating plots for {plotbasename} ...")
 
-        # Do the requested plots
-        if radialDensityPlots:
-            outburst_radial_density_plot(coma.vmodel, u.km, 1/u.cm**3, fragName,
-                                         plotbasename+'_rdens.png',
-                                         days_since_start)
+        outburst_radial_density_plots(coma.vmodel, frag_name=vmc.fragment.name, out_file=plotbasename+'_rdens.png',
+                variation_type=vmc.production.time_variation_type,
+                varying_production_key=varying_production_key,
+                varying_production_value=varying_production_value,
+                max_voldens=max_voldens)
+        outburst_column_density_plots(coma.vmodel, frag_name=vmc.fragment.name, out_file=plotbasename+'_coldens2D.png',
+                variation_type=vmc.production.time_variation_type,
+                varying_production_key=varying_production_key,
+                varying_production_value=varying_production_value,
+                min_coldens=min_coldens,
+                max_coldens=max_coldens)
+        outburst_column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=100000*u.km,
+                                        y_min=-100000*u.km, y_max=100000*u.km, grid_step_x=1000,
+                                        grid_step_y=1000, r_units=u.km, cdens_units=1/u.cm**2, frag_name=vmc.fragment.name,
+                                        out_file=plotbasename+'_coldens3D_view1.png',
+                                        variation_type=vmc.production.time_variation_type,
+                                        varying_production_key=varying_production_key,
+                                        varying_production_value=varying_production_value,
+                                        min_coldens=min_coldens,
+                                        max_coldens=max_coldens
+                                        )
+        mpl.rcParams.update(mpl.rcParamsDefault)
+        outburst_column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=10000*u.km,
+                                        y_min=-100000*u.km, y_max=10000*u.km, grid_step_x=1000,
+                                        grid_step_y=1000, r_units=u.km, cdens_units=1/u.cm**2, frag_name=vmc.fragment.name,
+                                        out_file=plotbasename+'_coldens3D_view2.png',
+                                        variation_type=vmc.production.time_variation_type,
+                                        varying_production_key=varying_production_key,
+                                        varying_production_value=varying_production_value,
+                                        min_coldens=min_coldens,
+                                        max_coldens=max_coldens
+                                        )
+        mpl.rcParams.update(mpl.rcParamsDefault)
 
-        if coldens2DPlots:
-            outburst_column_density_plot(coma.vmodel, u.km, 1/u.cm**3, fragName,
-                                         plotbasename+'_coldens2D.png',
-                                         days_since_start)
-
-        if coldens3DPlots:
-            outburst_column_density_plot_3d(coma.vmodel, -100000*u.km, 100000*u.km,
-                                            -100000*u.km, 100000*u.km, 1000,
-                                            1000, u.km, 1/u.cm**2, fragName,
-                                            plotbasename+'_coldens3D_view1.png',
-                                            days_since_start)
-
-            outburst_column_density_plot_3d(coma.vmodel, -100000*u.km, 10000*u.km,
-                                            -100000*u.km, 10000*u.km, 1000, 100,
-                                            u.km, 1/u.cm**2, fragName,
-                                            plotbasename+'_coldens3D_view2.png',
-                                            days_since_start)
         print("---------------------------------------")
         print("")
 

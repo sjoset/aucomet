@@ -6,13 +6,10 @@ import copy
 
 import logging as log
 import astropy.units as u
-import numpy as np
-import itertools
 from astropy.visualization import quantity_support
 from argparse import ArgumentParser
 
 import pyvectorial as pyv
-from pyvectorial import VectorialModelConfig 
 
 __author__ = 'Shawn Oset'
 __version__ = '0.1'
@@ -46,62 +43,6 @@ def process_args():
     return args
 
 
-def get_vmconfig_sets(vmc: VectorialModelConfig) -> list[VectorialModelConfig]:
-
-    # holds a list of all combinations of changing parameters in vmc,
-    # values given as lists instead of single values
-    varying_parameters = []
-
-    # list of VectorialModelConfigs built from these changing parameters
-    psets = []
-
-    # Look at these inputs and build all possible combinations for running
-    allowed_variations = [
-        vmc.production.base_q,
-        vmc.parent.tau_d,
-        vmc.fragment.tau_T
-        ]
-
-    # check if it is a list, and if not, make it a list of length 1
-    # build list of lists of changing values for input to itertools.product
-    for av in allowed_variations:
-        print(av)
-        # already a list, add it
-        if isinstance(av.value, np.ndarray):
-            varying_parameters.append(av)
-        else:
-            # Single value specified so make a 1-element list
-            varying_parameters.append([av])
-
-    # # check if it is a list, and if not, make it a list of length 1
-    # # build list of lists of changing values for input to itertools.product
-    # for av in allowed_variations:
-    #     # already a list, add it
-    #     if av.size != 1 or isinstance(av.value, np.ndarray):
-    #         varying_parameters.append(av)
-    #     else:
-    #         # Single value specified so make a 1-element list
-    #         varying_parameters.append([av])
-
-    for element in itertools.product(*varying_parameters):
-
-        print(element)
-
-        # Make copy to append to our list
-        new_vmc = copy.deepcopy(vmc)
-
-        # Update this copy with the values we are varying
-        # format is a tuple with format (base_q, parent_tau_d, fragment_tau_T)
-        new_vmc.production.base_q = element[0]
-        new_vmc.parent.tau_d = element[1]
-        new_vmc.parent.tau_T = element[1] * new_vmc.parent.T_to_d_ratio
-        new_vmc.fragment.tau_T = element[2]
-
-        psets.append(new_vmc)
-
-    return psets
-
-
 def file_string_id_from_parameters(vmc):
 
     base_q = vmc.production.base_q.value
@@ -121,13 +62,13 @@ def main():
     log.debug("Loading input from %s ....", args.parameterfile[0])
 
     # Read in our stuff
-    vmc_in, _ = pyv.vm_config_from_yaml(args.parameterfile[0], init_ratio = False)
+    # vmc_in, _ = pyv.vm_config_from_yaml(args.parameterfile[0], init_ratio = False)
+    vmc_set = pyv.vm_configs_from_yaml(args.parameterfile[0])
 
-    for vmc in get_vmconfig_sets(vmc_in):
+    for vmc in vmc_set:
 
         # TODO: test if run_vmodel modifies its config input
-        vmc_copy = copy.deepcopy(vmc)
-        coma = pyv.run_vmodel(vmc_copy)
+        coma = pyv.run_vmodel(vmc)
 
         if vmc.etc['print_radial_density']:
             pyv.print_radial_density(coma.vmodel)
