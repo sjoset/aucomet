@@ -1,0 +1,38 @@
+comet:
+  delta: 1.0
+  name: Cometussy
+  rh: 1.4
+  transform_applied: true
+  transform_method: cochran_schleicher_93
+etc:
+  print_binned_times: false
+  print_column_density: false
+  print_progress: true
+  print_radial_density: false
+  pyv_coma_pickle: vmout_q_1e+28_ptau_d_98000.0_ftau_T_78400.0.vm
+  pyv_date_of_run: 05 16 2022
+  show_3d_column_density_centered: false
+  show_3d_column_density_off_center: false
+  show_agreement_check: true
+  show_aperture_checks: true
+  show_column_density_plots: false
+  show_radial_plots: false
+fragment:
+  name: OH
+  tau_T: 78399.99999999999
+  v_photo: 1.05
+grid:
+  angular_points: 30
+  radial_points: 50
+  radial_substeps: 50
+parent:
+  T_to_d_ratio: 0.93
+  name: H2O
+  sigma: 3.0e-16
+  tau_T: 91139.99999999999
+  tau_d: 97999.99999999999
+  v_outflow: 0.7183811165192391
+production:
+  base_q: 1.0e+28
+  params: {}
+  time_variation_type: null

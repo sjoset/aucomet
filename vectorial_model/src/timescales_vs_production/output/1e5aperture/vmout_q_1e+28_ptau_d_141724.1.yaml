@@ -1,0 +1,35 @@
+comet:
+  delta: 1.0
+  name: Cometussy
+  rh: 1.4
+  transform_applied: false
+  transform_method: null
+etc:
+  aperture_accuracy: 99.97896834594255
+  aperture_dimensions:
+  - 100000
+  - 100000
+  aperture_type: rectangular
+  assumed_aperture_count: 1.0e+33
+  print_progress: false
+  pyv_coma_pickle: vmout_q_1e+28_ptau_d_141724.1.vm
+  pyv_date_of_run: 05 16 2022
+fragment:
+  name: OH
+  tau_T: 100000.0
+  v_photo: 1.05
+grid:
+  angular_points: 60
+  radial_points: 150
+  radial_substeps: 50
+parent:
+  T_to_d_ratio: 0.93
+  name: H2O
+  sigma: 3.0e-16
+  tau_T: 131803.44827585793
+  tau_d: 141724.13793103
+  v_outflow: 0.85
+production:
+  base_q: 1.0e+28
+  params: {}
+  time_variation_type: null

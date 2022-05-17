@@ -1,0 +1,97 @@
+production:
+  # parent production in molecules/s
+  base_q: 1.e+28
+  # base_q: [1.e+28]
+  # base_q: [1.e+27, 1.e+28]
+
+  # time_variation_type: "binned"
+  # params:
+  #   # # rates of production, in molecules/s
+  #   q_t:
+  #       - 1.e+28
+  #       - 3.e+29
+  #       - 1.e+28
+  #   # # times these productions started, in days ago
+  #   times_at_productions:
+  #       - 30
+  #       - 3
+  #       - 1
+
+  # time_variation_type: "gaussian"
+  # params:
+  #   # amplitude in molecules/s
+  #   amplitude: 3.e28
+  #   # std_dev in hours
+  #   std_dev: 20.0
+  #   # time at peak in hours ago
+  #   t_max: [24.0, 0.0, -24.0]
+
+  # time_variation_type: "sine wave"
+  # params:
+  #   # amplitude in molecules/s
+  #   amplitude: 3.e28
+  #   # period in hours
+  #   period: 20.0
+  #   # delta, angular offset in hours
+  #   delta: [-72.0, -48.0, -24.0, 0.0]
+
+  # time_variation_type: "square pulse"
+  # params:
+  #   # amplitude in molecules/s
+  #   amplitude: 4.e28
+  #   # duration in hours
+  #   duration: 5.0
+  #   # start of pulse, in hours ago
+  #   t_start: [24.0, 0.0, -24.0]
+
+parent:
+  name: "H2O"
+  # outflow velocity of parent, km/s
+  v_outflow: 0.85
+  # total lifetime of parent molecule, seconds
+  # tau_T: 86430
+  T_to_d_ratio: 0.93
+  # dissociative lifetime of molecule, seconds
+  # tau_d: 50000
+  tau_d: [50000]
+  # tau_d: [50000, 70000]
+  # approximate cross section for most molecules we care about, cm^2
+  sigma: 3.0e-16
+
+fragment:
+  name: "OH"
+  # velocity of fragment, km/s
+  v_photo: 1.05
+  # total lifetime of fragment molecule, seconds
+  # tau_T: [129000]
+  tau_T: 129000
+  # tau_T: [20000, 40000]
+
+comet:
+  name: "Cometussy"
+  # distance in AU
+  rh: 1.4
+  # adjustments to apply to input data
+  transform_method: 'cochran_schleicher_93'
+  # transform_method: 'festou_fortran'
+
+grid:
+  radial_points: 50
+  angular_points: 30
+  radial_substeps: 50
+
+etc:
+  print_progress: False
+
+  print_binned_times: False
+
+  print_radial_density: False
+  print_column_density: False
+
+  show_agreement_check: False
+  show_aperture_checks: False
+
+  show_radial_plots: False
+  show_column_density_plots: False
+  show_3d_column_density_centered: False
+  show_3d_column_density_off_center: False
