@@ -1,6 +1,6 @@
 production:
   # parent production in molecules/s
-  base_q: [1.e+27, 3.e+28, 1.e+28, 1.e+29]
+  base_q: [1.e+29, 3.e+28]
 
 parent:
   name: "H2O"
@@ -10,7 +10,7 @@ parent:
   T_to_d_ratio: 0.93
   # dissociative lifetime of molecule, seconds
   # tau_d: 50000
-  tau_d: [50000, 70000, 90000]
+  tau_d: [50000, 90000]
   # approximate cross section for most molecules we care about, cm^2
   sigma: 3.0e-16
 

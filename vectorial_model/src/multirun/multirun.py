@@ -66,48 +66,33 @@ def main():
     for vmc in vmc_set:
 
         coma = pyv.run_vmodel(vmc)
+        vmr = pyv.get_result_from_coma(coma)
 
         if vmc.etc['print_radial_density']:
-            pyv.print_radial_density(coma.vmodel)
+            pyv.print_radial_density(vmr)
         if vmc.etc['print_column_density']:
-            pyv.print_column_density(coma.vmodel)
+            pyv.print_column_density(vmr)
         if vmc.etc['show_agreement_check']:
-            pyv.show_fragment_agreement(coma.vmodel)
+            pyv.show_fragment_agreement(vmr)
         if vmc.etc['show_aperture_checks']:
             pyv.show_aperture_checks(coma)
 
         if vmc.etc['show_radial_plots']:
-            pyv.vmplotter.radial_density_plots(coma.vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=vmc.fragment.name)
+            pyv.radial_density_plots(vmc, vmr, r_units=u.km, voldens_units=1/u.cm**3)
         if vmc.etc['show_column_density_plots']:
-            pyv.vmplotter.column_density_plots(coma.vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=vmc.fragment.name)
+            pyv.column_density_plots(vmc, vmr, r_units=u.km, cd_units=1/u.cm**2)
         if vmc.etc['show_3d_column_density_centered']:
-            pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=100000*u.km,
-                                                 y_min=-100000*u.km, y_max=100000*u.km,
-                                                 grid_step_x=1000, grid_step_y=1000,
-                                                 r_units=u.km, cd_units=1/u.cm**2,
-                                                 frag_name=vmc.fragment.name)
+            pyv.column_density_plot_3d(vmc, vmr, x_min=-100000*u.km,
+                    x_max=100000*u.km, y_min=-100000*u.km, y_max=100000*u.km,
+                    grid_step_x=1000, grid_step_y=1000, r_units=u.km,
+                    cd_units=1/u.cm**2)
         if vmc.etc['show_3d_column_density_off_center']:
-            pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=10000*u.km,
-                                                 y_min=-100000*u.km, y_max=10000*u.km,
-                                                 grid_step_x=1000, grid_step_y=1000,
-                                                 r_units=u.km, cd_units=1/u.cm**2,
-                                                 frag_name=vmc.fragment.name)
+            pyv.column_density_plot_3d(vmc, vmr, x_min=-100000*u.km,
+                    x_max=10000*u.km, y_min=-100000*u.km, y_max=10000*u.km,
+                    grid_step_x=1000, grid_step_y=1000, r_units=u.km,
+                    cd_units=1/u.cm**2)
 
-        vmr = pyv.get_result_from_coma(coma)
-        # print(pyv.fragment_sputter_from_sbpy(vmr, within_r=700*u.km))
-        fsc = pyv.fragment_sputter_from_sbpy(vmr, within_r=800*u.km)
-        pyv.vmplotter.plot_fragment_sputter(fsc, dist_units=u.km, sputter_units=1/u.cm**3, trisurf=False)
-        # pyv.vmplotter.column_density_plot_3d_new(vmc=vmc, vmr=vmr, x_min=-100000*u.km, x_max=10000*u.km,
-        #                                      y_min=-100000*u.km, y_max=10000*u.km,
-        #                                      grid_step_x=1000, grid_step_y=1000,
-        #                                      r_units=u.km, cd_units=1/u.cm**2)
-        # pyv.vmplotter.column_density_plot_3d_new(vmc=vmc, vmr=vmr, x_min=-100000*u.km, x_max=100000*u.km,
-        #                                      y_min=-100000*u.km, y_max=100000*u.km,
-        #                                      grid_step_x=1000, grid_step_y=1000,
-        #                                      r_units=u.km, cd_units=1/u.cm**2)
-        # pyv.vmplotter.radial_density_plots_new(vmc=vmc, vmr=vmr, r_units=u.km, voldens_units=1/u.cm**3)
-        # pyv.vmplotter.column_density_plots_new(vmc=vmc, vmr=vmr, r_units=u.km, cd_units=1/u.cm**2)
-        # pyv.save_vmodel(vmc, coma.vmodel, 'vmout_'+file_string_id_from_parameters(vmc))
+        pyv.save_results(vmc, vmr, 'test')
 
 
 if __name__ == '__main__':

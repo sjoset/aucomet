@@ -139,6 +139,7 @@ def main():
     # sort by production value to group results
     vmc_set = sorted(vmc_set, key=lambda vmc: vmc.production.base_q)
 
+    # count how many variations we have
     num_qs = len(set(map(lambda x: x.production.base_q, vmc_set)))
     num_timescales = len(set(map(lambda x: x.parent.tau_d, vmc_set)))
 
@@ -176,7 +177,7 @@ def main():
 
         vmc.etc['aperture_accuracy'] = aperture_accuracy
         vmc.etc['vmodel_run_time'] = [vm_run_t1 - vm_run_t0, vm_check_t1 - vm_check_t0]
-        pyv.save_vmodel(vmc, coma.vmodel, 'vmout_'+file_string_id_from_parameters(vmc))
+        pyv.save_results(vmc, pyv.get_result_from_coma(coma), 'vmout_'+file_string_id_from_parameters(vmc))
         print(f"Total progress: {(100 * (i+1)) / (num_qs*num_timescales):4.1f} %")
     
     results_array = np.array(results_list).reshape((num_qs, num_timescales, 3))

@@ -9,7 +9,7 @@ import copy
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-from scipy.interpolate import griddata
+# from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from contextlib import redirect_stdout
@@ -34,7 +34,7 @@ __version__ = '0.1'
 # text_bred = (219, 175, 173)
 
 
-# def colored(color_tuple, text):
+# def colored_text(color_tuple, text):
 #     r, g, b = color_tuple
 #     return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
@@ -67,29 +67,29 @@ def process_args():
     return args
 
 
-def calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_dens):
+def calculate_comparisons(pvmr: pyv.VectorialModelResult, fvmr: pyv.VectorialModelResult):
 
     v_list = []
     c_list = []
     # Sometimes python grid is smaller than fortran version
-    max_r = coma.vmodel['max_grid_radius'].to(u.m).value
+    max_r = pvmr.max_grid_radius.to(u.m).value
 
-    for i, r in enumerate(vol_grid_points):
+    for i, r in enumerate(fvmr.volume_density_grid):
         r_m = r.to(u.m).value
         if r_m > max_r:
             continue
-        ratio = ((coma.vmodel['r_dens_interpolation'](r_m) * (1/u.m**3)) / vol_dens[i]).decompose().value
+        ratio = ((pvmr.volume_density_interpolation(r_m) * (1/u.m**3)) / fvmr.volume_density[i]).decompose().value
         v_list.append([r_m, ratio])
 
     v_array = np.array(v_list)
     vrs = v_array[:, 0]
     v_ratios = v_array[:, 1]
 
-    for i, r in enumerate(col_grid_points):
+    for i, r in enumerate(fvmr.column_density_grid):
         r_m = r.to(u.m).value
         if r_m > max_r:
             continue
-        ratio = ((coma.vmodel['column_density_interpolation'](r_m) * (1/u.m**2)) / col_dens[i]).decompose().value
+        ratio = ((pvmr.column_density_interpolation(r_m) * (1/u.m**2)) / fvmr.column_density[i]).decompose().value
         c_list.append([r_m, ratio])
 
     c_array = np.array(c_list)
@@ -99,9 +99,9 @@ def calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_
     return vrs, v_ratios, crs, c_ratios
 
 
-def do_cdens_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_dens, frag_lifetime, show_plots=False, out_file=None):
+def do_cdens_comparison(pvmr: pyv.VectorialModelResult, fvmr: pyv.VectorialModelResult, vmc: pyv.VectorialModelConfig, show_plots=False, out_file=None):
 
-    vrs, v_ratios, crs, c_ratios = calculate_comparisons(coma, vol_grid_points, vol_dens, col_grid_points, col_dens)
+    vrs, v_ratios, crs, c_ratios = calculate_comparisons(pvmr, fvmr)
     print("\nvolume density at fortran gridpoints, py/fort")
 
     print(v_ratios)
@@ -115,7 +115,7 @@ def do_cdens_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_de
         print(f"r: {r/1000} km\tpy/fort: {cr}")
     print(f"\nAverage: {np.average(c_ratios)}\t\tMax: {np.amax(c_ratios)}\tMin: {np.amin(c_ratios)}")
 
-    plot_cdens_comparison(crs, c_ratios, frag_lifetime, show_plots=show_plots, out_file=out_file)
+    plot_cdens_comparison(crs, c_ratios, vmc, show_plots=show_plots, out_file=out_file)
 
     if out_file is not None:
         with open(out_file, 'w') as f:
@@ -134,7 +134,7 @@ def do_cdens_comparison(coma, vol_grid_points, vol_dens, col_grid_points, col_de
                     print(f"r: {r/1000} km\tpy/fort: {cr}")
 
 
-def plot_cdens_comparison(rs, c_ratios, frag_lifetime, show_plots=True, out_file=None):
+def plot_cdens_comparison(rs, c_ratios, vmc: pyv.VectorialModelConfig, show_plots=True, out_file=None):
 
     r_units = u.km
     plt.style.use('Solarize_Light2')
@@ -143,7 +143,7 @@ def plot_cdens_comparison(rs, c_ratios, frag_lifetime, show_plots=True, out_file
 
     ax.set(xlabel=f'Distance from nucleus, {r_units.to_string()}')
     ax.set(ylabel="Column density ratio, py/fortran")
-    fig.suptitle(f"Calculated column density ratios, python/fortran\nFragment lifetime {frag_lifetime:6.0f}")
+    fig.suptitle(f"Calculated column density ratios, python/fortran\nFragment lifetime {vmc.fragment.tau_T.to(u.s).value:6.0f}")
 
     ax.set_xscale('log')
     ax.set_ylim([0.5, 1.5])
@@ -158,46 +158,23 @@ def plot_cdens_comparison(rs, c_ratios, frag_lifetime, show_plots=True, out_file
     plt.close(fig)
 
 
-def dump_python_fragment_sputter(vmodel, out_file):
+def dump_python_fragment_sputter(vmr: pyv.VectorialModelResult, out_file):
 
     with open(out_file, 'w') as f:
         with redirect_stdout(f):
-            print(f"Coma size: {vmodel['coma_radius'].to(u.km):.6e}")
-            print(f"Collision sphere size: {vmodel['collision_sphere_radius'].to(u.cm):.6e}")
-            print(f"Max grid radius: {vmodel['max_grid_radius'].to(u.km):.6e}")
+            print(f"Coma size: {vmr.coma_radius.to(u.km):.6e}")
+            print(f"Collision sphere size: {vmr.collision_sphere_radius.to(u.km):.6e}")
+            print(f"Max grid radius: {vmr.max_grid_radius.to(u.km):.6e}")
             print("Python fragment sputter\n\n")
             print("radius\tangle\tfragment sputter density")
             lastr = 0 * u.m
-            for i, j in np.ndindex(vmodel['density_grid'].shape):
-                r = vmodel['radial_grid'][i]
-                theta = vmodel['angular_grid'][j]
+            for i, frag_dens in enumerate(vmr.fragment_sputter.fragment_density):
+                r = vmr.fragment_sputter.rs[i].to(u.km)
+                theta = vmr.fragment_sputter.thetas[i]
                 if lastr != r:
                     print("")
-                print(f"{r:.5e} {theta:5.9f} {vmodel['density_grid'][i][j]:9.9e}")
+                print(f"{r:.5e} {theta:5.9f} {frag_dens.to(1/u.cm**3):9.9e}")
                 lastr = r
-
-
-def plot_sputter_python_interpolated(vmodel, within_r_km):
-
-    # TODO: figure out how to make this less ugly and actually work
-    xs, ys, zs = pyv.build_sputter_python(vmodel, within_r_km, mirrored=False)
-    xs = xs/1e3
-    ys = ys/1e3
-    zs /= 1e9
-    # xs, ys, zs = build_sputter_fortran(f_sputter)
-
-    xi = np.logspace(-1, 2, 700)
-    yi = np.logspace(-1, 2, 700)
-    # xi = np.linspace(0, 100, 500)
-    # yi = np.linspace(-100, 400, 1000)
-    xi, yi = np.meshgrid(xi, yi)
-
-    zi = griddata((xs, ys), zs, (xi, yi), method='cubic')
-    plt.figure()
-    plt.contour(xi, yi, zi, 15, linewidths=0.5, colors='k')
-    plt.contourf(xi, yi, zi, 500, cmap='magma')
-    plt.colorbar()
-    plt.show()
 
 
 def file_string_id_from_parameters(vmc_prime):
@@ -207,7 +184,7 @@ def file_string_id_from_parameters(vmc_prime):
 
     f_tau_T = vmc.fragment.tau_T.to(u.s).value
 
-    return f"c_ftau_{f_tau_T:06.0f}s_"
+    return f"c_ftau_{f_tau_T:06.0f}s"
 
 
 def main():
@@ -231,61 +208,33 @@ def main():
 
         # actually do it
         coma = pyv.run_vmodel(vmc)
-
-        # handle optional printing
-        if vmc.etc['print_radial_density']:
-            pyv.print_radial_density(coma.vmodel)
-        if vmc.etc['print_column_density']:
-            pyv.print_column_density(coma.vmodel)
-        if vmc.etc['show_agreement_check']:
-            pyv.show_fragment_agreement(coma.vmodel)
-        if vmc.etc['show_aperture_checks']:
-            pyv.show_aperture_checks(coma)
-
-        if vmc.etc['show_radial_plots']:
-            pyv.vmplotter.radial_density_plots(coma.vmodel, r_units=u.km, voldens_units=1/u.cm**3, frag_name=vmc.fragment.name)
-        if vmc.etc['show_column_density_plots']:
-            pyv.vmplotter.column_density_plots(coma.vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=vmc.fragment.name)
-        if vmc.etc['show_3d_column_density_centered']:
-            pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=100000*u.km,
-                                                 y_min=-100000*u.km, y_max=100000*u.km,
-                                                 grid_step_x=1000, grid_step_y=1000,
-                                                 r_units=u.km, cd_units=1/u.cm**2,
-                                                 frag_name=vmc.fragment.name)
-        if vmc.etc['show_3d_column_density_off_center']:
-            pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=10000*u.km,
-                                                 y_min=-100000*u.km, y_max=10000*u.km,
-                                                 grid_step_x=1000, grid_step_y=1000,
-                                                 r_units=u.km, cd_units=1/u.cm**2,
-                                                 frag_name=vmc.fragment.name)
+        vmr = pyv.get_result_from_coma(coma)
 
         # run fortran version and load the results from the output file it dumps to
         pyv.run_fortran_vmodel(vmc_untransformed)
-        vgrid, vdens, cgrid, cdens, sputter = pyv.read_fortran_vm_output(vmc.etc['out_file'], read_sputter=True)
+        fvmr = pyv.get_result_from_fortran(vmc.etc['out_file'])
 
-        # make a copy of the fortran input/output files for inspection later
-        os.rename(vmc.etc['in_file'], run_name_template + vmc.etc['in_file'])
-        os.rename(vmc.etc['out_file'], run_name_template + vmc.etc['out_file'])
+        # move the fortran input/output files for inspection later
+        os.rename(vmc.etc['in_file'], run_name_template + '_' + vmc.etc['in_file'])
+        os.rename(vmc.etc['out_file'], run_name_template + '_' + vmc.etc['out_file'])
 
-        do_cdens_comparison(coma, vgrid, vdens, cgrid, cdens, frag_lifetime=vmc_untransformed.fragment.tau_T.to(u.s).value, show_plots=False, out_file=run_name_template)
+        do_cdens_comparison(vmr, fvmr, vmc, show_plots=False, out_file=run_name_template + '_ratio')
 
-        # pyv.plot_sputter_fortran(sputter, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_fortran.png')
-        # pyv.plot_sputter_fortran(sputter, within_r_km=1000, mirrored=False, trisurf=True, show_plots=False, out_file=run_name_template + '_sputter_fortran_trisurf.png')
-        #
-        # pyv.plot_sputter_python(coma.vmodel, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_python.png')
-        # pyv.plot_sputter_python(coma.vmodel, within_r_km=1000, mirrored=False, trisurf=True, show_plots=False, out_file=run_name_template + '_sputter_python_trisurf.png')
-        #
-        # pyv.plot_sputters(sputter, coma.vmodel, within_r_km=1000, mirrored=False, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_combined.png')
-        # pyv.plot_sputters(sputter, coma.vmodel, within_r_km=1000, mirrored=True, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_combined_mirror.png')
-        #
-        # pyv.radial_density_plots_fortran(coma.vmodel, vgrid, vdens, 'OH', show_plots=False, out_file=run_name_template + '_rdens_fortran.png')
+        pyv.plot_fragment_sputter(fvmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_fortran.png')
+        pyv.plot_fragment_sputter(fvmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=True,  show_plots=False, out_file=run_name_template + '_sputter_fortran_trisurf.png')
 
-        vmr = pyv.get_result_from_coma(coma)
-        sbpyfs = pyv.fragment_sputter_from_sbpy(vmr, within_r=1600*u.km)
-        fortfs = pyv.fragment_sputter_from_fortran(sputter, within_r=1600*u.km)
-        pyv.vmplotter.plot_sputters_new(fortfs, sbpyfs, dist_units=u.km, sputter_units=1/u.cm**3)
+        pyv.plot_fragment_sputter(vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_python.png')
+        pyv.plot_fragment_sputter(vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=True,  show_plots=False, out_file=run_name_template + '_sputter_python_trisurf.png')
 
-        dump_python_fragment_sputter(coma.vmodel, run_name_template + '_pysputter')
+        pyv.plot_sputters(fvmr.fragment_sputter, vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_combined.png')
+        pyv.plot_sputters(fvmr.fragment_sputter, vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, mirrored=True, show_plots=False, out_file=run_name_template + '_sputter_combined_mirror.png')
+
+        pyv.radial_density_plots_fortran(vmc, fvmr, vmr, show_plots=False, out_file=run_name_template + '_rdens_fortran.png')
+
+        dump_python_fragment_sputter(vmr, run_name_template + '_pysputter')
+        pyv.save_results(vmc, vmr, run_name_template + '_python_save')
+        pyv.save_results(vmc, fvmr, run_name_template + '_fortran_save')
+
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ src:
   timescales_vs_production: "(Needs conversion) Varies the Q and parent lifetimes to test model stability"
 
 outburst_animations:
-  description: "Using time-dependent production code to generate coma animations"
+  description: "Using time-dependent production code to generate coma animations: only one base_q per run should be used"
 
 sputter_comparison:
   description: "Investigation of the differences in fragment sputter between fortran and python vectorial models"
@@ -21,4 +21,5 @@ TODOs:
   sputtering_comparison: "Rotate figures in document to horizontal"
   pyvectorial: "find a way to save entire coma object"
   sbpy: "rewrite vectorial model without dictionaries?"
-  vmplotter: "finish converting to vectorial model result"
+  vmplotter: "rewrite to only plot given an axis?"
+  all: "move key to print_volume_density from print_radial_density"

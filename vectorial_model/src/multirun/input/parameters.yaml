@@ -4,18 +4,18 @@ production:
   # base_q: [1.e+28]
   # base_q: [1.e+27, 1.e+28]
 
-  # time_variation_type: "binned"
-  # params:
-  #   # # rates of production, in molecules/s
-  #   q_t:
-  #       - 1.e+28
-  #       - 3.e+29
-  #       - 1.e+28
-  #   # # times these productions started, in days ago
-  #   times_at_productions:
-  #       - 30
-  #       - 3
-  #       - 1
+  time_variation_type: "binned"
+  params:
+    # # rates of production, in molecules/s
+    q_t:
+        - 1.e+28
+        - 3.e+29
+        - 1.e+28
+    # # times these productions started, in days ago
+    times_at_productions:
+        - 30
+        - 3
+        - 1
 
   # time_variation_type: "gaussian"
   # params:
@@ -72,7 +72,7 @@ comet:
   # distance in AU
   rh: 1.4
   # adjustments to apply to input data
-  transform_method: 'cochran_schleicher_93'
+  # transform_method: 'cochran_schleicher_93'
   # transform_method: 'festou_fortran'
 
 grid:
@@ -81,17 +81,17 @@ grid:
   radial_substeps: 50
 
 etc:
-  print_progress: False
+  print_progress: True
 
-  print_binned_times: False
+  print_binned_times: True
 
-  print_radial_density: False
-  print_column_density: False
+  print_radial_density: True
+  print_column_density: True
 
-  show_agreement_check: False
-  show_aperture_checks: False
+  show_agreement_check: True
+  show_aperture_checks: True
 
-  show_radial_plots: False
-  show_column_density_plots: False
-  show_3d_column_density_centered: False
-  show_3d_column_density_off_center: False
+  show_radial_plots: True
+  show_column_density_plots: True
+  show_3d_column_density_centered: True
+  show_3d_column_density_off_center: True
