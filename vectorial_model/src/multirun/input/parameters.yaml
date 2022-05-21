@@ -4,18 +4,18 @@ production:
   # base_q: [1.e+28]
   # base_q: [1.e+27, 1.e+28]
 
-  time_variation_type: "binned"
-  params:
-    # # rates of production, in molecules/s
-    q_t:
-        - 1.e+28
-        - 3.e+29
-        - 1.e+28
-    # # times these productions started, in days ago
-    times_at_productions:
-        - 30
-        - 3
-        - 1
+  # time_variation_type: "binned"
+  # params:
+  #   # # rates of production, in molecules/s
+  #   q_t:
+  #       - 1.e+28
+  #       - 3.e+29
+  #       - 1.e+28
+  #   # # times these productions started, in days ago
+  #   times_at_productions:
+  #       - 30
+  #       - 3
+  #       - 1
 
   # time_variation_type: "gaussian"
   # params:
@@ -26,14 +26,15 @@ production:
   #   # time at peak in hours ago
   #   t_max: [24.0, 0.0, -24.0]
 
-  # time_variation_type: "sine wave"
-  # params:
-  #   # amplitude in molecules/s
-  #   amplitude: 3.e28
-  #   # period in hours
-  #   period: 20.0
-  #   # delta, angular offset in hours
-  #   delta: [-72.0, -48.0, -24.0, 0.0]
+  time_variation_type: "sine wave"
+  params:
+    # amplitude in molecules/s
+    amplitude: 1.e29
+    # period in hours
+    period: 5.0
+    # delta, angular offset in hours
+    delta: 0.0
+    # delta: [-72.0, -48.0, -24.0, 0.0]
 
   # time_variation_type: "square pulse"
   # params:
@@ -42,7 +43,8 @@ production:
   #   # duration in hours
   #   duration: 5.0
   #   # start of pulse, in hours ago
-  #   t_start: [24.0, 0.0, -24.0]
+  #   t_start: 3.0
+  #   # t_start: [24.0, 0.0, -24.0]
 
 parent:
   name: "H2O"
@@ -76,8 +78,8 @@ comet:
   # transform_method: 'festou_fortran'
 
 grid:
-  radial_points: 50
-  angular_points: 30
+  radial_points: 150
+  angular_points: 60
   radial_substeps: 50
 
 etc:
@@ -85,13 +87,14 @@ etc:
 
   print_binned_times: True
 
-  print_radial_density: True
-  print_column_density: True
+  print_radial_density: False
+  print_column_density: False
 
   show_agreement_check: True
   show_aperture_checks: True
 
-  show_radial_plots: True
+  show_radial_plots: False
   show_column_density_plots: True
   show_3d_column_density_centered: True
-  show_3d_column_density_off_center: True
+  show_3d_column_density_off_center: False
+  show_fragment_sputter: True

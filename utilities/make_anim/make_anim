@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+conv_opts="-delay 15 -loop 0 -layers OptimizePlus"
+
+if [[ "$#" -eq 0 ]]; then
+    echo -e "Available:\nrdens\ncdens2d\ncdens3dv1\ncdens3dv2\nsputter"
+fi
+
+while [[ "$#" -gt 0 ]]; do
+
+    animtype="$1"
+    case $animtype in
+        "rdens")
+            echo "Constructing radial density animation..."
+            convert $conv_opts *rdens.png outburst_rdens.gif
+            shift
+            ;;
+        "cdens2d")
+            echo "Constructing 2D column density animation..."
+            convert $conv_opts *coldens2D.png outburst_coldens2D.gif
+            shift
+            ;;
+        "cdens3dv1")
+            echo "Constructing 3D column density animation, view 1..."
+            convert $conv_opts *coldens3D_view1.png outburst_coldens3D_view1.gif
+            shift
+            ;;
+        "cdens3dv2")
+            echo "Constructing 3D column density animation, view 2..."
+            convert $conv_opts *coldens3D_view2.png outburst_coldens3D_view2.gif
+            shift
+            ;;
+        "sputter")
+            echo "Constructing fragment sputter animation..."
+            convert $conv_opts *norm_sputter.png outburst_norm_sputter.gif
+            shift
+            ;;
+        *)
+            echo "Unknown animation type! Exiting."
+            exit 1
+            ;;
+    esac
+
+    echo "Done with $animtype animation."
+done

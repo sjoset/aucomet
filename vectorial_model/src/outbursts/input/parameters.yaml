@@ -27,25 +27,26 @@ production:
   #   # t_max: [-20.0, -10.0, 0.0, 10.0, 20.0]
   #   t_max: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
 
-  # time_variation_type: "sine wave"
-  # params:
-  #   # amplitude in molecules/s
-  #   amplitude: 3.e28
-  #   # period in hours
-  #   period: 20.0
-  #   # delta, angular offset in hours
-  #   delta: [-24.0, 0.0]
-  #   # delta: [-72.0, -48.0, -24.0, 0.0]
-
-  time_variation_type: "square pulse"
+  time_variation_type: "sine wave"
   params:
     # amplitude in molecules/s
-    amplitude: 1.e28
-    # duration in hours
-    duration: 2.0
-    # start of pulse, in hours ago
-    t_start: [-1.0, 1.0]
-    # t_start: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
+    amplitude: 1.e29
+    # period in hours
+    period: 10.0
+    # delta, angular offset in hours
+    # delta: [-24.0, 0.0]
+    delta: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
+    # delta: [-72.0, -48.0, -24.0, 0.0]
+
+  # time_variation_type: "square pulse"
+  # params:
+  #   # amplitude in molecules/s
+  #   amplitude: 1.e28
+  #   # duration in hours
+  #   duration: 2.0
+  #   # start of pulse, in hours ago
+  #   t_start: [-1.0, 1.0]
+  #   # t_start: [-40, -38, -36, -34, -32, -30, -28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40]
 
 parent:
   name: "H2O"
@@ -55,7 +56,7 @@ parent:
   # tau_T: 86430
   T_to_d_ratio: 0.93
   # dissociative lifetime of molecule, seconds
-  tau_d: 50000
+  tau_d: 86000
   # tau_d: [50000, 70000]
   # approximate cross section for most molecules we care about, cm^2
   sigma: 3.0e-16
@@ -65,7 +66,7 @@ fragment:
   # velocity of fragment, km/s
   v_photo: 1.05
   # total lifetime of fragment molecule, seconds
-  tau_T: 129000
+  tau_T: 80000
   # tau_T: [80000, 100000]
 
 comet:
@@ -77,12 +78,12 @@ comet:
   # transform_method: 'festou_fortran'
 
 grid:
-  radial_points: 50
-  angular_points: 30
+  radial_points: 150
+  angular_points: 60
   radial_substeps: 50
 
 etc:
-  print_progress: True
+  print_progress: False
 
   print_binned_times: False
 

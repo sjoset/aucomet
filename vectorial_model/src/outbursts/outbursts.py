@@ -95,6 +95,21 @@ def outburst_column_density_plot_3d(vmc: pyv.VectorialModelConfig, vmr: pyv.Vect
     plt.close()
 
 
+def outburst_fragment_sputter(fsc: pyv.FragmentSputterPolar,
+        dist_units, sputter_units, within_r, out_file, variation_type,
+        varying_production_key, varying_production_value):
+
+    # plt, fig, ax, surf
+    plt, _, ax = pyv.plot_fragment_sputter(fsc,
+            dist_units=dist_units, sputter_units=sputter_units,
+            within_r=within_r,
+            show_plots=False)
+    ax.set_title(f"{variation_type} {varying_production_key} = {varying_production_value:05.2f} ago")
+
+    plt.savefig(out_file)
+    plt.close()
+
+
 def main():
 
     quantity_support()
@@ -191,6 +206,13 @@ def main():
                 min_coldens=min_coldens, max_coldens=max_coldens)
         # reset them again
         mpl.rcParams.update(mpl.rcParamsDefault)
+        outburst_fragment_sputter(vmr.fragment_sputter,
+                dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km,
+                out_file=plotbasename+'_norm_sputter.png',
+                variation_type=vmc.production.time_variation_type,
+                varying_production_key=varying_production_key,
+                varying_production_value=varying_production_value
+                )
 
         print("---------------------------------------")
         print("")

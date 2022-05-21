@@ -91,6 +91,9 @@ def main():
                     x_max=10000*u.km, y_min=-100000*u.km, y_max=10000*u.km,
                     grid_step_x=1000, grid_step_y=1000, r_units=u.km,
                     cd_units=1/u.cm**2)
+        if vmc.etc['show_fragment_sputter']:
+            pyv.plot_fragment_sputter(vmr.fragment_sputter, dist_units=u.km,
+                    sputter_units=1/u.cm**3, within_r=1000*u.km)
 
         pyv.save_results(vmc, vmr, 'test')
 
