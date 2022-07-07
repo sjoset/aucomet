@@ -1,6 +1,6 @@
 comet:
   delta: 1.0
-  name: Cometussy
+  name: Test Comet
   rh: 1.4
   transform_applied: false
   transform_method: null

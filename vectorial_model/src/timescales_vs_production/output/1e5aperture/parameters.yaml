@@ -22,7 +22,7 @@ fragment:
   tau_T: 100000
 
 comet:
-  name: "Cometussy"
+  name: "Test Comet"
   # distance in AU
   rh: 1.4
   # adjustments to apply to input data

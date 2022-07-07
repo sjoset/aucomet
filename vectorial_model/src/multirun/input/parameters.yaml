@@ -26,15 +26,15 @@ production:
   #   # time at peak in hours ago
   #   t_max: [24.0, 0.0, -24.0]
 
-  time_variation_type: "sine wave"
-  params:
-    # amplitude in molecules/s
-    amplitude: 1.e29
-    # period in hours
-    period: 5.0
-    # delta, angular offset in hours
-    delta: 0.0
-    # delta: [-72.0, -48.0, -24.0, 0.0]
+  # time_variation_type: "sine wave"
+  # params:
+  #   # amplitude in molecules/s
+  #   amplitude: 1.e29
+  #   # period in hours
+  #   period: 5.0
+  #   # delta, angular offset in hours
+  #   delta: 0.0
+  #   # delta: [-72.0, -48.0, -24.0, 0.0]
 
   # time_variation_type: "square pulse"
   # params:
@@ -54,8 +54,8 @@ parent:
   # tau_T: 86430
   T_to_d_ratio: 0.93
   # dissociative lifetime of molecule, seconds
-  # tau_d: 50000
-  tau_d: [50000]
+  tau_d: 50000
+  # tau_d: [70000]
   # tau_d: [50000, 70000]
   # approximate cross section for most molecules we care about, cm^2
   sigma: 3.0e-16
@@ -66,11 +66,11 @@ fragment:
   v_photo: 1.05
   # total lifetime of fragment molecule, seconds
   # tau_T: [129000]
-  tau_T: 129000
+  tau_T: 100000
   # tau_T: [20000, 40000]
 
 comet:
-  name: "Cometussy"
+  name: "Test Comet"
   # distance in AU
   rh: 1.4
   # adjustments to apply to input data
@@ -93,8 +93,8 @@ etc:
   show_agreement_check: True
   show_aperture_checks: True
 
-  show_radial_plots: False
+  show_radial_plots: True
   show_column_density_plots: True
   show_3d_column_density_centered: True
-  show_3d_column_density_off_center: False
+  show_3d_column_density_off_center: True
   show_fragment_sputter: True

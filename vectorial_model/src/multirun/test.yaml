@@ -1,6 +1,6 @@
 comet:
   delta: 1.0
-  name: Cometussy
+  name: Test Comet
   rh: 1.4
   transform_applied: false
   transform_method: null
@@ -10,17 +10,17 @@ etc:
   print_progress: true
   print_radial_density: false
   pyv_coma_pickle: test.vmr
-  pyv_date_of_run: 05 20 2022
+  pyv_date_of_run: 07 07 2022
   show_3d_column_density_centered: true
-  show_3d_column_density_off_center: false
+  show_3d_column_density_off_center: true
   show_agreement_check: true
   show_aperture_checks: true
   show_column_density_plots: true
   show_fragment_sputter: true
-  show_radial_plots: false
+  show_radial_plots: true
 fragment:
   name: OH
-  tau_T: 129000.0
+  tau_T: 100000.0
   v_photo: 1.05
 grid:
   angular_points: 60
@@ -35,8 +35,5 @@ parent:
   v_outflow: 0.85
 production:
   base_q: 1.0e+28
-  params:
-    amplitude: 1.0e+29
-    delta: 0.0
-    period: 5.0
-  time_variation_type: sine wave
+  params: {}
+  time_variation_type: null
