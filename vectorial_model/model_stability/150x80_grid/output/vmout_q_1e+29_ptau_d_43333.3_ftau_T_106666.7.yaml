@@ -1,0 +1,38 @@
+comet:
+  delta: 1.0
+  name: Test Comet
+  rh: 1.0
+  transform_applied: true
+  transform_method: festou_fortran
+etc:
+  aperture_accuracy: 100.02731076970316
+  aperture_dimensions:
+  - 1000000
+  - 1000000
+  aperture_type: rectangular
+  assumed_aperture_count: 1.0e+33
+  print_progress: true
+  pyv_coma_pickle: vmout_q_1e+29_ptau_d_43333.3_ftau_T_106666.7.vmr
+  pyv_date_of_run: 07 13 2022
+  vmodel_run_time:
+  - 3.3405039310455322
+  - 7.40375018119812
+fragment:
+  name: OH
+  tau_T: 106666.66666666667
+  v_photo: 1.05
+grid:
+  angular_points: 80
+  radial_points: 150
+  radial_substeps: 50
+parent:
+  T_to_d_ratio: 0.93
+  name: H2O
+  sigma: 3.0e-16
+  tau_T: 48360.0
+  tau_d: 43333.33333333333
+  v_outflow: 0.85
+production:
+  base_q: 1.0e+29
+  params: {}
+  time_variation_type: null

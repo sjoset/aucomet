@@ -15,7 +15,11 @@ sputter_comparison:
   comparison_data: "Contains data runs for fragment_sputtering_comparison.pdf"
 
 model_stability:
-  description: "Testing the input production limits that will break the model"
+  description: "Testing the input production limits that will break the model at various lifetimes"
+  method: "Provide dummy values for Q and assume a certain fragment number in an aperture.  What range of Qs agree on what the calculated Q is?"
+
+accuracy_vs_gridsize:
+  description: "Investigating the difference in results while varying grid sizes"
 
 TODOs:
   pyvectorial: "find a way to save entire coma object"

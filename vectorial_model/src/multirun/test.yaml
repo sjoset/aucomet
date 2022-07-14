@@ -10,7 +10,7 @@ etc:
   print_progress: true
   print_radial_density: false
   pyv_coma_pickle: test.vmr
-  pyv_date_of_run: 07 07 2022
+  pyv_date_of_run: 07 11 2022
   show_3d_column_density_centered: true
   show_3d_column_density_off_center: true
   show_agreement_check: true

@@ -1,0 +1,45 @@
+production:
+  # parent production in molecules/s
+  base_q: 1.e28
+
+parent:
+  name: "H2O"
+  # outflow velocity of parent, km/s
+  v_outflow: 0.85
+  # ratio of total lifetime of parent molecule to dissociative, seconds
+  T_to_d_ratio: 0.93
+  # dissociative lifetime of molecule, seconds
+  tau_d: 52000
+  # approximate cross section for most molecules we care about, cm^2
+  sigma: 3.0e-16
+
+fragment:
+  name: "OH"
+  # velocity of fragment, km/s
+  v_photo: 1.05
+  # total lifetime of fragment molecule, seconds
+  tau_T: 160000
+
+comet:
+  name: "Test Comet"
+  # distance in AU
+  rh: 1.0
+  # adjustments to apply to input data
+  # transform_method: 'cochran_schleicher_93'
+  transform_method: 'festou_fortran'
+
+grid:
+  radial_points: 50
+  angular_points: 50
+  radial_substeps: 50
+
+etc:
+  print_progress: True
+
+  aperture_type: "rectangular"
+  # dimensions in km
+  aperture_dimensions:
+    - 1000000
+    - 1000000
+  # assumed count in aperture
+  assumed_aperture_count: 1.0e+33
