@@ -10,7 +10,7 @@ etc:
   print_progress: true
   print_radial_density: false
   pyv_coma_pickle: vmout_q_1e+28_ptau_d_199390.8_ftau_T_156800.0.vmr
-  pyv_date_of_run: 05 22 2022
+  pyv_date_of_run: 09 01 2022
   show_3d_column_density_centered: false
   show_3d_column_density_off_center: false
   show_agreement_check: true

@@ -428,21 +428,21 @@ def main():
     with open('output.npdata', 'rb') as np_file:
         all_data = np.load(np_file)
 
+    do_calc_q_vs_q_plots(all_data)
+    do_calc_q_vs_q_fixed_ptau_plots(all_data)
+    do_calc_q_vs_q_fixed_ftau_plots(all_data)
+
+    do_comp_time_vs_q_plots(all_data)
+    do_comp_time_vs_q_fixed_ptau_plots(all_data)
+    do_comp_time_vs_q_fixed_ftau_plots(all_data)
+
+    do_acc_vs_q_plots(all_data)
+    do_acc_vs_q_fixed_ptau_plots(all_data)
+    do_acc_vs_q_fixed_ftau_plots(all_data)
+
     # qs = set(all_data[:, 0])
     # p_taus = sorted(set(all_data[:, 1]))
     # f_taus = sorted(set(all_data[:, 2]))
-
-    # do_calc_q_vs_q_plots(all_data)
-    # do_calc_q_vs_q_fixed_ptau_plots(all_data)
-    # do_calc_q_vs_q_fixed_ftau_plots(all_data)
-
-    # do_comp_time_vs_q_plots(all_data)
-    # do_comp_time_vs_q_fixed_ptau_plots(all_data)
-    # do_comp_time_vs_q_fixed_ftau_plots(all_data)
-
-    # do_acc_vs_q_plots(all_data)
-    # do_acc_vs_q_fixed_ptau_plots(all_data)
-    do_acc_vs_q_fixed_ftau_plots(all_data)
 
     # acc_vs_q_plot(all_data, p_taus[0], f_taus[0], show_plots=True)
     # acc_vs_q_plot_3d_fixed_ptau(all_data, p_taus[0], show_plots=True)

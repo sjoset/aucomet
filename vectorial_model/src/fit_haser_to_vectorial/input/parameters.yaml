@@ -78,8 +78,8 @@ comet:
   # transform_method: 'festou_fortran'
 
 grid:
-  radial_points: 50
-  angular_points: 30
+  radial_points: 60
+  angular_points: 50
   radial_substeps: 80
 
 etc:
@@ -93,8 +93,8 @@ etc:
   show_agreement_check: False
   show_aperture_checks: False
 
-  show_radial_plots: True
-  show_column_density_plots: True
+  show_radial_plots: False
+  show_column_density_plots: False
   show_3d_column_density_centered: False
   show_3d_column_density_off_center: False
-  show_fragment_sputter: True
+  show_fragment_sputter: False

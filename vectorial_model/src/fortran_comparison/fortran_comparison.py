@@ -9,34 +9,14 @@ import copy
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-# from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from contextlib import redirect_stdout
-
-# import matplotlib.cm as cmx
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib.colors import Normalize
 
 import pyvectorial as pyv
 
 __author__ = 'Shawn Oset'
 __version__ = '0.1'
-
-
-# text_blue = (104, 136, 148)
-# text_peach = (219, 184, 156)
-# text_green = (175, 172, 124)
-# text_red = (199, 74, 119)
-# text_bblue = (164, 183, 190)
-# text_bpeach = (233, 212, 195)
-# text_bgreen = (219, 216, 156)
-# text_bred = (219, 175, 173)
-
-
-# def colored_text(color_tuple, text):
-#     r, g, b = color_tuple
-#     return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
 
 def process_args():

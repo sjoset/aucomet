@@ -83,7 +83,7 @@ def get_aperture(vmc: pyv.VectorialModelConfig) -> sba.Aperture:
 def main():
 
     """
-        Vary the dummy input production and the water lifetimes and save plotting data
+        Vary the dummy input production and the parent lifetimes and save plotting data
     """
 
     quantity_support()

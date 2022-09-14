@@ -1,4 +1,0 @@
-Using steady production for 5.00e+01 d
-Assuming a fixed count in aperture of 1.00e+29 in Rectangular aperture, dimensions 600.0×600.0 km
-Total to dissociative lifetime ratio: 0.93
-Parent and fragment velocities: 1.00e+00 km / s, 1.05e+00 km / s

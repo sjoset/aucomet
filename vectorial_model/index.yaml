@@ -1,5 +1,6 @@
 src:
   festou_1992: "Tests vectorial model against data from Festou 1992, comet d'Arrest apparition"
+  fit_haser_to_vectorial: "Run a vectorial model and fit various Haser models to it to see where they agree"
   fortran_comparison: "Runs python and fortran vectorial models with comparison graphs and output"
   haser_compare: "Runs Haser and vectorial model, compares column density numerically and with a few plots"
   inspectvm: "Loads a pickled .vm file directly, or a .yaml file pointing to a .vm file for plotting"
@@ -17,6 +18,7 @@ sputter_comparison:
 model_stability:
   description: "Testing the input production limits that will break the model at various lifetimes"
   method: "Provide dummy values for Q and assume a certain fragment number in an aperture.  What range of Qs agree on what the calculated Q is?"
+  notes: "also probes exection times as a function of Q"
 
 accuracy_vs_gridsize:
   description: "Investigating the difference in results while varying grid sizes"
