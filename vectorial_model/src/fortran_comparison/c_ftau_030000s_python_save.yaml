@@ -6,6 +6,7 @@ comet:
   transform_method: festou_fortran
 etc:
   delta: 1.0
+  fortran_vmodel_binary: bin/fvm
   g_factor: 0.000233
   in_file: fparam.dat
   out_file: fort.16
@@ -14,14 +15,13 @@ etc:
   print_progress: false
   print_radial_density: false
   pyv_coma_pickle: c_ftau_030000s_python_save.vmr
-  pyv_date_of_run: 05 17 2022
+  pyv_date_of_run: 09 16 2022
   show_3d_column_density_centered: false
   show_3d_column_density_off_center: false
   show_agreement_check: false
   show_aperture_checks: false
   show_column_density_plots: false
   show_radial_plots: false
-  vmodel_binary: bin/fvm
 fragment:
   name: OH
   tau_T: 58799.99999999999

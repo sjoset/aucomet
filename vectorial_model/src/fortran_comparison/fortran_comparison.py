@@ -5,6 +5,7 @@ import os
 import sys
 import logging as log
 import copy
+import pathlib
 
 import numpy as np
 import astropy.units as u
@@ -82,19 +83,6 @@ def calculate_comparisons(pvmr: pyv.VectorialModelResult, fvmr: pyv.VectorialMod
 def do_cdens_comparison(pvmr: pyv.VectorialModelResult, fvmr: pyv.VectorialModelResult, vmc: pyv.VectorialModelConfig, show_plots=False, out_file=None):
 
     vrs, v_ratios, crs, c_ratios = calculate_comparisons(pvmr, fvmr)
-    print("\nvolume density at fortran gridpoints, py/fort")
-
-    print(v_ratios)
-    for r, vr in zip(vrs, v_ratios):
-        print(f"r: {r/1000} km\tpy/fort: {vr}")
-    print(f"\nAverage: {np.average(v_ratios)}\t\tMax: {np.amax(v_ratios)}\tMin: {np.amin(v_ratios)}")
-
-    print("\ncolumn density at fortran gridpoints, py/fort")
-    print(c_ratios)
-    for r, cr in zip(crs, c_ratios):
-        print(f"r: {r/1000} km\tpy/fort: {cr}")
-    print(f"\nAverage: {np.average(c_ratios)}\t\tMax: {np.amax(c_ratios)}\tMin: {np.amin(c_ratios)}")
-
     plot_cdens_comparison(crs, c_ratios, vmc, show_plots=show_plots, out_file=out_file)
 
     if out_file is not None:
@@ -128,8 +116,6 @@ def plot_cdens_comparison(rs, c_ratios, vmc: pyv.VectorialModelConfig, show_plot
     ax.set_xscale('log')
     ax.set_ylim([0.5, 1.5])
     ax.plot(rs, c_ratios, color="#688894",  linewidth=2.0)
-
-    plt.legend(loc='upper right', frameon=False)
 
     if out_file:
         plt.savefig(out_file + '.png')
@@ -167,6 +153,41 @@ def file_string_id_from_parameters(vmc_prime):
     return f"c_ftau_{f_tau_T:06.0f}s"
 
 
+def plot_fragment_sputters(vmr, fvmr, out_file, **kwargs):
+
+    dist_units = kwargs.get('dist_units', u.m)
+    sputter_units = kwargs.get('sputter_units', 1/u.m**3)
+
+    fig = plt.figure(figsize=(30, 10))
+    ax1 = fig.add_subplot(131, projection='3d')
+    ax2 = fig.add_subplot(132, projection='3d')
+    ax3 = fig.add_subplot(133, projection='3d')
+
+    pyv.fragment_sputter_plot(vmr, ax1, **kwargs)
+    ax1.set(xlabel=f"x, {dist_units.to_string()}")
+    ax1.set(ylabel=f"y, {dist_units.to_string()}")
+    ax1.set(zlabel=f"python fragment volume density, {sputter_units.unit.to_string()}")
+
+    pyv.fragment_sputter_plot(fvmr, ax2, color='red', **kwargs)
+    ax2.set(xlabel=f"x, {dist_units.to_string()}")
+    ax2.set(ylabel=f"y, {dist_units.to_string()}")
+    ax2.set(zlabel=f"fortran fragment volume density, {sputter_units.unit.to_string()}")
+
+    pyv.fragment_sputter_plot(vmr, ax3, **kwargs)
+    pyv.fragment_sputter_plot(fvmr, ax3, color='red', **kwargs)
+    ax3.set(xlabel=f"x, {dist_units.to_string()}")
+    ax3.set(ylabel=f"y, {dist_units.to_string()}")
+    ax3.set(zlabel=f"combined fragment volume density, {sputter_units.unit.to_string()}")
+
+    fig.suptitle("Fragment sputter density")
+    plt.style.use('Solarize_Light2')
+    plt.tight_layout()
+
+    if out_file:
+        plt.savefig(out_file)
+    plt.close()
+
+
 def main():
 
     # astropy units/quantities support in plots
@@ -180,38 +201,30 @@ def main():
 
     for vmc in vmc_set:
 
-        # output filenames
+        # template for output filenames
         run_name_template = file_string_id_from_parameters(vmc)
 
+        # keep backup of config
         vmc_untransformed = copy.deepcopy(vmc)
         pyv.unapply_input_transform(vmc_untransformed)
 
-        # actually do it
+        # run the python version and get the results
         coma = pyv.run_vmodel(vmc)
         vmr = pyv.get_result_from_coma(coma)
 
         # run fortran version and load the results from the output file it dumps to
-        pyv.run_fortran_vmodel(vmc_untransformed)
+        pyv.run_fortran_vmodel(vmc_untransformed, pathlib.Path(vmc.etc['fortran_vmodel_binary']))
         fvmr = pyv.get_result_from_fortran(vmc.etc['out_file'])
 
         # move the fortran input/output files for inspection later
         os.rename(vmc.etc['in_file'], run_name_template + '_' + vmc.etc['in_file'])
         os.rename(vmc.etc['out_file'], run_name_template + '_' + vmc.etc['out_file'])
 
+        # output the column density comparison
         do_cdens_comparison(vmr, fvmr, vmc, show_plots=False, out_file=run_name_template + '_ratio')
-
-        pyv.plot_fragment_sputter(fvmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_fortran.png')
-        pyv.plot_fragment_sputter(fvmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=True,  show_plots=False, out_file=run_name_template + '_sputter_fortran_trisurf.png')
-
-        pyv.plot_fragment_sputter(vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_python.png')
-        pyv.plot_fragment_sputter(vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=True,  show_plots=False, out_file=run_name_template + '_sputter_python_trisurf.png')
-
-        pyv.plot_sputters(fvmr.fragment_sputter, vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, show_plots=False, out_file=run_name_template + '_sputter_combined.png')
-        pyv.plot_sputters(fvmr.fragment_sputter, vmr.fragment_sputter, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, trisurf=False, mirrored=True, show_plots=False, out_file=run_name_template + '_sputter_combined_mirror.png')
-
-        pyv.radial_density_plots_fortran(vmc, fvmr, vmr, show_plots=False, out_file=run_name_template + '_rdens_fortran.png')
-
+        plot_fragment_sputters(vmr, fvmr, dist_units=u.km, sputter_units=1/u.cm**3, within_r=1000*u.km, out_file=run_name_template + '_sputter.png')
         dump_python_fragment_sputter(vmr, run_name_template + '_pysputter')
+
         pyv.save_results(vmc, vmr, run_name_template + '_python_save')
         pyv.save_results(vmc, fvmr, run_name_template + '_fortran_save')
 

@@ -94,7 +94,7 @@ etc:
   show_3d_column_density_off_center: False
 
   # fortran version info
-  vmodel_binary: 'bin/fvm'
+  fortran_vmodel_binary: 'bin/fvm'
   out_file: 'fort.16'
   in_file: 'fparam.dat'
   g_factor: 2.33e-4
