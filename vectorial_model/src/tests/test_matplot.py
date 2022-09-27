@@ -7,13 +7,13 @@ import dill as pickle
 import logging as log
 import numpy as np
 import astropy.units as u
-from astropy.table import QTable
+# from astropy.table import QTable
 from astropy.visualization import quantity_support
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
-import matplotlib.cm as cmx
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import Normalize
+# import matplotlib.cm as cmx
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib.colors import Normalize
 # import scipy.interpolate
 
 import pyvectorial as pyv
@@ -86,11 +86,11 @@ def test_volume_and_column_density_plots(vmr: pyv.VectorialModelResult):
 
     _, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 10))
 
-    pyv.column_density_interpolation_plot(vmr, ax1, r_units=u.km, cdens_units=1/u.cm**2, color=mybred)
-    pyv.column_density_plot(vmr, ax1, r_units=u.km, cdens_units=1/u.cm**2, color=myred, marker='o')
+    pyv.mpl_column_density_interpolation_plot(vmr, ax1, r_units=u.km, cdens_units=1/u.cm**2, color=mybred)
+    pyv.mpl_column_density_plot(vmr, ax1, r_units=u.km, cdens_units=1/u.cm**2, color=myred, marker='o')
 
-    pyv.volume_density_interpolation_plot(vmr, ax2, color=mybblue)
-    pyv.volume_density_plot(vmr, ax2, r_units=u.km, vdens_units=1/u.cm**3, color=myblue, marker='*')
+    pyv.mpl_volume_density_interpolation_plot(vmr, ax2, color=mybblue)
+    pyv.mpl_volume_density_plot(vmr, ax2, r_units=u.km, vdens_units=1/u.cm**3, color=myblue, marker='*')
 
     # ax1.set_xlim([0, 2000]*u.km)
     ax1.set_xscale('log')
@@ -105,7 +105,7 @@ def test_column_density_3d_plot(vmr: pyv.VectorialModelResult):
 
     _ = plt.figure()
     ax = plt.axes(projection='3d')
-    pyv.column_density_plot_3d(vmr, ax, divisions=1000, center=(50000, 50000)*u.m, width=100000000 * u.m, height=100000000 * u.m, dist_units=u.km, cdens_units=1/u.cm**2, cmap='inferno', antialiased=False)
+    pyv.mpl_column_density_plot_3d(vmr, ax, divisions=1000, center=(50000, 50000)*u.m, width=100000 * u.km, height=100000 * u.km, dist_units=u.km, cdens_units=1/u.cm**2, cmap='inferno', antialiased=False)
     ax.grid(False)
     ax.view_init(90, 90)
     plt.show()
@@ -114,7 +114,7 @@ def test_column_density_3d_plot(vmr: pyv.VectorialModelResult):
 def test_fragment_sputter_contour_plot(vmr: pyv.VectorialModelResult):
 
     _, ax = plt.subplots(1, 1, figsize=(10, 10))
-    pyv.fragment_sputter_contour_plot(vmr, ax, dist_units=u.km, within_r=2000*u.km, mirrored=False, colormap='viridis')
+    pyv.mpl_fragment_sputter_contour_plot(vmr, ax, dist_units=u.km, within_r=5000*u.km, mirrored=False, colormap='viridis')
     ax.set_ylim(bottom=0)
     plt.show()
 
@@ -123,7 +123,7 @@ def test_fragment_sputter_plot(vmr: pyv.VectorialModelResult):
 
     _ = plt.figure()
     ax = plt.axes(projection='3d')
-    pyv.fragment_sputter_plot(vmr, ax, dist_units=u.km, within_r=3000*u.km)
+    pyv.mpl_fragment_sputter_plot(vmr, ax, dist_units=u.km, within_r=3000*u.km)
     plt.show()
 
 
