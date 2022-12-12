@@ -148,7 +148,7 @@ def main():
         plt.show()
 
         hps = pyv.haser_from_vectorial_cd1980(vmc)
-        print(hps)
+        print(f"Haser from vectorial cd1980 params: {hps}")
 
         hfr = pyv.haser_q_fit(q_guess=1.e27 * 1/u.s, hps=hps, rs=vmr.column_density_grid, cds=vmr.column_density)
         print(hfr.fitted_params)

@@ -1,3 +1,9 @@
+# .ecsv files, everywhere in the directory structure
+**/*.ecsv
+
+# .fits files, everywhere in the directory structure
+**/*.fits
+
 # vectorial model output files, everywhere in the directory structure
 **/*.vm
 

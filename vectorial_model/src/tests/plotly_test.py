@@ -84,7 +84,6 @@ def test_volume_and_column_density_plots(vmr: pyv.VectorialModelResult):
                          yaxis = dict(nticks=4, range=[-50,100],),
                          zaxis = dict(nticks=4, range=[-100,100],),
             xaxis_title="aoeu",),
-           
         width=1800,
         margin=dict(r=20, l=10, b=10, t=10))
     fig.update_xaxes(type="log")
@@ -116,7 +115,7 @@ def test_fragment_sputter_contour_plot(vmr: pyv.VectorialModelResult):
 
     fig = go.Figure()
 
-    sputter, outflow, max_coord = pyv.plotly_fragment_sputter_contour_plot(vmr, dist_units=u.km, sputter_units=1/u.cm**3, within_r=3000*u.km, mirrored=True)
+    sputter, outflow, max_coord = pyv.plotly_fragment_sputter_contour_plot(vmr, dist_units=u.km, sputter_units=1/u.cm**3, within_r=500*u.km, mirrored=True)
     fig.add_trace(sputter)
     if outflow:
         fig.add_trace(outflow)
@@ -156,6 +155,8 @@ def test_fragment_sputter_plot(vmr: pyv.VectorialModelResult):
             # zaxis = dict(nticks=4, range=[-100,100],),
             xaxis_title="aoeu",),
         # width=1800,
+        xaxis_range=[-max_coord, max_coord],
+        yaxis_range=[-500, 3000],
         margin=dict(r=20, l=10, b=10, t=10))
 
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
@@ -181,7 +182,8 @@ def main():
     # coma = coma_from_dill('coma_pickle_squarepulse.vm')
 
     # for cpic in ['coma_pickle.vm', 'coma_pickle_gaussian.vm', 'coma_pickle_sine.vm', 'coma_pickle_squarepulse.vm']:
-    for cpic in ['coma_pickle_sine.vm']:
+    # for cpic in ['coma_pickle_sine.vm']:
+    for cpic in ['coma_pickle_low_ejection_velocity.vm']:
 
         coma = coma_from_dill(cpic)
         vmr = pyv.get_result_from_coma(coma)
@@ -194,8 +196,8 @@ def main():
 
         test_volume_and_column_density_plots(vmr)
         test_column_density_3d_plot(vmr)
-        test_fragment_sputter_contour_plot(vmr)
         test_fragment_sputter_plot(vmr)
+        test_fragment_sputter_contour_plot(vmr)
         test_plotting_q_t(coma)
 
 

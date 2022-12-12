@@ -161,7 +161,7 @@ def main():
         #     mesh_fragment_sputter(vmr.fragment_sputter, dist_units=u.km,
         #             sputter_units=1/u.cm**3, within_r=1000*u.km, mirrored=True)
 
-        pyv.save_results(vmc, vmr, 'test')
+        # pyv.save_results(vmc, vmr, 'test')
         with open('coma_pickle.vm', 'wb') as comapicklefile:
             pickle.dump(coma, comapicklefile)
         print(f"Collision sphere radius: {vmr.collision_sphere_radius}")
