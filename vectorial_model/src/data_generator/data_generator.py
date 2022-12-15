@@ -5,12 +5,14 @@ import sys
 import pathlib
 import copy
 import contextlib
+import multiprocessing
+import warnings
 
 import logging as log
 from argparse import ArgumentParser
 from typing import List
 from itertools import product
-from astropy.table import vstack
+from astropy.table import vstack, QTable
 
 import numpy as np
 import astropy.units as u
@@ -31,7 +33,7 @@ def process_args():
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('--verbose', '-v', action='count', default=0,
                         help='increase verbosity level')
-    parser.add_argument('output', nargs=1, type=str, help='FITS output filename')
+    # parser.add_argument('output', nargs=1, type=str, help='FITS output filename')
 
     args = parser.parse_args()
 
@@ -113,7 +115,7 @@ def generate_vmc_set_h2o(base_q, r_h) -> List[pyv.VectorialModelConfig]:
     return vmc_set
 
 
-def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h, delete_intermediates: bool = False) -> None:
+def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h, delete_intermediates: bool = False, parallelism=1) -> None:
 
     # create separate intermediate files for each production and concatenate at the end
 
@@ -123,10 +125,11 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h, delete_inter
     out_table_list = []
 
     qs = np.logspace(28.0, 30.5, num=31, endpoint=True) / u.s
-    for base_q in qs:
+    for i, base_q in enumerate(qs):
+        print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
         vmc_set = generate_vmc_set_h2o(base_q, r_h=r_h)
-        out_table = pyv.build_calculation_table(vmc_set)
-        out_filename = output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits'
+        out_table = pyv.build_calculation_table(vmc_set, parallelism=parallelism)
+        out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
         out_file_list.append(out_filename)
 
         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
@@ -181,10 +184,11 @@ def generate_h2o_fits_file_small(output_fits_file: pathlib.PurePath, r_h, delete
 
     qs = np.logspace(28.0, 30.5, num=10, endpoint=True) / u.s
     # qs = np.logspace(28.0, 30.5, num=2, endpoint=True) / u.s
-    for base_q in qs:
+    for i, base_q in enumerate(qs):
+        print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
         vmc_set = generate_vmc_set_h2o_small(base_q, r_h=r_h)
         out_table = pyv.build_calculation_table(vmc_set, parallelism=parallelism)
-        out_filename = output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits'
+        out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
         out_file_list.append(out_filename)
 
         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
@@ -203,16 +207,65 @@ def generate_h2o_fits_file_small(output_fits_file: pathlib.PurePath, r_h, delete
             remove_file_silent_fail(file_to_del)
 
 
+def make_h2o_dataset_table():
+    # returns an astropy QTable of AU, associated filenames for the calculations at this AU,
+    # and whether or not that file has already been generated
+
+    aus = np.linspace(1.0, 3.0, num=5, endpoint=True)
+    output_fits_filenames = [pathlib.Path(f"h2o_{au:3.2f}_au.fits") for au in aus]
+    fits_file_exists = [a.is_file() for a in output_fits_filenames]
+
+    return QTable([aus * u.AU, output_fits_filenames, fits_file_exists], names=('r_h', 'filename', 'exists'),
+                  meta={'name': "List of datasets to generate for h2o",
+                        'parent_molecule': 'h2o'})
+
+
 def main():
 
-    # one mandatory argument: filename for output of results in fits format
-    args = process_args()
-    output_fits_file = pathlib.PurePath(args.output[0])
-    log.info("Saving output to %s ...", output_fits_file)
+    # suppress warnings cluttering up the output
+    warnings.filterwarnings("ignore")
+    process_args()
 
-    # generate_h2o_fits_file_small(output_fits_file, r_h=1.0 * u.AU, delete_intermediates=True, parallelism=8)
-    # generate_h2o_fits_file_small(pathlib.PurePath('h2osmall_2au.fits'), r_h=2.0 * u.AU, delete_intermediates=True, parallelism=8)
+    # generate_h2o_fits_file_small(output_fits_file, r_h=1.0 * u.AU, delete_intermediates=True, parallelism=4)
+    # generate_h2o_fits_file_small(pathlib.PurePath('h2osmall_2au.fits'), r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
+    # generate_h2o_fits_file(output_fits_file, r_h=1.0 * u.AU, delete_intermediates=True, parallelism=4)
+    # generate_h2o_fits_file(output_fits_file, r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
 
+    parallelism = max(1, multiprocessing.cpu_count()-1)
+    print(f"Max CPUs: {multiprocessing.cpu_count()}\tWill use: {parallelism} concurrent processes")
+
+    """
+        Water section
+    """
+    h2o_dataset_table = make_h2o_dataset_table()
+
+    print(f"Datasets for {h2o_dataset_table.meta['parent_molecule']}:")
+    print(h2o_dataset_table)
+
+    # fill generate_now column with False and ask which data to generate, if any
+    h2o_dataset_table.add_column(False, name='generate_now')
+
+    # do all of them, or pick which ones?
+    if input(f"Generate all missing data for {h2o_dataset_table.meta['parent_molecule']}? [N/y] ") in ['y', 'Y']:
+        for row in h2o_dataset_table:
+            row['generate_now'] = not row['exists']
+    else:
+        for row in h2o_dataset_table:
+            if row['exists']:
+                continue
+            if input(f"Generate data for {row['r_h']}? [N/y] ") in ['y', 'Y']:
+                row['generate_now'] = True
+                print("OK")
+
+    print("Current settings:")
+    print(h2o_dataset_table)
+    if input("Calculate? [N/y] ") not in ['y', 'Y']:
+        print("Quitting.")
+        return
+    
+    for row in h2o_dataset_table:
+        if row['generate_now']:
+            generate_h2o_fits_file(row['filename'], row['r_h'], delete_intermediates=True, parallelism=parallelism)
 
 if __name__ == '__main__':
     sys.exit(main())
