@@ -257,6 +257,10 @@ def main():
                 row['generate_now'] = True
                 print("OK")
 
+    if not any([row['generate_now'] for row in h2o_dataset_table]):
+        print("No data selected for generation!  Quitting.")
+        return
+
     print("Current settings:")
     print(h2o_dataset_table)
     if input("Calculate? [N/y] ") not in ['y', 'Y']:
