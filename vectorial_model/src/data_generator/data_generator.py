@@ -7,13 +7,16 @@ import copy
 import contextlib
 import multiprocessing
 import warnings
+import time
 
-import logging as log
 from argparse import ArgumentParser
 from typing import List
 from itertools import product
 from astropy.table import vstack, QTable
+from multiprocessing import Pool
 
+import logging as log
+import importlib.metadata as impm
 import numpy as np
 import astropy.units as u
 import pyvectorial as pyv
@@ -54,6 +57,86 @@ def remove_file_silent_fail(f: pathlib.PurePath) -> None:
         os.unlink(f)
 
 
+# Service function that takes a vmc, runs a model, and returns results + timing information
+# We map this function over a set of VectorialModelConfigs to get our list of completed models
+def run_vmodel_timed(vmc: pyv.VectorialModelConfig):
+
+    """
+        Return the encoded coma (using the dill library) because python multiprocessing wants
+        to pickle return values to send them back to the main calling process.  The coma can't be
+        pickled by the stock python pickler so we pickle it here with dill and things are fine
+    """
+
+    t_i = time.time()
+    coma_pickled = pyv.pickle_to_base64(pyv.run_vmodel(vmc))
+    t_f = time.time()
+
+    return (coma_pickled, (t_f - t_i)*u.s)
+
+
+def build_calculation_table(vmc_set: List[pyv.VectorialModelConfig], parallelism: int=1) -> QTable:
+
+    """
+        Take a set of model configs, run them, and return QTable with results of input vmc,
+        resulting comae, and model run time
+        Uses the multiprocessing module to parallelize the model running, with the number of
+        concurrent processes passed in as 'parallelism'
+    """
+
+    sbpy_ver = impm.version("sbpy")
+    calculation_table = QTable(names=('b64_encoded_vmc', 'vmc_hash', 'b64_encoded_coma'), dtype=('U', 'U', 'U'), meta={'sbpy_ver': sbpy_ver})
+
+    t_i = time.time()
+    print(f"Running calculation of {len(vmc_set)} models with pool size of {parallelism} ...")
+    with Pool(parallelism) as vm_pool:
+        model_results = vm_pool.map(run_vmodel_timed, vmc_set)
+    t_f = time.time()
+    print(f"Pooled calculations complete, time: {(t_f - t_i)*u.s}")
+
+    times_list = []
+    for i, vmc in enumerate(vmc_set):
+
+        pickled_coma = model_results[i][0]
+        times_list.append(model_results[i][1])
+        pickled_vmc = pyv.pickle_to_base64(vmc)
+
+        calculation_table.add_row((pickled_vmc, pyv.hash_vmc(vmc), pickled_coma))
+
+    calculation_table.add_column(times_list, name='model_run_time')
+
+    # now that the model runs are finished, add the config info as columns to the table
+    add_vmc_columns(calculation_table)
+
+    return calculation_table
+
+
+def add_vmc_columns(qt: QTable) -> None:
+
+    """
+        Take a table of finished vectorial model calculations and add information
+        from the VectorialModelConfig as columns in the table
+    """
+    vmc_list = [pyv.unpickle_from_base64(row['b64_encoded_vmc']) for row in qt]
+
+    qt.add_column([vmc.production.base_q for vmc in vmc_list], name='base_q')
+
+    qt.add_column([vmc.parent.name for vmc in vmc_list], name='parent_molecule')
+    qt.add_column([vmc.parent.tau_d for vmc in vmc_list], name='parent_tau_d')
+    qt.add_column([vmc.parent.tau_T for vmc in vmc_list], name='parent_tau_T')
+    qt.add_column([vmc.parent.sigma for vmc in vmc_list], name='parent_sigma')
+    qt.add_column([vmc.parent.v_outflow for vmc in vmc_list], name='v_outflow')
+
+    qt.add_column([vmc.fragment.name for vmc in vmc_list], name='fragment_molecule')
+    qt.add_column([vmc.fragment.tau_T for vmc in vmc_list], name='fragment_tau_T')
+    qt.add_column([vmc.fragment.v_photo for vmc in vmc_list], name='v_photo')
+
+    qt.add_column([vmc.comet.rh for vmc in vmc_list], name='r_h')
+
+    qt.add_column([vmc.grid.radial_points for vmc in vmc_list], name='radial_points')
+    qt.add_column([vmc.grid.angular_points for vmc in vmc_list], name='angular_points')
+    qt.add_column([vmc.grid.radial_substeps for vmc in vmc_list], name='radial_substeps')
+
+
 def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
 
     grid = pyv.Grid(radial_points=150, angular_points=80, radial_substeps=80)
@@ -61,7 +144,7 @@ def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
     production = pyv.Production(base_q=1.e28/u.s, time_variation_type=None, params=None)
 
     parent = pyv.Parent(
-            name='parent name',
+            name='h2o',
             # v_outflow=0.85 * u.km/u.s,
             v_outflow=0.85/np.sqrt((comet.rh.to_value(u.AU))**2) * u.km/u.s,
             tau_d=86000 * u.s,
@@ -71,7 +154,7 @@ def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
             )
 
     fragment = pyv.Fragment(
-            name='fragment name',
+            name='oh',
             v_photo=1.05 * u.km/u.s,
             tau_T=160000 * u.s
             )
@@ -90,7 +173,7 @@ def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
     return vmc
 
 
-def generate_vmc_set_h2o(base_q, r_h) -> List[pyv.VectorialModelConfig]:
+def generate_vmc_set_h2o(base_q: u.Quantity, r_h: u.Quantity) -> List[pyv.VectorialModelConfig]:
 
     r_h_AU = r_h.to_value(u.AU)
     base_vmc = generate_base_vmc_h2o()
@@ -115,7 +198,7 @@ def generate_vmc_set_h2o(base_q, r_h) -> List[pyv.VectorialModelConfig]:
     return vmc_set
 
 
-def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h, delete_intermediates: bool = False, parallelism=1) -> None:
+def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, delete_intermediates: bool = False, parallelism=1) -> None:
 
     # create separate intermediate files for each production and concatenate at the end
 
@@ -128,12 +211,13 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h, delete_inter
     for i, base_q in enumerate(qs):
         print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
         vmc_set = generate_vmc_set_h2o(base_q, r_h=r_h)
-        out_table = pyv.build_calculation_table(vmc_set, parallelism=parallelism)
+        out_table = build_calculation_table(vmc_set, parallelism=parallelism)
         out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
         out_file_list.append(out_filename)
 
         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
         remove_file_silent_fail(out_filename)
+
         out_table.write(out_filename, format='fits')
         out_table_list.append(out_table)
 
@@ -148,63 +232,63 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h, delete_inter
             remove_file_silent_fail(file_to_del)
 
 
-def generate_vmc_set_h2o_small(base_q, r_h) -> List[pyv.VectorialModelConfig]:
-
-    r_h_AU = r_h.to_value(u.AU)
-    base_vmc = generate_base_vmc_h2o()
-
-    # scale lifetimes up by r_h^2
-    p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=2, endpoint=True) * r_h_AU**2
-    f_tau_Ts = np.linspace(100000 * u.s, 220000 * u.s, num=2, endpoint=True) * r_h_AU**2
-
-    vmc_set = []
-    for element in product(p_tau_ds, f_tau_Ts):
-        new_vmc = copy.deepcopy(base_vmc)
-        new_vmc.parent.tau_d = element[0]
-        new_vmc.parent.tau_T = element[0] * base_vmc.parent.T_to_d_ratio
-        new_vmc.fragment.tau_T = element[1]
-        new_vmc.production.base_q = base_q
-
-        # use empirical formula in CS93 for outflow
-        new_vmc.parent.v_outflow = (0.85 / np.sqrt(r_h_AU ** 2)) * u.km/u.s
-
-        vmc_set.append(new_vmc)
-
-    return vmc_set
-
-
-def generate_h2o_fits_file_small(output_fits_file: pathlib.PurePath, r_h, delete_intermediates: bool = False, parallelism=1) -> None:
-
-    # create separate intermediate files for each production and concatenate at the end
-
-    # list of PurePath filenames of intermediate files
-    out_file_list = []
-    # list of intermediate QTable objects
-    out_table_list = []
-
-    qs = np.logspace(28.0, 30.5, num=10, endpoint=True) / u.s
-    # qs = np.logspace(28.0, 30.5, num=2, endpoint=True) / u.s
-    for i, base_q in enumerate(qs):
-        print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
-        vmc_set = generate_vmc_set_h2o_small(base_q, r_h=r_h)
-        out_table = pyv.build_calculation_table(vmc_set, parallelism=parallelism)
-        out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
-        out_file_list.append(out_filename)
-
-        log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
-        remove_file_silent_fail(out_filename)
-        out_table.write(out_filename, format='fits')
-        out_table_list.append(out_table)
-
-    remove_file_silent_fail(output_fits_file)
-    final_table = vstack(out_table_list)
-    final_table.write(output_fits_file, format='fits')
-
-    if delete_intermediates:
-        print(f"Deleting intermediate files...")
-        for file_to_del in out_file_list:
-            print(f"\t😵 {file_to_del}")
-            remove_file_silent_fail(file_to_del)
+# def generate_vmc_set_h2o_small(base_q, r_h) -> List[pyv.VectorialModelConfig]:
+#
+#     r_h_AU = r_h.to_value(u.AU)
+#     base_vmc = generate_base_vmc_h2o()
+#
+#     # scale lifetimes up by r_h^2
+#     p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=2, endpoint=True) * r_h_AU**2
+#     f_tau_Ts = np.linspace(100000 * u.s, 220000 * u.s, num=2, endpoint=True) * r_h_AU**2
+#
+#     vmc_set = []
+#     for element in product(p_tau_ds, f_tau_Ts):
+#         new_vmc = copy.deepcopy(base_vmc)
+#         new_vmc.parent.tau_d = element[0]
+#         new_vmc.parent.tau_T = element[0] * base_vmc.parent.T_to_d_ratio
+#         new_vmc.fragment.tau_T = element[1]
+#         new_vmc.production.base_q = base_q
+#
+#         # use empirical formula in CS93 for outflow
+#         new_vmc.parent.v_outflow = (0.85 / np.sqrt(r_h_AU ** 2)) * u.km/u.s
+#
+#         vmc_set.append(new_vmc)
+#
+#     return vmc_set
+#
+#
+# def generate_h2o_fits_file_small(output_fits_file: pathlib.PurePath, r_h, delete_intermediates: bool = False, parallelism=1) -> None:
+#
+#     # create separate intermediate files for each production and concatenate at the end
+#
+#     # list of PurePath filenames of intermediate files
+#     out_file_list = []
+#     # list of intermediate QTable objects
+#     out_table_list = []
+#
+#     qs = np.logspace(28.0, 30.5, num=10, endpoint=True) / u.s
+#     # qs = np.logspace(28.0, 30.5, num=2, endpoint=True) / u.s
+#     for i, base_q in enumerate(qs):
+#         print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
+#         vmc_set = generate_vmc_set_h2o_small(base_q, r_h=r_h)
+#         out_table = build_calculation_table(vmc_set, parallelism=parallelism)
+#         out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
+#         out_file_list.append(out_filename)
+#
+#         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
+#         remove_file_silent_fail(out_filename)
+#         out_table.write(out_filename, format='fits')
+#         out_table_list.append(out_table)
+#
+#     remove_file_silent_fail(output_fits_file)
+#     final_table = vstack(out_table_list)
+#     final_table.write(output_fits_file, format='fits')
+#
+#     if delete_intermediates:
+#         print(f"Deleting intermediate files...")
+#         for file_to_del in out_file_list:
+#             print(f"\t😵 {file_to_del}")
+#             remove_file_silent_fail(file_to_del)
 
 
 def make_h2o_dataset_table():
@@ -216,8 +300,7 @@ def make_h2o_dataset_table():
     fits_file_exists = [a.is_file() for a in output_fits_filenames]
 
     return QTable([aus * u.AU, output_fits_filenames, fits_file_exists], names=('r_h', 'filename', 'exists'),
-                  meta={'name': "List of datasets to generate for h2o",
-                        'parent_molecule': 'h2o'})
+                  meta={'parent_molecule': 'h2o'})
 
 
 def main():
@@ -226,11 +309,9 @@ def main():
     warnings.filterwarnings("ignore")
     process_args()
 
-    # generate_h2o_fits_file_small(output_fits_file, r_h=1.0 * u.AU, delete_intermediates=True, parallelism=4)
     # generate_h2o_fits_file_small(pathlib.PurePath('h2osmall_2au.fits'), r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
-    # generate_h2o_fits_file(output_fits_file, r_h=1.0 * u.AU, delete_intermediates=True, parallelism=4)
-    # generate_h2o_fits_file(output_fits_file, r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
 
+    # figure out how parallel the model running can be
     parallelism = max(1, multiprocessing.cpu_count()-1)
     print(f"Max CPUs: {multiprocessing.cpu_count()}\tWill use: {parallelism} concurrent processes")
 
@@ -270,6 +351,11 @@ def main():
     for row in h2o_dataset_table:
         if row['generate_now']:
             generate_h2o_fits_file(row['filename'], row['r_h'], delete_intermediates=True, parallelism=parallelism)
+
+    # TODO: offer to concatenate files into one?
+
+    # TODO: offer to validate the files (which?) with some tests to make sure they generated properly?
+
 
 if __name__ == '__main__':
     sys.exit(main())

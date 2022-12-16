@@ -207,10 +207,6 @@ def main():
     # read in table from FITS
     test_table = QTable.read(table_file, format='fits')
 
-    # add some analysis data to table and sort by base_q
-    print("Adding columns for model input parameters ...")
-    add_vmc_columns(test_table)
-
     print("Running aperture tests ...")
     # test_calculation_table(test_table)
 
