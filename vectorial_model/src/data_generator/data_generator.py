@@ -8,6 +8,7 @@ import contextlib
 import multiprocessing
 import warnings
 import time
+import gc
 
 from argparse import ArgumentParser
 from typing import List
@@ -87,11 +88,11 @@ def build_calculation_table(vmc_set: List[pyv.VectorialModelConfig], parallelism
     calculation_table = QTable(names=('b64_encoded_vmc', 'vmc_hash', 'b64_encoded_coma'), dtype=('U', 'U', 'U'), meta={'sbpy_ver': sbpy_ver})
 
     t_i = time.time()
-    print(f"Running calculation of {len(vmc_set)} models with pool size of {parallelism} ...")
+    log.info("Running calculation of %s models with pool size of %s ...", len(vmc_set), parallelism)
     with Pool(parallelism) as vm_pool:
         model_results = vm_pool.map(run_vmodel_timed, vmc_set)
     t_f = time.time()
-    print(f"Pooled calculations complete, time: {(t_f - t_i)*u.s}")
+    log.info("Pooled calculations complete, time: %s", (t_f - t_i)*u.s)
 
     times_list = []
     for i, vmc in enumerate(vmc_set):
@@ -177,6 +178,7 @@ def generate_vmc_set_h2o(base_q: u.Quantity, r_h: u.Quantity) -> List[pyv.Vector
 
     r_h_AU = r_h.to_value(u.AU)
     base_vmc = generate_base_vmc_h2o()
+    base_vmc.comet.rh = r_h
 
     # scale lifetimes up by r_h^2
     p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=10, endpoint=True) * r_h_AU**2
@@ -209,7 +211,8 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, 
 
     qs = np.logspace(28.0, 30.5, num=31, endpoint=True) / u.s
     for i, base_q in enumerate(qs):
-        print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
+        percent_complete = (i * 100)/len(qs)
+        print(f"{r_h.to_value(u.AU)} AU\t\tq: {base_q:3.1e}\t\t{percent_complete:4.1f} %")
         vmc_set = generate_vmc_set_h2o(base_q, r_h=r_h)
         out_table = build_calculation_table(vmc_set, parallelism=parallelism)
         out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
@@ -226,12 +229,15 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, 
     final_table.write(output_fits_file, format='fits')
 
     if delete_intermediates:
-        print(f"Deleting intermediate files...")
+        log.info(f"Deleting intermediate files...")
         for file_to_del in out_file_list:
-            print(f"\t😵 {file_to_del}")
+            log.info("%s\t😵", file_to_del)
             remove_file_silent_fail(file_to_del)
 
+    del final_table
 
+
+# TODO: we can extract a small data set from the larger tables
 # def generate_vmc_set_h2o_small(base_q, r_h) -> List[pyv.VectorialModelConfig]:
 #
 #     r_h_AU = r_h.to_value(u.AU)
@@ -295,7 +301,7 @@ def make_h2o_dataset_table():
     # returns an astropy QTable of AU, associated filenames for the calculations at this AU,
     # and whether or not that file has already been generated
 
-    aus = np.linspace(1.0, 3.0, num=5, endpoint=True)
+    aus = np.linspace(1.0, 4.0, num=13, endpoint=True)
     output_fits_filenames = [pathlib.Path(f"h2o_{au:3.2f}_au.fits") for au in aus]
     fits_file_exists = [a.is_file() for a in output_fits_filenames]
 
@@ -311,7 +317,7 @@ def main():
 
     # generate_h2o_fits_file_small(pathlib.PurePath('h2osmall_2au.fits'), r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
 
-    # figure out how parallel the model running can be
+    # figure out how parallel the model running can be, leaving one core open (unless there's only a single core)
     parallelism = max(1, multiprocessing.cpu_count()-1)
     print(f"Max CPUs: {multiprocessing.cpu_count()}\tWill use: {parallelism} concurrent processes")
 
@@ -351,10 +357,9 @@ def main():
     for row in h2o_dataset_table:
         if row['generate_now']:
             generate_h2o_fits_file(row['filename'], row['r_h'], delete_intermediates=True, parallelism=parallelism)
-
-    # TODO: offer to concatenate files into one?
-
-    # TODO: offer to validate the files (which?) with some tests to make sure they generated properly?
+            # call the garbage collector to clean up between generating data files
+            # Not sure if this works but it might help the script finish if we generate all the data at once
+            print(f"Cleaning up: garbage collected {gc.collect()} items.")
 
 
 if __name__ == '__main__':

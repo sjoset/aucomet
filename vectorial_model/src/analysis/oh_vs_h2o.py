@@ -49,31 +49,31 @@ def process_args():
     return args
 
 
-def add_vmc_columns(qt: QTable) -> None:
-
-    # extract VectorialModelConfig and add columns based on some parameters
-    base_q_list = []
-    ptd_list = []
-    ptT_list = []
-    voutflow_list = []
-    ftT_list = []
-    vphoto_list = []
-
-    for row in qt:
-        vmc = pyv.unpickle_from_base64(row['b64_encoded_vmc'])
-        base_q_list.append(vmc.production.base_q)
-        voutflow_list.append(vmc.parent.v_outflow)
-        ptd_list.append(vmc.parent.tau_d)
-        ptT_list.append(vmc.parent.tau_T)
-        ftT_list.append(vmc.fragment.tau_T)
-        vphoto_list.append(vmc.fragment.v_photo)
-
-    qt.add_column(base_q_list, name='base_q')
-    qt.add_column(ptd_list, name='parent_tau_d')
-    qt.add_column(ptT_list, name='parent_tau_T')
-    qt.add_column(voutflow_list, name='v_outflow')
-    qt.add_column(ftT_list, name='fragment_tau_T')
-    qt.add_column(vphoto_list, name='v_photo')
+# def add_vmc_columns(qt: QTable) -> None:
+#
+#     # extract VectorialModelConfig and add columns based on some parameters
+#     base_q_list = []
+#     ptd_list = []
+#     ptT_list = []
+#     voutflow_list = []
+#     ftT_list = []
+#     vphoto_list = []
+#
+#     for row in qt:
+#         vmc = pyv.unpickle_from_base64(row['b64_encoded_vmc'])
+#         base_q_list.append(vmc.production.base_q)
+#         voutflow_list.append(vmc.parent.v_outflow)
+#         ptd_list.append(vmc.parent.tau_d)
+#         ptT_list.append(vmc.parent.tau_T)
+#         ftT_list.append(vmc.fragment.tau_T)
+#         vphoto_list.append(vmc.fragment.v_photo)
+#
+#     qt.add_column(base_q_list, name='base_q')
+#     qt.add_column(ptd_list, name='parent_tau_d')
+#     qt.add_column(ptT_list, name='parent_tau_T')
+#     qt.add_column(voutflow_list, name='v_outflow')
+#     qt.add_column(ftT_list, name='fragment_tau_T')
+#     qt.add_column(vphoto_list, name='v_photo')
 
 
 def add_qOH_column(qt: QTable) -> None:
@@ -143,10 +143,6 @@ def main():
 
     # read in table from FITS
     test_table = QTable.read(table_file, format='fits')
-
-    # add some analysis data to table and sort by base_q
-    print("Adding columns for model input parameters ...")
-    add_vmc_columns(test_table)
 
     print("Computing q(OH) ...")
     add_qOH_column(test_table)

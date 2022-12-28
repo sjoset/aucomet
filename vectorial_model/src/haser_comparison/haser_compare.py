@@ -139,38 +139,12 @@ def main():
         plot_cdens_comparison(vmr, hcoma)
 
         # plt, _, ax1, ax2 = pyv.column_density_plots(coma.vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=vmc.fragment.name, show_plots=False)
-        plt, _, ax1, ax2 = pyv.column_density_plots(vmc, vmr, r_units=u.km, cd_units=1/u.cm**2, show_plots=False)
+        # plt, _, ax1, ax2 = pyv.column_density_plots(vmc, vmr, r_units=u.km, cd_units=1/u.cm**2, show_plots=False)
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(20, 20))
+        pyv.mpl_column_density_plot(vmr, ax1, r_units=u.km, cdens_units=1/u.cm**2)
         ax1.plot(np.logspace(1, 7) * u.km, hcoma.column_density(np.logspace(1, 7) * u.km))
         ax2.plot(np.logspace(1, 7) * u.km, hcoma.column_density(np.logspace(1, 7) * u.km))
         plt.show()
-
-        # if vmc.etc['print_radial_density']:
-        #     pyv.print_radial_density(coma.vmodel)
-        # if vmc.etc['print_column_density']:
-        #     pyv.print_column_density(coma.vmodel)
-        # if vmc.etc['show_agreement_check']:
-        #     pyv.show_fragment_agreement(coma.vmodel)
-        # if vmc.etc['show_aperture_checks']:
-        #     pyv.show_aperture_checks(coma)
-        #
-        # if vmc.etc['show_radial_plots']:
-        #     pyv.vmplotter.radial_density_plots(coma.vmodel, r_units=u.km, voldens_units=1/u.km**3, frag_name=vmc.fragment.name)
-        # if vmc.etc['show_column_density_plots']:
-        #     pyv.vmplotter.column_density_plots(coma.vmodel, r_units=u.km, cd_units=1/u.cm**2, frag_name=vmc.fragment.name)
-        # if vmc.etc['show_3d_column_density_centered']:
-        #     pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=-100000*u.km, x_max=100000*u.km,
-        #                                          y_min=-100000*u.km, y_max=100000*u.km,
-        #                                          grid_step_x=1000, grid_step_y=1000,
-        #                                          r_units=u.km, cd_units=1/u.cm**2,
-        #                                          frag_name=vmc.fragment.name)
-        # if vmc.etc['show_3d_column_density_off_center']:
-        #     pyv.vmplotter.column_density_plot_3d(coma.vmodel, x_min=100000*u.km, x_max=-10000*u.km,
-        #                                          y_min=100000*u.km, y_max=-10000*u.km,
-        #                                          grid_step_x=1000, grid_step_y=1000,
-        #                                          r_units=u.km, cd_units=1/u.km**2,
-        #                                          frag_name=vmc.fragment.name)
-
-        pyv.save_results(vmc, vmr, 'vmout_'+file_string_id_from_parameters(vmc))
 
 
 if __name__ == '__main__':

@@ -24,9 +24,6 @@ accuracy_vs_gridsize:
   description: "Investigating the difference in results while varying grid sizes"
 
 TODOs:
-  pyvectorial: "find a way to save entire coma object"
-  vmplotter: "rewrite to only plot given an axis?"
-  all: "move key to print_volume_density from print_radial_density"
   all: "Write a function that takes a vectorial model and fits Haser parameters to it"
   all: "Compare vectorial runs with different Qs, checking that the column density ratios are the same as the Q ratios"
   all: "Does limiting to 8 fragment lifetimes undercut fragment sputter when the production is very high?"
