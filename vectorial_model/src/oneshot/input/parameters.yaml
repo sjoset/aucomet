@@ -56,8 +56,8 @@ comet:
   # transform_method: 'festou_fortran'
 
 grid:
-  radial_points: 50
-  angular_points: 30
+  radial_points: 150
+  angular_points: 80
   radial_substeps: 80
 
 etc:

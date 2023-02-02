@@ -3,6 +3,7 @@
 import os
 import sys
 import dill as pickle
+import time
 
 import logging as log
 import numpy as np
@@ -127,8 +128,15 @@ def main():
 
     for vmc in vmc_set:
 
+        t_i = time.time()
         coma = pyv.run_vmodel(vmc)
+        t_f = time.time()
         vmr = pyv.get_result_from_coma(coma)
+
+        pyv.print_volume_density(vmr)
+        pyv.print_column_density(vmr)
+        pyv.show_aperture_checks(coma)
+        pyv.show_fragment_agreement(vmr)
 
         # if vmc.etc['print_radial_density']:
         #     pyv.print_radial_density(vmr)
@@ -165,6 +173,7 @@ def main():
         with open('coma_pickle.vm', 'wb') as comapicklefile:
             pickle.dump(coma, comapicklefile)
         print(f"Collision sphere radius: {vmr.collision_sphere_radius}")
+        print(f"Model run time: {(t_f - t_i)* u.s}")
 
 
 if __name__ == '__main__':

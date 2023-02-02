@@ -11,7 +11,7 @@ import time
 import gc
 
 from argparse import ArgumentParser
-from typing import List
+from typing import List, Tuple
 from itertools import product
 from astropy.table import vstack, QTable
 from multiprocessing import Pool
@@ -53,14 +53,14 @@ def process_args():
 
 
 # need this function because pathlib.Path.unlink() throws an error, possible bug or bad install
-def remove_file_silent_fail(f: pathlib.PurePath) -> None:
+def remove_file_silent_fail(f: pathlib.Path) -> None:
     with contextlib.suppress(FileNotFoundError):
         os.unlink(f)
 
 
 # Service function that takes a vmc, runs a model, and returns results + timing information
 # We map this function over a set of VectorialModelConfigs to get our list of completed models
-def run_vmodel_timed(vmc: pyv.VectorialModelConfig):
+def run_vmodel_timed(vmc: pyv.VectorialModelConfig) -> Tuple:
 
     """
         Return the encoded coma (using the dill library) because python multiprocessing wants
@@ -114,8 +114,8 @@ def build_calculation_table(vmc_set: List[pyv.VectorialModelConfig], parallelism
 def add_vmc_columns(qt: QTable) -> None:
 
     """
-        Take a table of finished vectorial model calculations and add information
-        from the VectorialModelConfig as columns in the table
+        Take a QTable of finished vectorial model calculations and add information
+        from the VectorialModelConfig as columns in the given table
     """
     vmc_list = [pyv.unpickle_from_base64(row['b64_encoded_vmc']) for row in qt]
 
@@ -139,6 +139,11 @@ def add_vmc_columns(qt: QTable) -> None:
 
 
 def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
+
+    """
+        Returns vmc with parent and fragment info filled out for water, with generic
+        settings for base_q, r_h, comet name, and high grid settings
+    """
 
     grid = pyv.Grid(radial_points=150, angular_points=80, radial_substeps=80)
     comet = pyv.Comet(name='NA', rh=1.0 * u.AU, delta=1.0 * u.AU, transform_method=None, transform_applied=False)
@@ -176,9 +181,17 @@ def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
 
 def generate_vmc_set_h2o(base_q: u.Quantity, r_h: u.Quantity) -> List[pyv.VectorialModelConfig]:
 
-    r_h_AU = r_h.to_value(u.AU)
+    """
+        Returns a list of VectorialModelConfigs with the parent and fragment lifetimes
+        varied over a range of interest.  Scalings due to heliocentric distance are then
+        applied to lifetimes, and the empirical relation between parent outflow speed
+        and r_h is applied as well.
+    """
+
     base_vmc = generate_base_vmc_h2o()
+
     base_vmc.comet.rh = r_h
+    r_h_AU = r_h.to_value(u.AU)
 
     # scale lifetimes up by r_h^2
     p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=10, endpoint=True) * r_h_AU**2
@@ -200,9 +213,18 @@ def generate_vmc_set_h2o(base_q: u.Quantity, r_h: u.Quantity) -> List[pyv.Vector
     return vmc_set
 
 
-def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, delete_intermediates: bool = False, parallelism=1) -> None:
+def generate_h2o_fits_file(output_fits_file: pathlib.Path, r_h: u.Quantity, delete_intermediates: bool = False, parallelism=1) -> None:
 
-    # create separate intermediate files for each production and concatenate at the end
+    """
+        Varies base_q over a range to be investigated, generates an output .fits file
+        for each base_q, then combines the .fits files to produce a dataset for water
+        at the given heliocentric distance r_h
+    """
+
+    # To combine the files, the entire dataset needs to be in memory,
+    # so this shouldn't remove the intermediates files and instead check
+    # if they already exist and skip them to so that we can resume calculations
+    # from the last successful sub-calculation
 
     # list of PurePath filenames of intermediate files
     out_file_list = []
@@ -215,6 +237,7 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, 
         print(f"{r_h.to_value(u.AU)} AU\t\tq: {base_q:3.1e}\t\t{percent_complete:4.1f} %")
 
         vmc_set = generate_vmc_set_h2o(base_q, r_h=r_h)
+# <<<<<<< HEAD
         out_filename = pathlib.Path(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
         if out_filename.is_file():
             print(f"Found intermediate file {out_filename}, skipping generation and reading file instead...")
@@ -222,6 +245,10 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, 
         else:
             out_table = build_calculation_table(vmc_set, parallelism=parallelism)
 
+# =======
+#         out_table = build_calculation_table(vmc_set, parallelism=parallelism)
+#         out_filename = pathlib.Path(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
+# >>>>>>> c45da74 (Vectorial model: find Haser model parameters through fitting given column density data, test version of model with no collision sphere)
         out_file_list.append(out_filename)
 
         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
@@ -243,69 +270,15 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, 
     del final_table
 
 
-# TODO: we can extract a small data set from the larger tables
-# def generate_vmc_set_h2o_small(base_q, r_h) -> List[pyv.VectorialModelConfig]:
-#
-#     r_h_AU = r_h.to_value(u.AU)
-#     base_vmc = generate_base_vmc_h2o()
-#
-#     # scale lifetimes up by r_h^2
-#     p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=2, endpoint=True) * r_h_AU**2
-#     f_tau_Ts = np.linspace(100000 * u.s, 220000 * u.s, num=2, endpoint=True) * r_h_AU**2
-#
-#     vmc_set = []
-#     for element in product(p_tau_ds, f_tau_Ts):
-#         new_vmc = copy.deepcopy(base_vmc)
-#         new_vmc.parent.tau_d = element[0]
-#         new_vmc.parent.tau_T = element[0] * base_vmc.parent.T_to_d_ratio
-#         new_vmc.fragment.tau_T = element[1]
-#         new_vmc.production.base_q = base_q
-#
-#         # use empirical formula in CS93 for outflow
-#         new_vmc.parent.v_outflow = (0.85 / np.sqrt(r_h_AU ** 2)) * u.km/u.s
-#
-#         vmc_set.append(new_vmc)
-#
-#     return vmc_set
-#
-#
-# def generate_h2o_fits_file_small(output_fits_file: pathlib.PurePath, r_h, delete_intermediates: bool = False, parallelism=1) -> None:
-#
-#     # create separate intermediate files for each production and concatenate at the end
-#
-#     # list of PurePath filenames of intermediate files
-#     out_file_list = []
-#     # list of intermediate QTable objects
-#     out_table_list = []
-#
-#     qs = np.logspace(28.0, 30.5, num=10, endpoint=True) / u.s
-#     # qs = np.logspace(28.0, 30.5, num=2, endpoint=True) / u.s
-#     for i, base_q in enumerate(qs):
-#         print(f"Current q: {base_q:3.1e}, {i*100/len(qs)} %")
-#         vmc_set = generate_vmc_set_h2o_small(base_q, r_h=r_h)
-#         out_table = build_calculation_table(vmc_set, parallelism=parallelism)
-#         out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
-#         out_file_list.append(out_filename)
-#
-#         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
-#         remove_file_silent_fail(out_filename)
-#         out_table.write(out_filename, format='fits')
-#         out_table_list.append(out_table)
-#
-#     remove_file_silent_fail(output_fits_file)
-#     final_table = vstack(out_table_list)
-#     final_table.write(output_fits_file, format='fits')
-#
-#     if delete_intermediates:
-#         print(f"Deleting intermediate files...")
-#         for file_to_del in out_file_list:
-#             print(f"\t😵 {file_to_del}")
-#             remove_file_silent_fail(file_to_del)
+def make_h2o_dataset_table() -> QTable:
 
-
-def make_h2o_dataset_table():
-    # returns an astropy QTable of AU, associated filenames for the calculations at this AU,
-    # and whether or not that file has already been generated
+    """
+        Defines a list of water dataset files at a range of heliocentric distances, from 1 AU to 4 AU.
+        Returns an astropy QTable with columns:
+            | r_h | filename | whether 'filename' already exists |
+        We use this to track which data still needs to be generated, and allows different r_h datasets to
+        be generated in different sessions in case of power outages etc.
+    """
 
     aus = np.linspace(1.0, 4.0, num=13, endpoint=True)
     output_fits_filenames = [pathlib.Path(f"h2o_{au:3.2f}_au.fits") for au in aus]
@@ -321,12 +294,20 @@ def main():
     warnings.filterwarnings("ignore")
     process_args()
 
-    # generate_h2o_fits_file_small(pathlib.PurePath('h2osmall_2au.fits'), r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
+    # generate_h2o_fits_file_small(pathlib.Path('h2osmall_2au.fits'), r_h=2.0 * u.AU, delete_intermediates=True, parallelism=4)
 
     # figure out how parallel the model running can be, leaving one core open (unless there's only a single core)
     parallelism = max(1, multiprocessing.cpu_count()-1)
     print(f"Max CPUs: {multiprocessing.cpu_count()}\tWill use: {parallelism} concurrent processes")
 
+    # TODO:
+    # This can probably be generic because we should just be filling in a table,
+    # so this could be a function that takes the dataset table generating function (make_h2o_dataset_table, etc.)
+    # and use that to fill in the table as requested, assuming all of our datasets are varied over r_h in some way
+
+    # TODO:
+    # This 'water section' could also be main() from another file as a plugin type of architecture, where we just discover all the
+    # dataset_*.py files and ask which one to do
     """
         Water section
     """
@@ -365,6 +346,7 @@ def main():
             generate_h2o_fits_file(row['filename'], row['r_h'], delete_intermediates=False, parallelism=parallelism)
             # call the garbage collector to clean up between generating data files
             # Not sure if this works but it might help the script finish if we generate all the data at once
+            # TODO: figure out if we need this, try it with smaller dataset?
             print(f"Cleaning up: garbage collected {gc.collect()} items.")
 
 
