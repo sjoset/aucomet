@@ -213,9 +213,15 @@ def generate_h2o_fits_file(output_fits_file: pathlib.PurePath, r_h: u.Quantity, 
     for i, base_q in enumerate(qs):
         percent_complete = (i * 100)/len(qs)
         print(f"{r_h.to_value(u.AU)} AU\t\tq: {base_q:3.1e}\t\t{percent_complete:4.1f} %")
+
         vmc_set = generate_vmc_set_h2o(base_q, r_h=r_h)
-        out_table = build_calculation_table(vmc_set, parallelism=parallelism)
-        out_filename = pathlib.PurePath(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
+        out_filename = pathlib.Path(output_fits_file.stem + '_' + str(base_q.to_value(1/u.s)) + '.fits')
+        if out_filename.is_file():
+            print(f"Found intermediate file {out_filename}, skipping generation and reading file instead...")
+            out_table = QTable.read(out_filename, format='fits')
+        else:
+            out_table = build_calculation_table(vmc_set, parallelism=parallelism)
+
         out_file_list.append(out_filename)
 
         log.info("Table building for base production %s complete, writing results to %s ...", base_q, out_filename)
@@ -353,10 +359,10 @@ def main():
     if input("Calculate? [N/y] ") not in ['y', 'Y']:
         print("Quitting.")
         return
-    
+
     for row in h2o_dataset_table:
         if row['generate_now']:
-            generate_h2o_fits_file(row['filename'], row['r_h'], delete_intermediates=True, parallelism=parallelism)
+            generate_h2o_fits_file(row['filename'], row['r_h'], delete_intermediates=False, parallelism=parallelism)
             # call the garbage collector to clean up between generating data files
             # Not sure if this works but it might help the script finish if we generate all the data at once
             print(f"Cleaning up: garbage collected {gc.collect()} items.")
