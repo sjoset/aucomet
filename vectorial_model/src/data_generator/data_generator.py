@@ -26,6 +26,16 @@ __author__ = 'Shawn Oset'
 __version__ = '0.1'
 
 
+@dataclass
+class VMParameterSet:
+    parameter_set_id: str
+    rh_list: np.array
+    base_q_list: np.array
+    parent_tau_list: np.array
+    fragment_tau_list: np.array
+    base_vmc: pyv.VectorialModelConfig
+
+
 def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
 
     """
@@ -66,17 +76,6 @@ def generate_base_vmc_h2o() -> pyv.VectorialModelConfig:
 
     return vmc
 
-
-# TODO: describe what we mean by 'dataset', as in a group of models split up into separate files by AU
-# or make a dataclass for it and rewrite for that
-@dataclass
-class VMParameterSet:
-    parameter_set_id = None
-    rh_list = None
-    base_q_list = None
-    parent_tau_list = None
-    fragment_tau_list = None
-    base_vmc = None
 
 vm_parameter_sets = [
         # Water, large data set for full analysis
@@ -210,80 +209,36 @@ def add_vmc_columns(qt: QTable) -> None:
     qt.add_column([vmc.grid.radial_substeps for vmc in vmc_list], name='radial_substeps')
 
 
-def generate_vmc_set_h2o(r_h: u.Quantity) -> List[pyv.VectorialModelConfig]:
+def generate_vmc_set(vmps: VMParameterSet, r_h: u.Quantity) -> List[pyv.VectorialModelConfig]:
 
     """
-        Returns a list of VectorialModelConfigs with base_q varied over 1e28 to 1e30.5
-        and lifetimes varied over a range of interest.  Scalings due to heliocentric distance are then
-        applied to lifetimes, and the empirical relation between parent outflow speed
-        and r_h is applied as well.
+        Returns a slice of all possible VectorialModelConfigs at the given r_h.
+        Scalings due to heliocentric distance are then applied to lifetimes, and the
+        empirical relation between parent outflow speed and r_h is applied as well.
     """
 
-    base_vmc = generate_base_vmc_h2o()
+    base_vmc = copy.deepcopy(vmps.base_vmc)
 
     base_vmc.comet.rh = r_h
     r_h_AU = r_h.to_value(u.AU)
 
-    base_qs = np.logspace(28.0, 30.5, num=31, endpoint=True) / u.s
-
-    # scale lifetimes up by r_h^2
-    p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=10, endpoint=True) * r_h_AU**2
-    f_tau_Ts = np.linspace(100000 * u.s, 220000 * u.s, num=10, endpoint=True) * r_h_AU**2
-
     vmc_set = []
-    for element in product(base_qs, p_tau_ds, f_tau_Ts):
+    for element in product(vmps.base_q_list, vmps.parent_tau_list, vmps.fragment_tau_list):
         new_vmc = copy.deepcopy(base_vmc)
         new_vmc.production.base_q = element[0]
-        new_vmc.parent.tau_d = element[1]
-        new_vmc.parent.tau_T = element[1] * base_vmc.parent.T_to_d_ratio
-        new_vmc.fragment.tau_T = element[2]
+        new_vmc.parent.tau_d = element[1] * r_h_AU**2
+        new_vmc.parent.tau_T = element[1] * r_h_AU**2 * base_vmc.parent.T_to_d_ratio
+        new_vmc.fragment.tau_T = element[2] * r_h_AU**2
 
         # use empirical formula in CS93 for outflow
-        new_vmc.parent.v_outflow = (0.85 / np.sqrt(r_h_AU ** 2)) * u.km/u.s
+        new_vmc.parent.v_outflow = (0.85 / np.sqrt(r_h_AU)) * u.km/u.s
 
         vmc_set.append(new_vmc)
 
     return vmc_set
 
 
-def generate_vmc_set_h2o_small(r_h: u.Quantity) -> List[pyv.VectorialModelConfig]:
-
-    """
-        Returns a list of VectorialModelConfigs with base_q varied over 1e28 to 1e30.5
-        and lifetimes varied over a range of interest.  Scalings due to heliocentric distance are then
-        applied to lifetimes, and the empirical relation between parent outflow speed
-        and r_h is applied as well.
-        Smaller data set for testing purposes
-    """
-
-    base_vmc = generate_base_vmc_h2o()
-
-    base_vmc.comet.rh = r_h
-    r_h_AU = r_h.to_value(u.AU)
-
-    base_qs = np.logspace(28.0, 30.5, num=4, endpoint=True) / u.s
-
-    # scale lifetimes up by r_h^2
-    p_tau_ds = np.linspace(50000 * u.s, 100000 * u.s, num=3, endpoint=True) * r_h_AU**2
-    f_tau_Ts = np.linspace(100000 * u.s, 220000 * u.s, num=3, endpoint=True) * r_h_AU**2
-
-    vmc_set = []
-    for element in product(base_qs, p_tau_ds, f_tau_Ts):
-        new_vmc = copy.deepcopy(base_vmc)
-        new_vmc.production.base_q = element[0]
-        new_vmc.parent.tau_d = element[1]
-        new_vmc.parent.tau_T = element[1] * base_vmc.parent.T_to_d_ratio
-        new_vmc.fragment.tau_T = element[2]
-
-        # use empirical formula in CS93 for outflow
-        new_vmc.parent.v_outflow = (0.85 / np.sqrt(r_h_AU ** 2)) * u.km/u.s
-
-        vmc_set.append(new_vmc)
-
-    return vmc_set
-
-
-def generate_fits_file(output_fits_file: pathlib.Path, r_h: u.Quantity, vmc_list: List[pyv.VectorialModelConfig], delete_intermediates: bool = False, parallelism=1) -> None:
+def generate_fits_file(output_fits_file: pathlib.Path, r_h: u.Quantity, vmps: VMParameterSet, delete_intermediates: bool = False, parallelism=1) -> None:
 
     """
         Compute all of the models at a given AU and generate a (probably large) fits file with all of the results.
@@ -295,7 +250,8 @@ def generate_fits_file(output_fits_file: pathlib.Path, r_h: u.Quantity, vmc_list
     # list of intermediate QTable objects
     out_table_list = []
 
-    # vmc_list = vmc_list_generator(r_h=r_h)
+    # Take a slice of configs at this r_h
+    vmc_list = generate_vmc_set(vmps=vmps, r_h=r_h)
 
     # split our set of vmc into sublists, where every sublist has a matching base_q
     # so we can loop through and compute all the models that have the same base_q and save the intermediate results
@@ -336,9 +292,10 @@ def generate_fits_file(output_fits_file: pathlib.Path, r_h: u.Quantity, vmc_list
     del final_table
 
 
-def make_dataset_table(molecule_name: str, au_list: List[np.float64]) -> QTable:
+def make_dataset_table(vmps: VMParameterSet) -> QTable:
 
     """
+        TODO: check comments for accuracy, do we really need to use a QTable here? Instead, named tuple? Dict?
         Defines a list of dataset files at a range of heliocentric distances given by au_list
         Returns an astropy QTable with columns:
             | r_h | filename | whether 'filename' already exists |
@@ -347,24 +304,19 @@ def make_dataset_table(molecule_name: str, au_list: List[np.float64]) -> QTable:
     """
 
     # aus = np.linspace(1.0, 4.0, num=13, endpoint=True)
-    output_fits_filenames = [pathlib.Path(f"{molecule_name}_{au:3.2f}_au.fits") for au in au_list]
+    output_fits_filenames = [pathlib.Path(f"{vmps.parameter_set_id}_{rh.to_value(u.AU):3.2f}_au.fits") for rh in vmps.rh_list]
     fits_file_exists = [a.is_file() for a in output_fits_filenames]
 
-    return QTable([au_list * u.AU, output_fits_filenames, fits_file_exists], names=('r_h', 'filename', 'exists'),
-                  meta={'parent_molecule': molecule_name})
+    return QTable([vmps.rh_list, output_fits_filenames, fits_file_exists], names=('r_h', 'filename', 'exists'))
 
 
-def get_dataset_selection() -> Tuple:
+def get_dataset_selection() -> VMParameterSet:
 
     """
-        Allows the user to select a dataset and returns a tuple with the relevant parameters for
-        the selected dataset
+        Allows the user to select a dataset from the global list vm_parameter_sets
     """
 
-    selections = [('h2o', np.linspace(1.0, 4.0, num=13, endpoint=True), generate_vmc_set_h2o),
-                  ('h2o_small', np.linspace(1.0, 4.0, num=4, endpoint=True), generate_vmc_set_h2o_small)]
-
-    dataset_names = [x[0] for x in selections]
+    dataset_names = [x.parameter_set_id for x in vm_parameter_sets]
     user_selection = None
 
     while user_selection == None:
@@ -382,12 +334,10 @@ def get_dataset_selection() -> Tuple:
         if selection in range(len(dataset_names)):
             user_selection = selection
 
-    return selections[user_selection]
+    return vm_parameter_sets[user_selection]
 
 
 def main():
-
-    # TODO: make a dataclass instead of using dataset_table?
 
     # suppress warnings cluttering up the output
     warnings.filterwarnings("ignore")
@@ -398,17 +348,18 @@ def main():
     print(f"Max CPUs: {multiprocessing.cpu_count()}\tWill use: {parallelism} concurrent processes")
 
     # we define a few datasets of interest to us - which one to compute?
-    molecule_name, au_list, vmc_list_generator = get_dataset_selection()
-    dataset_table = make_dataset_table(molecule_name=molecule_name, au_list=au_list)
+    vmps = get_dataset_selection()
+    dataset_table = make_dataset_table(vmps)
 
-    print(f"Datasets for {dataset_table.meta['parent_molecule']}:")
+    # TODO: clarify what we mean by dataset
+    print(f"Datasets for {vmps.parameter_set_id}:")
     print(dataset_table)
 
     # fill generate_now column with False and ask which data to generate, if any
     dataset_table.add_column(False, name='generate_now')
 
     # do all of them, or pick which ones?
-    if input(f"Generate all missing data for {dataset_table.meta['parent_molecule']}? [N/y] ") in ['y', 'Y']:
+    if input(f"Generate all missing data for {vmps.parameter_set_id}? [N/y] ") in ['y', 'Y']:
         # mark all missing data to be generated this run
         for row in dataset_table:
             # if it exists, don't generate, and vice versa
@@ -434,7 +385,7 @@ def main():
 
     for row in dataset_table:
         if row['generate_now']:
-            generate_fits_file(row['filename'], row['r_h'], vmc_list=vmc_list_generator(row['r_h']), delete_intermediates=False, parallelism=parallelism)
+            generate_fits_file(output_fits_file=row['filename'], r_h=row['r_h'], vmps=vmps, delete_intermediates=True, parallelism=parallelism)
 
 
 if __name__ == '__main__':
