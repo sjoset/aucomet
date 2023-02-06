@@ -18,6 +18,11 @@ To run tests we also need
 ### install sbpy by cloning the git repo
     git clone https://github.com/sjoset/sbpy.git
     cd sbpy
+    pip install -e .
+
+### install other libraries used
+## Vectorial model
+    conda install dill plotly
 
 ### this allows us to edit sbpy source in place and run it without reinstalling every change
     python setup.py develop --user
