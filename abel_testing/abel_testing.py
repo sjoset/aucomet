@@ -8,19 +8,20 @@ import sys
 import pathlib
 
 import logging as log
+import numpy as np
+import astropy.units as u
+import pyvectorial as pyv
+
 import plotly.graph_objects as go
+import plotly.io as pio
 from plotly.subplots import make_subplots
 
-import numpy as np
 from astropy.table import QTable
-import astropy.units as u
-from astropy.visualization import quantity_support
 from argparse import ArgumentParser
-
-import pyvectorial as pyv
 
 from abel.direct import direct_transform
 from abel.basex import basex_transform
+from abel.hansenlaw import hansenlaw_transform
 
 __author__ = "Shawn Oset"
 __version__ = "0.1"
@@ -55,6 +56,9 @@ def process_args():
 
 
 def get_vmr_from_table_row(table_row):
+    """
+    Takes a row of a vectorial model calculation table, and returns the results in a VectorialModelResult
+    """
     # vmc = pyv.unpickle_from_base64(table_row["b64_encoded_vmc"])
     coma = pyv.unpickle_from_base64(table_row["b64_encoded_coma"])
     vmr = pyv.get_result_from_coma(coma)
@@ -62,14 +66,10 @@ def get_vmr_from_table_row(table_row):
     return vmr
 
 
-def add_model_column_density_data(vmr, fig, row, col):
-    fig.add_trace(
-        pyv.plotly_column_density_plot(
-            vmr, dist_units=u.km, cdens_units=1 / u.cm**2, opacity=0.5, mode="markers"
-        ),
-        row=row,
-        col=col,
-    )
+def add_model_column_density_interpolation(vmr, fig, row, col):
+    """
+    Takes a vectorial model result and draws its column density interpolation curve on the given plotly figure
+    """
     fig.add_trace(
         pyv.plotly_column_density_interpolation_plot(
             vmr, dist_units=u.km, cdens_units=1 / u.cm**2, mode="lines"
@@ -79,14 +79,23 @@ def add_model_column_density_data(vmr, fig, row, col):
     )
 
 
-def add_model_volume_density_data(vmr, fig, row, col):
+def add_model_column_density_data(vmr, fig, row, col):
+    """
+    Takes a vectorial model result and draws its column density on the given plotly figure
+    """
     fig.add_trace(
-        pyv.plotly_volume_density_plot(
-            vmr, dist_units=u.km, vdens_units=1 / u.cm**3, opacity=0.5, mode="markers"
+        pyv.plotly_column_density_plot(
+            vmr, dist_units=u.km, cdens_units=1 / u.cm**2, opacity=0.5, mode="markers"
         ),
         row=row,
         col=col,
     )
+
+
+def add_volume_density_interpolation(vmr, fig, row, col):
+    """
+    Takes a vectorial model result and draws its volume density interpolation curve on the given plotly figure
+    """
     fig.add_trace(
         pyv.plotly_volume_density_interpolation_plot(
             vmr, dist_units=u.km, vdens_units=1 / u.cm**3, mode="lines"
@@ -96,23 +105,52 @@ def add_model_volume_density_data(vmr, fig, row, col):
     )
 
 
-def column_density_via_direct_abel_transform(vmr: pyv.VectorialModelResult):
-    # We need an array of values from small r to large r with the fragment volume density
-    rs, step = np.linspace(
-        3 * vmr.collision_sphere_radius.to_value(u.km),
-        vmr.max_grid_radius.to_value(u.km),
-        endpoint=True,
-        num=1000,
-        retstep=True,
+def add_model_volume_density_data(vmr, fig, **kwargs):
+    """
+    Takes a vectorial model result and draws its volume density on the given plotly figure
+    """
+    fig.add_trace(
+        pyv.plotly_volume_density_plot(
+            vmr, dist_units=u.km, vdens_units=1 / u.cm**3, opacity=0.5, mode="markers"
+        ),
+        **kwargs,
     )
-    rs = rs * u.km
-    step = step * u.km
+
+
+def sample_space(start: u.Quantity, end: u.Quantity, **kwargs):
+    """
+    Wrapper for numpy's linspace that respects astropy's unit system,
+    with resulting samples and sample step in meters
+    """
+    xs, step = np.linspace(
+        start.to_value(u.m), end.to_value(u.m), retstep=True, **kwargs
+    )
+    xs = xs * u.m
+    step = step * u.m
+
+    return xs, step
+
+
+def column_density_via_direct_abel_transform(
+    vmr: pyv.VectorialModelResult, gridsize: int
+):
+    """
+    Takes a vectorial model result and uses the volume density in a "direct" Abel
+    transform to produce np.array(rs), np.array(column densities at rs)
+    """
+
+    rs, step = sample_space(
+        2 * vmr.collision_sphere_radius,
+        vmr.max_grid_radius,
+        endpoint=True,
+        num=gridsize,
+    )
 
     n_rs = vmr.volume_density_interpolation(rs.to_value(u.m))
 
     forward_abel = (
         direct_transform(
-            n_rs, dr=step.to_value(u.m), direction="forward", correction=False
+            n_rs, dr=step.to_value(u.m), direction="forward", correction=True
         )
         / u.m**2
     )
@@ -120,24 +158,58 @@ def column_density_via_direct_abel_transform(vmr: pyv.VectorialModelResult):
     return rs, forward_abel
 
 
-def column_density_via_basex_abel_transform(vmr: pyv.VectorialModelResult):
-    rs, step = np.linspace(
-        3 * vmr.collision_sphere_radius.to_value(u.km),
-        vmr.max_grid_radius.to_value(u.km),
+def column_density_via_hansenlaw_abel_transform(
+    vmr: pyv.VectorialModelResult, gridsize: int
+):
+    """
+    Takes a vectorial model result and uses the volume density in a "hansenlaw" Abel
+    transform to produce np.array(rs), np.array(column densities at rs)
+    """
+
+    rs, step = sample_space(
+        2 * vmr.collision_sphere_radius,
+        vmr.max_grid_radius,
         endpoint=True,
-        num=200,
-        retstep=True,
+        num=gridsize,
     )
-    rs = rs * u.km
-    step = step * u.km
+
+    n_rs = vmr.volume_density_interpolation(rs.to_value(u.m))
+
+    forward_abel = (
+        hansenlaw_transform(
+            n_rs,
+            dr=step.to_value(u.m),
+            direction="forward",
+        )
+        / u.m**2
+    )
+
+    return rs, forward_abel
+
+
+def column_density_via_basex_abel_transform(
+    vmr: pyv.VectorialModelResult, gridsize: int
+):
+    """
+    Takes a vectorial model result and uses the volume density in a "basex" Abel
+    transform to produce np.array(rs), np.array(column densities at rs)
+    """
+
+    rs, step = sample_space(
+        2 * vmr.collision_sphere_radius,
+        vmr.max_grid_radius,
+        endpoint=True,
+        num=gridsize,
+    )
 
     n_rs = vmr.volume_density_interpolation(rs.to_value(u.m))
 
     forward_abel = (
         basex_transform(
             n_rs,
+            # sigma=0.5,
             verbose=True,
-            basis_dir=None,
+            basis_dir=".",
             dr=step.to_value(u.m),
             direction="forward",
         )
@@ -159,15 +231,68 @@ def add_abel_transform_comparison(vmr, abel_rs, abel_cds, fig, **kwargs):
 
     cd_ratios = model_cds / abel_cds
 
-    curve = go.Scatter(x=rs, y=cd_ratios)
+    curve = go.Scatter(x=rs.to_value(u.km), y=cd_ratios)
 
     fig.add_trace(curve, **kwargs)
 
 
-def main():
-    # astropy units/quantities support in plots
-    quantity_support()
+def style_and_label_figure(fig, vmr):
+    fig.update_xaxes(type="log", tickformat="0.1e", exponentformat="e")
+    fig.update_yaxes(type="log", tickformat="0.1e", exponentformat="e")
 
+    title_text = f"Abel transforms and Column Density: collision sphere radius r_c = {vmr.collision_sphere_radius.to_value(u.km):1.2f} km, log Q = 30, no calculations done inside r_c"
+    # title_text = f"Abel transforms and Column Density: collision sphere radius r_c = {vmr.collision_sphere_radius.to_value(u.km):1.2f} km, log Q = 30, calculations done inside r_c"
+    fig.update_layout(
+        autosize=False,
+        width=1800,
+        height=1200,
+        margin=dict(l=50, r=100, b=100, t=100, pad=4),
+        paper_bgcolor="#d8d7de",
+        plot_bgcolor="#e7e7ea",
+        # paper_bgcolor="LightSteelBlue",
+        title_text=title_text,
+        showlegend=False,
+    )
+
+    fig["layout"]["xaxis"]["title"] = "Radius, km"
+    for i in range(1, 7):
+        fig["layout"]["xaxis" + str(i)]["title"] = "Radius, km"
+
+    fig["layout"]["yaxis"]["title"] = "Column density, 1/cm^2"
+    for i in range(1, 7):
+        fig["layout"]["yaxis1"]["title"] = "Column density, 1/cm^2"
+
+    annotation_args = {
+        "xref": "x domain",
+        "yref": "y domain",
+        "x": 0.9,
+        "y": 0.9,
+        "showarrow": False,
+        "font": {"family": "monospace", "size": 12, "color": "#301e2a"},
+    }
+    for row, col, xfrm in [
+        (1, 1, "model output"),
+        (1, 2, "direct"),
+        (2, 1, "hansenlaw"),
+        (2, 3, "basex"),
+    ]:
+        fig.add_annotation(
+            text=xfrm,
+            row=row,
+            col=col,
+            **annotation_args,
+        )
+
+    for row, col, xfrm in [(1, 3, "direct"), (2, 2, "hansenlaw"), (2, 4, "basex")]:
+        fig.add_annotation(
+            text=f"model / {xfrm}",
+            row=row,
+            col=col,
+            **annotation_args,
+        )
+
+
+def main():
     args = process_args()
     log.debug("Loading input from %s ....", args.fitsinput[0])
     table_file = pathlib.PurePath(args.fitsinput[0])
@@ -176,41 +301,42 @@ def main():
 
     vmr = get_vmr_from_table_row(test_table[0])
 
-    fig = make_subplots(rows=1, cols=5)
-    # add_model_volume_density_data(vmr, fig, row=1, col=1)
+    fig = make_subplots(rows=2, cols=4)
+
     add_model_column_density_data(vmr, fig, row=1, col=1)
+    add_model_column_density_interpolation(vmr, fig, row=1, col=1)
 
-    abel_rs, abel_cds = column_density_via_direct_abel_transform(vmr)
-    add_abel_transform(abel_rs, abel_cds, fig, row=1, col=2)
-    add_abel_transform_comparison(vmr, abel_rs, abel_cds, fig, row=1, col=3)
+    abel_rs_direct, abel_cds_direct = column_density_via_direct_abel_transform(
+        vmr, gridsize=1000
+    )
+    add_abel_transform(abel_rs_direct, abel_cds_direct, fig, row=1, col=2)
+    add_model_column_density_data(vmr, fig, row=1, col=2)
+    add_abel_transform_comparison(
+        vmr, abel_rs_direct, abel_cds_direct, fig, row=1, col=3
+    )
 
-    abel_rs, abel_cds = column_density_via_basex_abel_transform(vmr)
-    add_abel_transform(abel_rs, abel_cds, fig, row=1, col=4)
-    add_abel_transform_comparison(vmr, abel_rs, abel_cds, fig, row=1, col=5)
+    abel_rs_hansenlaw, abel_cds_hansenlaw = column_density_via_hansenlaw_abel_transform(
+        vmr, gridsize=70000
+    )
+    print(abel_rs_hansenlaw)
+    add_abel_transform(abel_rs_hansenlaw, abel_cds_hansenlaw, fig, row=2, col=1)
+    add_model_column_density_data(vmr, fig, row=2, col=1)
+    add_abel_transform_comparison(
+        vmr, abel_rs_hansenlaw, abel_cds_hansenlaw, fig, row=2, col=2
+    )
 
-    # fig.update_layout(
-    #     scene=dict(
-    #         xaxis=dict(
-    #             nticks=4,
-    #             range=[-100, 100],
-    #         ),
-    #         yaxis=dict(
-    #             nticks=4,
-    #             range=[-50, 100],
-    #         ),
-    #         zaxis=dict(
-    #             nticks=4,
-    #             range=[-100, 100],
-    #         ),
-    #         xaxis_title="aoeu",
-    #     ),
-    #     width=1800,
-    #     margin=dict(r=20, l=10, b=10, t=10),
-    # )
-    fig.update_xaxes(type="log")
-    fig.update_yaxes(type="log")
+    abel_rs_basex, abel_cds_basex = column_density_via_basex_abel_transform(
+        vmr, gridsize=200
+    )
+    add_abel_transform(abel_rs_basex, abel_cds_basex, fig, row=2, col=3)
+    add_model_column_density_data(vmr, fig, row=2, col=3)
+    add_abel_transform_comparison(vmr, abel_rs_basex, abel_cds_basex, fig, row=2, col=4)
+
+    style_and_label_figure(fig, vmr)
 
     fig.show()
+
+    fig.write_image("out.pdf")
 
 
 if __name__ == "__main__":
