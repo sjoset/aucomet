@@ -1,0 +1,196 @@
+Water Production Rates of Comets Derived from Hydrogen Images Obtained by the 
+All-Sky Lyman-alpha Imager Solar Wind ANisotropies (SWAN) Instrument on the   
+SOlar and Heliospheric Observatory (SOHO) Satellite                           
+                                                                              
+Data Set Overview                                                             
+=================                                                             
+                                                                              
+This data set presents water production rates of comets taken from 1996 to    
+2021 derived from observations of the hydrogen Lyman-alpha coma made with the 
+Solar Wind ANisotropies (SWAN) Instrument on the SOlar and Heliospheric       
+Observatory (SOHO) Satellite. The raw images are archived at Goddard Space    
+Flight Center and by the European Space Agency.  The SOHO archive maintained  
+at NASA/GSFC and at ESAC is available at                                      
+http://sohowww.nascom.nasa.gov/data/archive/ and at                           
+https://www.cosmos.esa.int/web/soho/soho-science-archive. The instrument, its
+operation and application to comet observations are described by Bertaux et
+al. (1998). Fully calibrated images are an intermediary step in the modeling
+process as described in Combi et al. (2011) and are not an output of the
+processing and thus not currently available in a public archive. For now the
+SWAN PI can provide fully calibrated images on a case-by-case basis.      
+                                                                              
+The SWAN instrument has an instantaneous instrument field of view consisting  
+of a square of five by five 1 degree pixels that are scanned across the sky   
+to construct an image. In normal operations this is done once per day over    
+the entire sky as seen from SOHO to make an all-sky image of the              
+interplanetary hydrogen streaming through the solar system. Because the       
+neutral hydrogen is ionized by impact from the solar wind and solar           
+ultraviolet radiation, its distribution provides a mapping of the spatial     
+distribution of the solar wind itself.                                        
+                                                                              
+The main gaseous constituent of comets is water, which is primarily           
+photodissociated into H and OH and the OH is further photodissociated into H  
+and O. Therefore, observations of the distribution of atomic hydrogen in the  
+comae of comets can be used to calculate the water production rate of the     
+comet through the use of models appropriately parameterized after many        
+independent studies. The brightness of the Lyman-alpha emission is converted  
+into column densities using the daily solar Lyman-alpha fluxes compiled by    
+the Laboratory for Atmospheric and Space Physics (LASP) of the University of  
+Colorado and available at http://lasp.colorado.edu/lisird/lya/.  The emission 
+rate factor, or g-factor, at any comet's particular heliocentric velocity is  
+determined from this solar flux and the shape of the solar Lyman-alpha line   
+profile by Lemaire et al. (1998; 2005). Because the comet is at different     
+heliographic longitude than near-Earth-based measurements that contribute to  
+the LASP data base, the solar Lyman-alpha flux used is advanced or delayed    
+by the number of days corresponding to the nearest angular difference between 
+the comet's longitude and that of the Earth. Typically the solar Lyman-alpha  
+flux depends on the number and intensity of active regions on the photosphere 
+of the Sun and the pattern is reasonably reproducible from one solar rotation 
+to the next. The comet's heliocentric velocity is also accounted for in the   
+position along the solar line used to calculate the g-factor.                 
+                                                                              
+The results of most of the observations contained in this data set were       
+derived from full-sky images. In the early years of SWAN operation there were 
+quite a few specialized comet observation campaigns, where the region of the  
+sky centered on the comet was oversampled spatially by a factor of 2 (half    
+degree spacing) and integration times were longer. In theory this should give 
+somewhat higher quality data with lower uncertainties. In this data set, all  
+the comet-specific and full-sky observations are folded together and the      
+given 1-sigma uncertainties reflect the quality of the resulting production   
+rate and its mode of acquisition.                                             
+                                                                              
+Parameters                                                                    
+==========                                                                    
+                                                                              
+The data are presented as ASCII tables with seven columns. The first column   
+is the time in UTC when the comet nucleus was sampled. The second column is   
+that same time given in fractional days from the comet's perihelion day and   
+time. The third column gives the heliocentric distance of the comet at the    
+time of the observation in astronomical units. The fourth column gives the    
+spacecraft to comet distance in astronomical units. The fifth column gives    
+the photon emission rate, or g-factor, in photons per atom per second at a    
+distance of one astronomical unit. The sixth column gives the water           
+production rate in 1.0e27 molecules per second. The seventh column gives a    
+one-sigma uncertainty calculated from the scatter in the image data and the   
+quality of the model fit to the interplanetary background signal and the      
+comet coma distributions. Owing to calibration uncertainty, model and model   
+parameter uncertainties, as well as the influence of faint background stars,  
+a systematic uncertainty on the order of 30% has been estimated.              
+                                                                              
+The heliocentric distance and distance from the comet to SOHO, and not the    
+geocentric distance of the Earth, at the time of the observation were         
+calculated from the orbital elements taken from the JPL Horizons web site at  
+the time the observations were analyzed. Orbital elements are typically       
+updated by JPL from time to time and so some small differences might be found 
+between heliocentric and comet-SOHO distances from the most current orbital   
+elements. Also, SOHO is not located at the L1 Lagrange point but is in a halo 
+orbit around the L1 Lagrange point, and the comet-SOHO distance uses the      
+update SOHO orbit information from the SOHO project.                          
+                                                                              
+Processing                                                                    
+==========                                                                    
+                                                                              
+SWAN was recalibrated against Hubble Space Telescope observations of the      
+hydrogen Lyman-alpha as described in various references cited in the paper by 
+Combi et al. (2011). Recalibration factors for comet results published before 
+2011 are given in that same paper. Results contained in the PDS archive       
+include the new 2011 calibration and so will be different from results        
+published before the 2011 paper. The calibration has remained the same since  
+that paper.                                                                   
+                                                                              
+Water production rates were calculated by normalization of modeled            
+distributions of the hydrogen coma as described in the paper by Makinen and   
+Combi (2005). The so-called time-resolved model (TRM) is a model calculation  
+for hydrogen atoms produced by the photodissociation chain of H2O and OH.     
+The production of hydrogen atoms as well as their speeds after they exit the  
+collisionally thick part of the coma are taken from a parameterized version   
+of the Monte Carlo models from Combi and Smyth (1988a; 1988b) that were       
+subsequently tested against a range of spatial observations of comet hydrogen 
+observations (Combi et al. 2000) as well as doppler-resolve hydrogen          
+Lyman-alpha line profiles obtained the Hubble Space Telescope Goddard High    
+Resolution Spectrometer (Combi et al. 1998; and Richter et al. 2000). The     
+models have been since tested against comet observations covering a wide      
+range of heliocentric distances and water production rates. Since the 
+resulting production rates are dependent on normalized distributions 
+from the best fit models and are not single valued, heliocentric velocities 
+and column densities are not reported in the data tables, as reporting 
+single values would be somewhat arbitrary.
+                                                                              
+In the TRM the trajectories of hydrogen atoms in the coma under the influence 
+of solar gravity and solar radiation pressure are calculated using a          
+combination of the original syndyname approach described for hydrogen by      
+Keller and Meier (1976) and the vectorial model of Festou (1981). To compare  
+the model distribution with the observed images, apertures of radius 4        
+degrees to 8 degrees were used in the analyses and varied from image-to-image 
+and comet-to-comet depending on the density of local field stars.  Field      
+stars within the analysis apertures were either subtracted using two images   
+or excluded. Faint field stars not possible to identify contribute to the     
+uncertainty in both the fit to the background interplanetary medium signal    
+that is subtracted from the comet as well as to the comet signal itself. In   
+the large majority of observations, field stars within the 4 to 8 degree      
+field of view were excluded with an interactive process and are irregular 
+in size and magnitude from measurement to measurement (Combi et al. 2019). 
+Therefore, generally the total brightness used for each observation was not 
+exactly that which would be expected to fill the entire circular aperture of 
+the nominal radius.       
+                                                                              
+References Related to the Analysis, Calibration and Processing of these Data  
+==========================================================  
+                                                                              
+Bertaux, J.L., Costa, J., Quemerais, E., Lallement, R., Berthe, M., Kyrola,   
+  E., Schmidt, W., Summanen, T., Makinen, T., Goukenleuque, C. 1998.          
+  Lyman-alpha observations of Comet Hyakutake with SWAN on SOHO. Planet.      
+  Space Sci. 46, 555-568.                                                     
+                                                                              
+Combi, M.R., and Smyth, W.H. 1988a. Monte Carlo Particle Trajectory Models    
+  for Neutral Cometary Gases. I. Models and Equations. Astrophys. J. 327,     
+  1026-1043.                                                                  
+                                                                              
+Combi, M.R., and Smyth, W.H. 1988b. Monte Carlo Particle Trajectory Models    
+  for Neutral Cometary Gases. II. The Spatial Morphology of the Lyman-alpha   
+  Coma. Astrophys. J. 327, 1044-1059.                                         
+                                                                              
+Combi, M.R., Brown, M.E., Feldman, P.D., Keller, H.U., Meier, R.R., and       
+  Smyth, W.H. 1998. Hubble Space Telescope Ultraviolet Imaging and High       
+  Resolution Spectroscopy of Water Photodissociation Products in Comet        
+  Hyakutake (C/1996 B2). Astrophys. J. 494, 816-821.                          
+                                                                              
+Combi, M.R., Reinard, A.A., Bertaux, J.-L., Quemerais, E., and Makinen, T.    
+  2000. SOHO/SWAN Observations of the Structure and Evolution of the Hydrogen 
+  Lyman-alpha Coma of Comet Hale-Bopp (1995 O1). Icarus 144, 191-202.         
+                                                                              
+Combi, M.R., Lee, Y., Patel, T.S., Makinen, J.T.T., Bertaux, J.-L., and       
+  Quemerais, E. 2011. SOHO/SWAN Observations of Short-Period Spacecraft       
+  Target Comets. Astron. J. 141, 128 (13pp).                                  
+                                                                              
+Combi, M.R., Makinen, T.T., Bertaux, J.-L., Quemerais, E., Ferron, S., 
+  Avery, M., and Wright, C. 2018. Water production activity of nine long-
+  period comets from SOHO/SWAN observations of hydrogen Lyman-alpha: 2013-
+  2016. Icarus 300, 33-46.
+
+Combi, M.R., Makinen, T.T., Bertaux, J.-L., Quemerais, E., and Ferron, S.
+  2019. A survey of water production in 61 comets from SOHO/SWAN 
+  observations of hydrogen Lyman-alpha: Twenty-one years 1996-2016. Icarus 
+  317, 610-620.
+
+Festou, M.C. 1981. The Density Distribution of Neutral Compounds in Cometary  
+  Atmospheres I. Models and Equations. Astron. Astrophys. 95, 69-79.          
+                                                                              
+Keller, H.U. and Meier R.R. 1976. A Cometary Hydrogen Model for Arbitrary     
+  Observational Geometry. Astron. Astrophys. 52, 273-281.                     
+                                                                              
+Lemaire, P., Emerich, C., Curdt, W., Schuehle, U., and Wilhelm, K. 1998.      
+  Solar H I Lyman alpha full disk profile obtained with the SUMER/SOHO        
+  spectrometer. Astron. Astrophys. 334, 1095-1098.                            
+                                                                              
+Lemaire, P., Emerich, C., Vial, J.-C., Curdt, W., Schuhle, U., and Wilhelm,   
+  K. 2005. Variation of the full Sun hydrogen Lyman profiles through solar    
+  cycle 23. Adv. Sp. Res. 35, 384-387.                                        
+                                                                              
+Makinen, J.T.T. and Combi, M.R. 2005. Temporal Deconvolution of the Hydrogen  
+  Coma. I. A Hybrid Model. Icarus 177, 217-227.                               
+                                                                              
+Richter, K., Combi, M.R., Keller, H.U., and Meier, R.R. 2000. Multiple        
+  Scattering of Hydrogen Lyman-alpha Radiation in the Coma of Comet Hyakutake 
+  (C/1996 B2). Astrophys. J. 531, 599-611.                                    
+                                                                              

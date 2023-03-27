@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<?xml-model href="http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1H00.sch"
+	schematypens="http://purl.oclc.org/dsdl/schematron"?>
+
+<Product_Collection xmlns="http://pds.nasa.gov/pds4/pds/v1" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://pds.nasa.gov/pds4/pds/v1               http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1H00.xsd">
+  <Identification_Area>
+    <logical_identifier>urn:nasa:pds:soho:swan_derived</logical_identifier>
+    <version_id>3.0</version_id>
+    <title>SOHO SWAN Derived Cometary Water Production Rates Collection</title>
+    <information_model_version>1.17.0.0</information_model_version>
+    <product_class>Product_Collection</product_class>
+    <Citation_Information>
+      <author_list>Combi, M.</author_list>
+      <editor_list>Combi, M.; Feaga, L.</editor_list>
+      <publication_year>2022</publication_year>
+      <doi>10.26007/y367-c978</doi>
+      <keyword>water production rate</keyword>
+      <description>
+        This data collection contains derived water production
+        rates for numerous comets observed by the SOHO SWAN
+        instrument from 1996 to 2021.  Multiple measurements
+        were made for each comet through a single perihelion
+        passage and some comets were observed over multiple
+        epochs.  The production rates were derived by modeling
+        the observed distribution of atomic hydrogen in the
+        comae of the comets.
+      </description>
+    </Citation_Information>
+    <Modification_History>
+      <Modification_Detail>
+        <modification_date>2016-06-23</modification_date>
+        <version_id>1.0</version_id>
+        <description>
+			Creation
+        </description>
+      </Modification_Detail>
+      <Modification_Detail>
+        <modification_date>2017-03-08</modification_date>
+        <version_id>1.0</version_id>
+        <description>
+			Liens-resolved version accepted for archiving.
+        </description>
+      </Modification_Detail>
+      <Modification_Detail>
+        <modification_date>2018-08-08</modification_date>
+        <version_id>2.0</version_id>
+        <description>
+           New data files for 12 comets added to the collection,
+           extending the stop date for the collection to 2017.
+        </description>
+      </Modification_Detail>
+      <Modification_Detail>
+        <modification_date>2022-04-05</modification_date>
+        <version_id>3.0</version_id>
+        <description>
+           New data files for 16 comets added to the collection,
+           extending the stop date for the collection to 2021.
+        </description>
+      </Modification_Detail>
+    </Modification_History>
+  </Identification_Area>
+  <Context_Area>
+    <Time_Coordinates>
+      <start_date_time>1996-01-22T07:53:45Z</start_date_time>
+      <stop_date_time>2021-10-17T06:08:38Z</stop_date_time>
+    </Time_Coordinates>
+    <Primary_Result_Summary>
+      <purpose>Science</purpose>
+      <processing_level>Derived</processing_level>
+    </Primary_Result_Summary>
+    <Investigation_Area>
+      <name>SOHO</name>
+      <type>Mission</type>
+      <Internal_Reference>
+        <lid_reference>urn:nasa:pds:context:investigation:mission.solar_and_heliospheric_observatory</lid_reference>
+        <reference_type>collection_to_investigation</reference_type>
+      </Internal_Reference>
+    </Investigation_Area>
+    <Observing_System>
+      <Observing_System_Component>
+        <name>SOlar and Heliospheric Observatory (SOHO)</name>
+        <type>Host</type>
+        <Internal_Reference>
+          <lid_reference>urn:nasa:pds:context:instrument_host:spacecraft.soho</lid_reference>
+          <reference_type>is_instrument_host</reference_type>
+        </Internal_Reference>
+      </Observing_System_Component>
+      <Observing_System_Component>
+        <name>Solar Wind ANisotropies (SWAN)</name>
+        <type>Instrument</type>
+        <Internal_Reference>
+          <lid_reference>urn:nasa:pds:context:instrument:soho.swan</lid_reference>
+          <reference_type>is_instrument</reference_type>
+        </Internal_Reference>
+      </Observing_System_Component>
+    </Observing_System>
+    <Target_Identification>
+      <name>Multiple Comets</name>
+      <type>Comet</type>
+    </Target_Identification>
+  </Context_Area>
+  <Reference_List>
+    <Internal_Reference>
+      <lid_reference>urn:nasa:pds:soho:document</lid_reference>
+      <reference_type>collection_to_document</reference_type>
+    </Internal_Reference>
+    <Internal_Reference>
+      <lid_reference>urn:nasa:pds:soho:swan_derived:overview</lid_reference>
+      <reference_type>collection_to_document</reference_type>
+      <comment>This brief document provides an overview of the collection content and history.</comment>
+    </Internal_Reference>
+  </Reference_List>
+  <Collection>
+    <collection_type>Data</collection_type>
+  </Collection>
+  <File_Area_Inventory>
+    <File>
+      <file_name>inventory.csv</file_name>
+    </File>
+    <Inventory>
+      <offset unit="byte">0</offset>
+      <parsing_standard_id>PDS DSV 1</parsing_standard_id>
+      <records>94</records>
+      <record_delimiter>Carriage-Return Line-Feed</record_delimiter>
+      <field_delimiter>Comma</field_delimiter>
+      <Record_Delimited>
+        <fields>2</fields>
+        <groups>0</groups>
+        <Field_Delimited>
+          <name>Member Status</name>
+          <field_number>1</field_number>
+          <data_type>ASCII_String</data_type>
+          <maximum_field_length unit="byte">1</maximum_field_length>
+        </Field_Delimited>
+        <Field_Delimited>
+          <name>LIDVID_LID</name>
+          <field_number>2</field_number>
+          <data_type>ASCII_LIDVID_LID</data_type>
+          <maximum_field_length unit="byte">255</maximum_field_length>
+        </Field_Delimited>
+      </Record_Delimited>
+      <reference_type>inventory_has_member_product</reference_type>
+    </Inventory>
+  </File_Area_Inventory>
+</Product_Collection>

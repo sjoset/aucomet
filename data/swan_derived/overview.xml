@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<?xml-model href="http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1H00.sch"
+	schematypens="http://purl.oclc.org/dsdl/schematron"?>
+
+<Product_Document xmlns="http://pds.nasa.gov/pds4/pds/v1" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://pds.nasa.gov/pds4/pds/v1                             http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1H00.xsd">
+  <Identification_Area>
+    <logical_identifier>urn:nasa:pds:soho:swan_derived:overview</logical_identifier>
+    <version_id>3.0</version_id>
+    <title>SOHO SWAN Derived Cometary Water Production Rates - Overview</title>
+    <information_model_version>1.17.0.0</information_model_version>
+    <product_class>Product_Document</product_class>
+    <Citation_Information>
+      <author_list>Combi, M.</author_list>
+      <editor_list>Feaga, L.</editor_list>
+      <publication_year>2022</publication_year>
+      <description>
+        This simple text file describes the content of the
+        collection as well as the reduction, processing, and
+        modeling methods applied to the SOHO SWAN
+        Lyman-alpha data that were used to derive the water
+        production rates in the collection.
+      </description>
+    </Citation_Information>
+    <Modification_History>
+      <Modification_Detail>
+        <modification_date>2017-02-15</modification_date>
+        <version_id>1.0</version_id>
+        <description>Liens from PDSSBN review resolved.</description>
+      </Modification_Detail>
+      <Modification_Detail>
+        <modification_date>2020-01-08</modification_date>
+        <version_id>2.0</version_id>
+        <description>Time period of the study extended, new data files
+               added to the collection, and liens resolved.</description>
+      </Modification_Detail>
+      <Modification_Detail>
+         <modification_date>2022-08-12</modification_date>
+         <version_id>3.0</version_id>
+         <description>Time period of the study extended, new data files added to
+               the collection, and clarification text added to the overview
+	       file to address a review lien.</description>
+      </Modification_Detail>
+    </Modification_History>
+  </Identification_Area>
+  <Document>
+    <publication_date>2022-08-12</publication_date>
+    <Document_Edition>
+      <edition_name>ASCII Text</edition_name>
+      <language>English</language>
+      <files>1</files>
+      <Document_File>
+        <file_name>overview.txt</file_name>
+        <document_standard_id>7-Bit ASCII Text</document_standard_id>
+      </Document_File>
+    </Document_Edition>
+  </Document>
+</Product_Document>

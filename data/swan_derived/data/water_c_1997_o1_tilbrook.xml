@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<?xml-model href="http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1H00.sch"
+	schematypens="http://purl.oclc.org/dsdl/schematron"?>
+
+<Product_Observational xmlns="http://pds.nasa.gov/pds4/pds/v1" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://pds.nasa.gov/pds4/pds/v1                             http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1H00.xsd">
+  <Identification_Area>
+    <logical_identifier>urn:nasa:pds:soho:swan_derived:c_1997_o1_tilbrook_water_tab</logical_identifier>
+    <version_id>1.2</version_id>
+    <title>SOHO SWAN derived water production rates for comet C/1997 O1 (Tilbrook)</title>
+    <information_model_version>1.17.0.0</information_model_version>
+    <product_class>Product_Observational</product_class>
+    <Citation_Information>
+      <publication_year>2020</publication_year>
+      <keyword>SOHO</keyword>
+      <keyword>SWAN</keyword>
+      <keyword>comet</keyword>
+      <keyword>water production rate</keyword>
+      <keyword>Lyman-alpha</keyword>
+      <keyword>C/1997 O1 (Tilbrook)</keyword>
+      <description>Water production rates for comet C/1997 O1 (Tilbrook) derived from SOHO/SWAN
+                  Lyman-alpha observations acquired in 1997.
+     </description>
+    </Citation_Information>
+    <Modification_History>
+      <Modification_Detail>
+        <modification_date>2017-02-15</modification_date>
+        <version_id>1.0</version_id>
+        <description>Liens from data collection review corrected in label by Lori Feaga</description>
+      </Modification_Detail>
+      <Modification_Detail>
+        <modification_date>2020-02-07</modification_date>
+        <version_id>1.1</version_id>
+        <description>Added lid reference for target (B. Hirsch).</description>
+      </Modification_Detail>
+      <Modification_Detail>
+        <modification_date>2022-08-01</modification_date>
+        <version_id>1.2</version_id>
+        <description>Corrected lid reference for mission and updated to latest schema (B. Hirsch).</description>
+      </Modification_Detail>
+    </Modification_History>
+  </Identification_Area>
+  <Observation_Area>
+    <Time_Coordinates>
+      <start_date_time>1997-06-28T19:46:33Z</start_date_time>
+      <stop_date_time>1997-08-12T09:02:52Z</stop_date_time>
+    </Time_Coordinates>
+    <Primary_Result_Summary>
+      <purpose>Science</purpose>
+      <processing_level>Derived</processing_level>
+      <Science_Facets>
+        <wavelength_range>Ultraviolet</wavelength_range>
+        <discipline_name>Small Bodies</discipline_name>
+        <facet1>Production Rates</facet1>
+      </Science_Facets>
+    </Primary_Result_Summary>
+    <Investigation_Area>
+      <name>SOHO</name>
+      <type>Mission</type>
+      <Internal_Reference>
+        <lid_reference>urn:nasa:pds:context:investigation:mission.solar_and_heliospheric_observatory</lid_reference>
+        <reference_type>data_to_investigation</reference_type>
+      </Internal_Reference>
+    </Investigation_Area>
+    <Observing_System>
+      <Observing_System_Component>
+        <name>SOlar and Heliospheric Observatory (SOHO)</name>
+        <type>Host</type>
+        <Internal_Reference>
+          <lid_reference>urn:nasa:pds:context:instrument_host:spacecraft.soho</lid_reference>
+          <reference_type>is_instrument_host</reference_type>
+        </Internal_Reference>
+      </Observing_System_Component>
+      <Observing_System_Component>
+        <name>Solar Wind ANisotropies (SWAN)</name>
+        <type>Instrument</type>
+        <Internal_Reference>
+          <lid_reference>urn:nasa:pds:context:instrument:soho.swan</lid_reference>
+          <reference_type>is_instrument</reference_type>
+        </Internal_Reference>
+      </Observing_System_Component>
+    </Observing_System>
+    <Target_Identification>
+      <name>C/1997 O1 (Tilbrook)</name>
+      <type>Comet</type>
+      <Internal_Reference>
+        <lid_reference>urn:nasa:pds:context:target:comet.c1997_o1_tilbrook</lid_reference>
+        <reference_type>data_to_target</reference_type>
+      </Internal_Reference>
+    </Target_Identification>
+  </Observation_Area>
+  <Reference_List>
+    <External_Reference>
+      <doi>10.1088/0004-6256/141/4/128</doi>
+      <reference_text>Combi, M.R., Lee, Y., Patel, T.S., Makinen, J.T.T., Bertaux, J.-L., and Quemerais, E. 2011.
+                     SOHO/SWAN Observations of Short-period Spacecraft Target Comets.
+                     Astronomical Journal, 141, 128.
+     </reference_text>
+      <description>The analysis procedure and most recent recalibration of the SOHO/SWAN database is included
+                  in this paper.
+     </description>
+    </External_Reference>
+  </Reference_List>
+  <File_Area_Observational>
+    <File>
+      <file_name>water_c_1997_o1_tilbrook.tab</file_name>
+    </File>
+    <Table_Character>
+      <name>C/1997 O1 (Tilbrook)</name>
+      <offset unit="byte">0</offset>
+      <records>16</records>
+      <description>Water production rates and observational parameters of comet C/1997 O1 (Tilbrook)
+           as derived from Lyman-alpha data from the SOHO/SWAN instrument</description>
+      <record_delimiter>Carriage-Return Line-Feed</record_delimiter>
+      <Record_Character>
+        <fields>7</fields>
+        <groups>0</groups>
+        <record_length unit="byte">80</record_length>
+        <Field_Character>
+          <name>UTC of observation</name>
+          <field_number>1</field_number>
+          <field_location unit="byte">1</field_location>
+          <data_type>ASCII_Date_Time_YMD_UTC</data_type>
+          <field_length unit="byte">20</field_length>
+          <field_format>%20s</field_format>
+          <description>The UTC time of observations in YYYY-MM-DDTHH:MM:SSZ.</description>
+        </Field_Character>
+        <Field_Character>
+          <name>Time from perihelion</name>
+          <field_number>2</field_number>
+          <field_location unit="byte">22</field_location>
+          <data_type>ASCII_Real</data_type>
+          <field_length unit="byte">9</field_length>
+          <field_format>%9.3f</field_format>
+          <unit>day</unit>
+          <description>The time prior to perihelion (-) or post perihelion (+) of the observation.</description>
+        </Field_Character>
+        <Field_Character>
+          <name>Heliocentric distance</name>
+          <field_number>3</field_number>
+          <field_location unit="byte">32</field_location>
+          <data_type>ASCII_Real</data_type>
+          <field_length unit="byte">8</field_length>
+          <field_format>%8.3f</field_format>
+          <unit>AU</unit>
+          <description>The heliocentric distance of the comet at the time of the observation.</description>
+        </Field_Character>
+        <Field_Character>
+          <name>Spacecraft-comet distance</name>
+          <field_number>4</field_number>
+          <field_location unit="byte">41</field_location>
+          <data_type>ASCII_Real</data_type>
+          <field_length unit="byte">8</field_length>
+          <field_format>%8.3f</field_format>
+          <unit>AU</unit>
+          <description>The distance between SOHO and the comet at the time of the observation.</description>
+        </Field_Character>
+        <Field_Character>
+          <name>g_factor</name>
+          <field_number>5</field_number>
+          <field_location unit="byte">50</field_location>
+          <data_type>ASCII_Real</data_type>
+          <field_length unit="byte">11</field_length>
+          <field_format>%11.6f</field_format>
+          <unit>photon/s</unit>
+          <description>The solar fluorescence g-factor at 1 AU for Hydrogen Lyman-alpha used in the
+                      production rate derivation.</description>
+        </Field_Character>
+        <Field_Character>
+          <name>Water production rate</name>
+          <field_number>6</field_number>
+          <field_location unit="byte">62</field_location>
+          <data_type>ASCII_Real</data_type>
+          <field_length unit="byte">8</field_length>
+          <field_format>%8.2f</field_format>
+          <unit>molecule/s</unit>
+          <scaling_factor>1.0e27</scaling_factor>
+          <description>The water production rate derived from atomic hydrogen Lyman-alpha observations of the
+                      comet.  An apertures of radius between 4 and 8 degrees was used.</description>
+        </Field_Character>
+        <Field_Character>
+          <name>Water production rate uncertainty</name>
+          <field_number>7</field_number>
+          <field_location unit="byte">71</field_location>
+          <data_type>ASCII_Real</data_type>
+          <field_length unit="byte">8</field_length>
+          <field_format>%8.2f</field_format>
+          <unit>molecule/s</unit>
+          <scaling_factor>1.0e27</scaling_factor>
+          <description>1-sigma formal uncertainty of the water production rate from photon statistic noise,
+                      coma model fitting, and interplanetary medium and star background subtraction.</description>
+        </Field_Character>
+      </Record_Character>
+    </Table_Character>
+  </File_Area_Observational>
+</Product_Observational>
