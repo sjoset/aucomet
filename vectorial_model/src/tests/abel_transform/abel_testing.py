@@ -13,7 +13,8 @@ import astropy.units as u
 import pyvectorial as pyv
 
 import plotly.graph_objects as go
-import plotly.io as pio
+
+# import plotly.io as pio
 from plotly.subplots import make_subplots
 
 from astropy.table import QTable
@@ -315,10 +316,10 @@ def main():
         vmr, abel_rs_direct, abel_cds_direct, fig, row=1, col=3
     )
 
+    # TODO: add note to abel write-up that 10000 points seems to be good enough
     abel_rs_hansenlaw, abel_cds_hansenlaw = column_density_via_hansenlaw_abel_transform(
         vmr, gridsize=70000
     )
-    print(abel_rs_hansenlaw)
     add_abel_transform(abel_rs_hansenlaw, abel_cds_hansenlaw, fig, row=2, col=1)
     add_model_column_density_data(vmr, fig, row=2, col=1)
     add_abel_transform_comparison(
@@ -337,6 +338,7 @@ def main():
     fig.show()
 
     fig.write_image("out.pdf")
+    return 0
 
 
 if __name__ == "__main__":
