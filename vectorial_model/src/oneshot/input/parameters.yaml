@@ -1,6 +1,7 @@
 production:
   # parent production in molecules/s
-  base_q: 1.e+30
+  base_q: 1.e+28
+  # base_q: 1.e+30
 
   # time_variation_type: "gaussian"
   # params:
@@ -20,14 +21,14 @@ production:
   #   # delta, angular offset in hours
   #   delta: 3.0
 
-  time_variation_type: "square pulse"
-  params:
-    # amplitude in molecules/s
-    amplitude: 4.e30
-    # duration in hours
-    duration: 5.0
-    # start of pulse, in hours ago
-    t_start: 20.0
+  # time_variation_type: "square pulse"
+  # params:
+  #   # amplitude in molecules/s
+  #   amplitude: 4.e30
+  #   # duration in hours
+  #   duration: 5.0
+  #   # start of pulse, in hours ago
+  #   t_start: 20.0
 
 parent:
   name: "H2O"

@@ -95,7 +95,5 @@ etc:
 
   # fortran version info
   fortran_vmodel_binary: 'bin/fvm'
-  out_file: 'fort.16'
-  in_file: 'fparam.dat'
   g_factor: 2.33e-4
   delta: 1.0

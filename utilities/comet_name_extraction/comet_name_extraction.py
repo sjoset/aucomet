@@ -280,7 +280,7 @@ def print_summary(cnrs: List[CometNameRegex], comet_dataframe: pd.DataFrame) -> 
     print("")
 
     print(f"Manually renamed entries ({len(manually_renamed_set)}):")
-    for x in sorted(manually_renamed_set, key=lambda x: x[0]):
+    for x in sorted(manually_renamed_set, key=lambda x: x[1]):
         print(f"\t{x[0]:>30} ====> {x[1]}")
     print("")
 
@@ -317,7 +317,9 @@ def write_swift_database_csv(
 
 def main():
     # read our data
-    comet_dataframe = read_swift_database_csv(pathlib.Path("swift_comet_database.csv"))
+    comet_dataframe = read_swift_database_csv(
+        pathlib.Path("./swift_comet_database.csv")
+    )
     raw_comet_names = comet_dataframe["original_swift_name"]
 
     # try to match the observation name to a conventional comet name

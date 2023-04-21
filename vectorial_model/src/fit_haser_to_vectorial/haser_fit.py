@@ -154,7 +154,7 @@ def test_haser_full_fit_with_noise():
     cds = cd_sbpy(rs)
 
     # add some noise to a standard Haser column density
-    rng = np.random.default_rng(seed=42)
+    rng = np.random.default_rng(seed=41)
     cd_noise = 1.0e16 * rng.normal(size=rs.size)
 
     hfr = pyv.haser_full_fit_from_column_density(

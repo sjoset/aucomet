@@ -24,5 +24,9 @@ To run tests we also need
 ## Vectorial model
     conda install dill plotly
 
+### optional libraries for Abel transformations
+    pip install PyAbel
+
+
 ### this allows us to edit sbpy source in place and run it without reinstalling every change
     python setup.py develop --user
