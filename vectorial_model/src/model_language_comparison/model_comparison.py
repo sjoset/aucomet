@@ -65,7 +65,7 @@ def calculate_comparisons(
             continue
         ratio = (
             (
-                (pvmr.volume_density_interpolation(r_m) * (1 / u.m**3))
+                (pvmr.volume_density_interpolation(r_m) * (1 / u.m**3))  # type: ignore
                 / fvmr.volume_density[i]
             )
             .decompose()
@@ -137,8 +137,8 @@ def plot_cdens_comparison(
 
     fig, ax = plt.subplots(1, 1, figsize=(20, 20))
 
-    ax.set(xlabel=f"Distance from nucleus, {r_units.to_string()}")
-    ax.set(ylabel="Column density ratio, py/fortran")
+    ax.set(xlabel=f"Distance from nucleus, {r_units.to_string()}")  # type: ignore
+    ax.set(ylabel="Column density ratio, py/fortran")  # type: ignore
     fig.suptitle(
         f"Calculated column density ratios, python/fortran\nFragment lifetime {vmc.fragment.tau_T.to(u.s).value:6.0f}"
     )
@@ -217,6 +217,74 @@ def plot_fragment_sputters(vmr, fvmr, out_file, **kwargs):
     plt.close()
 
 
+def sample_rust_model_calculation(
+    vmc: pyv.VectorialModelConfig,
+) -> pyv.VectorialModelResult:
+    rustbin = pathlib.Path(
+        pathlib.Path.home(),
+        pathlib.Path(
+            "repos/aucomet/vectorial_model/src/model_language_comparison/bin/rust_vect"
+        ),
+    )
+    ec = pyv.RustModelExtraConfig(
+        bin_path=rustbin,
+        rust_input_filename=pathlib.Path("rust_in.yaml"),
+        rust_output_filename=pathlib.Path("rust_out.txt"),
+    )
+
+    vmr = pyv.run_vectorial_model(vmc=vmc, extra_config=ec)
+
+    pyv.interpolate_volume_density(vmr)
+    if vmr.volume_density_interpolation is None:
+        return vmr
+
+    pyv.column_density_from_abel(vmr)
+
+    pyv.interpolate_column_density(vmr)
+    if vmr.column_density_interpolation is None:
+        return vmr
+
+    return vmr
+
+
+def sample_fortran_model_calculation(
+    vmc: pyv.VectorialModelConfig,
+) -> pyv.VectorialModelResult:
+    fortranbin = pathlib.Path(
+        pathlib.Path.home(),
+        pathlib.Path(
+            "repos/aucomet/vectorial_model/src/model_language_comparison/bin/fvm"
+        ),
+    )
+    ec = pyv.FortranModelExtraConfig(
+        bin_path=fortranbin,
+        fortran_input_filename=pathlib.Path("fparam.dat"),
+        fortran_output_filename=pathlib.Path("fort.16"),
+        r_h=1.0 * u.AU,
+    )
+
+    vmr = pyv.run_vectorial_model(vmc=vmc, extra_config=ec)
+
+    pyv.interpolate_volume_density(vmr)
+    if vmr.volume_density_interpolation is None:
+        return vmr
+
+    pyv.column_density_from_abel(vmr)
+
+    pyv.interpolate_column_density(vmr)
+    if vmr.column_density_interpolation is None:
+        return vmr
+
+    return vmr
+
+
+def sample_python_model_calculation(vmc: pyv.VectorialModelConfig):
+    ec = pyv.PythonModelExtraConfig(print_progress=True)
+    vmr = pyv.run_vectorial_model(vmc=vmc, extra_config=ec)
+
+    return vmr
+
+
 def main():
     # astropy units/quantities support in plots
     quantity_support()
@@ -226,6 +294,70 @@ def main():
     log.debug("Loading input from %s ....", args.parameterfile[0])
     # Read in our stuff
     vmc_set = pyv.vm_configs_from_yaml(args.parameterfile[0])
+
+    vmr = sample_fortran_model_calculation(vmc)
+    vmr2 = sample_rust_model_calculation(vmc)
+    vmr3 = sample_python_model_calculation(vmc)
+
+    fig = make_subplots(rows=1, cols=1)
+    fig.update_xaxes(type="log", tickformat="0.1e", exponentformat="e")
+    fig.update_yaxes(type="log", tickformat="0.1e", exponentformat="e")
+
+    fig.add_trace(
+        pyv.plotly_volume_density_plot(
+            vmr, dist_units=u.km, vdens_units=(1 / u.cm**3)
+        )
+    )
+    fig.add_trace(
+        pyv.plotly_volume_density_plot(
+            vmr2, dist_units=u.km, vdens_units=(1 / u.cm**3)
+        )
+    )
+    fig.add_trace(
+        pyv.plotly_volume_density_plot(
+            vmr3, dist_units=u.km, vdens_units=(1 / u.cm**3)
+        )
+    )
+
+    fig.add_trace(
+        pyv.plotly_column_density_plot(
+            vmr, dist_units=u.km, cdens_units=(1 / u.cm**2)
+        )
+    )
+    fig.add_trace(
+        pyv.plotly_column_density_plot(
+            vmr2, dist_units=u.km, cdens_units=(1 / u.cm**2)
+        )
+    )
+    fig.add_trace(
+        pyv.plotly_column_density_plot(
+            vmr3, dist_units=u.km, cdens_units=(1 / u.cm**2)
+        )
+    )
+    fig.show()
+
+    # vmr_list = [pyv.unpickle_from_base64(row["b64_encoded_vmr"]) for row in out_table]
+    # for vmr in vmr_list:
+    #     print(vmr.collision_sphere_radius.to(u.km))
+    #     pyv.interpolate_volume_density(vmr)
+    #     pyv.column_density_from_abel(vmr)
+    #     pyv.interpolate_column_density(vmr)
+    #     fig = make_subplots(rows=1, cols=1)
+    #     fig.update_xaxes(type="log", tickformat="0.1e", exponentformat="e")
+    #     fig.update_yaxes(type="log", tickformat="0.1e", exponentformat="e")
+    #     # fig.add_trace(
+    #     #     pyv.plotly_volume_density_plot(
+    #     #         vmr, dist_units=u.km, vdens_units=(1 / u.cm**3)
+    #     #     )
+    #     # )
+    #     fig.add_trace(
+    #         pyv.plotly_column_density_plot(
+    #             vmr, dist_units=u.km, cdens_units=(1 / u.cm**2)
+    #         )
+    #     )
+    #     # for r, vd in zip(vmr.volume_density_grid, vmr.volume_density):
+    #     #     print(f"r: {r.to_value(u.km):8e}\tVD: {vd.to_value(1/u.m**3):8e}")
+    #     fig.show()
 
     for vmc in vmc_set:
         # template for output filenames
