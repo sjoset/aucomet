@@ -1,71 +1,71 @@
 production:
   # parent production in molecules/s
-  base_q: 1.e+29
+  base_q_per_s: 1.e+29
 
-  # time_variation_type: "binned"
-  # params:
+  # time_variation:
+  #   time_variation_type: "binned"
   #   # # rates of production, in molecules/s
-  #   q_t:
+  #   q_per_s:
   #       - 1.e+28
   #       - 3.e+29
   #       - 1.e+28
   #   # # times these productions started, in days ago
-  #   times_at_productions:
+  #   times_at_productions_days:
   #       - 30
   #       - 3
   #       - 1
 
-  # time_variation_type: "gaussian"
-  # params:
+  # time_variation:
+  #   time_variation_type: "gaussian"
   #   # amplitude in molecules/s
-  #   amplitude: 3.e30
+  #   amplitude_per_s: 3.e30
   #   # std_dev in hours
-  #   std_dev: 20.0
+  #   std_dev_hrs: 20.0
   #   # time at peak in hours ago
-  #   t_max: 24.0
+  #   t_max_hrs: 24.0
 
-  # time_variation_type: "sine wave"
-  # params:
+  # time_variation:
+  #   time_variation_type: "sine wave"
   #   # amplitude in molecules/s
-  #   amplitude: 3.e28
+  #   amplitude_per_s: 3.e28
   #   # period in hours
-  #   period: 20.0
+  #   period_hrs: 20.0
   #   # delta, angular offset in hours
-  #   delta: 3.0
+  #   delta_hrs: 3.0
 
-  # time_variation_type: "square pulse"
-  # params:
+  # time_variation:
+  #   time_variation_type: "square pulse"
   #   # amplitude in molecules/s
-  #   amplitude: 4.e30
+  #   amplitude_per_s: 4.e30
   #   # duration in hours
-  #   duration: 5.0
+  #   duration_hrs: 5.0
   #   # start of pulse, in hours ago
-  #   t_start: 20.0
+  #   t_start_hrs: 20.0
 
 parent:
   # outflow velocity of parent, km/s
-  v_outflow: 0.85
+  v_outflow_kms: 0.85
   # v_outflow: 0.5
   # ratio between total and dissociative lifetimes
-  tau_T: 80000
+  tau_T_s: 80000
   # tau_T: 1.33e+6
   # dissociative lifetime of molecule, seconds
-  tau_d: 86000
+  tau_d_s: 86000
   # tau_d: 1.33e+6
   # approximate cross section for most molecules we care about, cm^2
-  sigma: 3.0e-16
+  sigma_cm_sq: 3.0e-16
 
 fragment:
   # velocity of fragment, km/s
-  v_photo: 1.05
+  v_photo_kms: 1.05
   # v_photo: 0.8
   # total lifetime of fragment molecule, seconds
-  tau_T: 160000
+  tau_T_s: 160000
   # tau_T: 2.6e+6
 
 grid:
-  radial_points: 100
-  angular_points: 100
+  radial_points: 250
+  angular_points: 200
   radial_substeps: 100
   parent_destruction_level: 0.99
   fragment_destruction_level: 0.95
