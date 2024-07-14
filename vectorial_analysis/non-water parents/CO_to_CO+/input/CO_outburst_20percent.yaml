@@ -1,0 +1,35 @@
+production:
+  # parent production in molecules/s
+  base_q: 1.e+29
+
+  time_variation_type: "square pulse"
+  params:
+    # amplitude in molecules/s - 20% of the base production
+    amplitude: 2.0e+28
+    # duration in hours - guess
+    duration: 24.0
+    # start of pulse, in hours ago: 9 days
+    t_start: 216
+
+parent:
+  # outflow velocity of parent, km/s
+  v_outflow: 0.5
+  # total lifetime of parent, seconds
+  tau_T: 1.33e+6
+  # dissociative lifetime of molecule, seconds
+  tau_d: 1.33e+6
+  # approximate cross section for most molecules we care about, cm^2
+  sigma: 3.0e-16
+
+fragment:
+  # velocity of fragment, km/s
+  v_photo: 0.8
+  # total lifetime of fragment molecule, seconds
+  tau_T: 2.6e+6
+
+grid:
+  radial_points: 250
+  angular_points: 150
+  radial_substeps: 100
+  parent_destruction_level: 0.99
+  fragment_destruction_level: 0.95
