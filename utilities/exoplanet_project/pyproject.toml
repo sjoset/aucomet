@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "exoplanet_search_au"
+version = "0.0.1"
+description = "Finds exoplanet transits visible from Auburn, AL, USA"
+authors = ["Shawn Oset <szo0032@auburn.edu>"]
+license = "MIT"
+# readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+beautifulsoup4 = "^4.12.3"
+lxml = "^5.2.2"
+
+[tool.poetry.scripts]
+exo_au = 'exoplanet_search_au.exo:main'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
